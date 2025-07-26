@@ -97,3 +97,18 @@ void Server::remove_session(std::shared_ptr<ClientSession> session) {
 void Server::log_session_count() {
     Logger::get()->info("[Server] Active sessions: {}", sessions_.size());
 }
+
+bool Server::disconnectSessionIfExists(const std::string &username) {
+    std::lock_guard<std::mutex> lock(sessions_mutex_);
+
+    for (auto &session : sessions_) {
+        auto accountInfo = session->getAccountInfo();
+        if (accountInfo && accountInfo->getUserName() == username) {
+            Logger::get()->warn("[Server] Found duplicate session for '{}', disconnecting old session.", username);
+            session->close();  // Предположим, что у ClientSession есть метод close()
+            return true;
+        }
+    }
+
+    return false;
+}

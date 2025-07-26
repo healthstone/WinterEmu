@@ -14,6 +14,9 @@ public:
 
     bool isAuthenticated() { return isAuth; }
 
+    void setUserName(const std::string &username);
+    std::string getUserName() {return username_;}
+
     /** метод, вызываемый, когда acc становится авторизованным **/
     void handle_auth_state();
 
@@ -23,4 +26,5 @@ public:
 private:
     std::shared_ptr<SRP6> srp_ = std::make_shared<SRP6>();
     bool isAuth = false;
+    std::string username_;
 };

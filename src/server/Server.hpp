@@ -22,6 +22,8 @@ public:
     void remove_session(std::shared_ptr<ClientSession> session);
     void log_session_count();
 
+    bool disconnectSessionIfExists(const std::string &username);
+
     std::shared_ptr<Database> db() { return db_; }
     std::shared_ptr<AccountCache> account_cache() { return account_cache_; }
 

@@ -77,7 +77,19 @@ HandlersAuth::handle_logon_challenge(std::shared_ptr<ClientSession> session, Aut
 
     // 2 - делаем верхний регистр
     username = UTF8Utils::to_uppercase(username);
-    session->getAccountInfo()->srp()->set_only_username(username);
+
+    // 2.5 - кикаем все сессии, где уже авторизованы под данным логином + откидываем этого с оповещением, что уже авторизован
+    if (session->server()->disconnectSessionIfExists(username)) {
+        log->warn("[HandlersAuth] Duplicate session for '{}'", username);
+
+        AuthPacket reply(AuthOpcodes::SMSG_AUTH_RESPONSE);
+        reply.write_uint8(static_cast<uint8_t>(AuthStatusCode::AUTH_FAILED));
+        reply.write_uint8(static_cast<uint8_t>(AuthErrorCode::ALREADY_LOGGED_IN));
+        PacketUtils::send_packet_as<AuthPacket>(std::move(session), reply);
+        co_return;
+    }
+
+    session->getAccountInfo()->setUserName(username);
 
     auto cache = session->server()->account_cache();
     auto cached_user_opt = cache->get(username);

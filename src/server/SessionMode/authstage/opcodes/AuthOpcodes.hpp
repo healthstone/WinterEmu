@@ -26,5 +26,6 @@ enum class AuthErrorCode: uint8_t {
     INTERNAL_ERROR = 0,
     WRONG_USERNAME = 1,
     WRONG_PASSWORD = 2,
-    DATABASE_BUSY  = 3
+    DATABASE_BUSY  = 3,
+    ALREADY_LOGGED_IN  = 4
 };
