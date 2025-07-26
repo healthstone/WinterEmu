@@ -99,7 +99,7 @@ void Server::log_session_count() {
 }
 
 bool Server::disconnectSessionIfExists(const std::string &username) {
-    std::lock_guard<std::mutex> lock(sessions_mutex_);
+    //std::lock_guard<std::mutex> lock(sessions_mutex_);
 
     for (auto &session : sessions_) {
         auto accountInfo = session->getAccountInfo();
