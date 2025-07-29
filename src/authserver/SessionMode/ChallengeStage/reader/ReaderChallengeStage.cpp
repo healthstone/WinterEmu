@@ -22,8 +22,25 @@ void ReaderChallengeStage::process_read_buffer(std::shared_ptr<ClientSession> se
     std::vector<uint8_t> payload(data, data + 4 + size);
     buffer.read_completed(4 + size);
 
-    if (static_cast<AuthCmd>(cmd) == AuthCmd::AUTH_LOGON_CHALLENGE)
-        HandlersChallenge::HandleLogonChallenge(session, payload);
-    if (static_cast<AuthCmd>(cmd) == AuthCmd::AUTH_RECONNECT_CHALLENGE)
-        HandlersChallenge::HandleReconnectChallenge(session, payload);
+    switch (static_cast<AuthCmd>(cmd)) {
+        case AuthCmd::AUTH_LOGON_CHALLENGE: {
+            boost::asio::co_spawn(
+                    session->socket().get_executor(),
+                    HandlersChallenge::HandleLogonChallenge(session, payload),
+                    boost::asio::detached
+            );
+            break;
+        }
+        case AuthCmd::AUTH_RECONNECT_CHALLENGE: {
+            boost::asio::co_spawn(
+                    session->socket().get_executor(),
+                    HandlersChallenge::HandleReconnectChallenge(session, payload),
+                    boost::asio::detached
+            );
+            break;
+        }
+        default:
+            Logger::get()->warn("ReaderChallengeStage: Unexpected cmd 0x{:02X}, expected AUTH_LOGON_CHALLENGE or AUTH_RECONNECT_CHALLENGE", data[0]);
+            break;
+    }
 }

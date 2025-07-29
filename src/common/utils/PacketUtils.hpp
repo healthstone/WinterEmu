@@ -1,5 +1,5 @@
 #include <memory>
-#include "src/server/ClientSession/ClientSession.hpp"
+#include "src/authserver/ClientSession/ClientSession.hpp"
 
 namespace PacketUtils {
 
