@@ -1,62 +1,104 @@
 #pragma once
 
+#include "BigNumber.hpp"
+#include "Sha1Hash.hpp"
 #include <vector>
-#include <cstdint>
-#include <openssl/bn.h>
-#include <openssl/sha.h>
 #include <string>
+#include <stdexcept>
 
 class SRP6 {
 public:
-    SRP6();
-    ~SRP6();
+    SRP6() {
+        // N и g — TrinityCore эталон
+        N_.SetHexStr("B79B3E2A87823CAB8F5EBFBF8EB1010853506298B5BADBD5B53E1895E644B89");
+        g_.SetDword(7);
 
-    std::pair<std::vector<uint8_t>, std::vector<uint8_t>> generate_salt_and_verifier_trinity(
-            const std::string& username,
-            const std::string& password
-    );
+        // k = SHA1(N | PAD(g))
+        auto N_bytes = N_.AsBytes();
+        auto g_bytes = PadTo(N_bytes.size(), g_);
+        Sha1Hash sha;
+        sha.Update(N_bytes);
+        sha.Update(g_bytes);
+        auto hash = sha.Finalize();
+        k_.SetBinary(hash.data(), hash.size());
+    }
 
-    void set_only_username(const std::string& username);
-    void load_verifier(const std::vector<uint8_t>& salt, const std::vector<uint8_t>& verifier);
-    void generate_server_ephemeral();
+    void LoadVerifier(const std::vector<uint8_t>& salt, const std::vector<uint8_t>& verifier) {
+        salt_ = salt;
+        v_.SetBinary(verifier.data(), verifier.size());
+    }
 
-    std::vector<uint8_t> get_B_bytes() const;
-    std::vector<uint8_t> get_N_bytes() const;
-    std::vector<uint8_t> get_salt_bytes() const;
-    uint8_t get_generator() const;
+    void GenerateServerEphemeral() {
+        b_.SetRand(256);
+        BigNumber gb = g_.ModExp(b_, N_);
+        BigNumber kv = k_.ModMul(v_, N_);
+        B_ = kv.ModAdd(gb, N_);
+    }
 
-    // --- Для клиента ---
-    void load_constants(const std::vector<uint8_t>& N, uint8_t g);
-    void load_salt(const std::vector<uint8_t>& salt);
-    void set_credentials(const std::string& username, const std::string& password);
-    void generate_client_ephemeral();
+    std::vector<uint8_t> GetBBytes() const {
+        return B_.AsBytes();
+    }
 
-    std::string getUserName() const {return username_;}
+    std::vector<uint8_t> GetNBytes() const {
+        return N_.AsBytes();
+    }
 
-    const std::vector<uint8_t>& get_last_M1() const;
-    std::vector<uint8_t> get_A_bytes() const;
-    std::vector<uint8_t> compute_M1(const std::vector<uint8_t>& B_bytes);
-    bool verify_client_proof(const std::vector<uint8_t>& A_bytes, const std::vector<uint8_t>& M1_client, std::vector<uint8_t>& M2);
-    bool verify_server_proof(const std::vector<uint8_t>& last_M1, const std::vector<uint8_t>& M2_server);
+    uint8_t GetGenerator() const {
+        return 7;
+    }
+
+    std::vector<uint8_t> GetSalt() const {
+        return salt_;
+    }
+
+    // --- u = SHA1(A | B)
+    BigNumber CalculateU(const BigNumber& A, const BigNumber& B) {
+        auto A_bytes = A.AsBytes();
+        auto B_bytes = B.AsBytes();
+        Sha1Hash sha;
+        sha.Update(A_bytes);
+        sha.Update(B_bytes);
+        auto u_bytes = sha.Finalize();
+
+        BigNumber u;
+        u.SetBinary(u_bytes.data(), u_bytes.size());
+        return u;
+    }
+
+    // S = (A * v^u) ^ b mod N
+    BigNumber CalculateS(const BigNumber& A) {
+        BigNumber u = CalculateU(A, B_);
+        BigNumber vu = v_.ModExp(u, N_);
+        BigNumber Avu = A.ModMul(vu, N_);
+        S_ = Avu.ModExp(b_, N_);
+        return S_;
+    }
+
+    std::vector<uint8_t> CalculateSessionKey() {
+        auto S_bytes = S_.AsBytes();
+        Sha1Hash sha;
+        sha.Update(S_bytes);
+        session_key_ = sha.Finalize();
+        return session_key_;
+    }
 
 private:
-    void init_constants();
-    BIGNUM* calculate_k() const;
+    std::vector<uint8_t> PadTo(size_t size, const BigNumber& num) {
+        auto bytes = num.AsBytes();
+        if (bytes.size() >= size)
+            return bytes;
+        std::vector<uint8_t> padded(size, 0);
+        std::copy_backward(bytes.begin(), bytes.end(), padded.end());
+        return padded;
+    }
 
+    BigNumber N_;
+    BigNumber g_;
+    BigNumber k_;
+    BigNumber v_;
+    BigNumber b_;
+    BigNumber B_;
+    BigNumber S_;
     std::vector<uint8_t> salt_;
-    std::string username_;
-    std::string password_;
-
-    BIGNUM* v_ = nullptr;
-    BIGNUM* b_ = nullptr;
-    BIGNUM* B_ = nullptr;
-    BIGNUM* N_ = nullptr;
-    BIGNUM* g_ = nullptr;
-    BIGNUM* k_ = nullptr;
-    BIGNUM* a_ = nullptr;
-    BIGNUM* A_ = nullptr;
-
-    BN_CTX* bn_ctx_ = nullptr;
-
-    std::vector<uint8_t> last_M1_;
+    std::vector<uint8_t> session_key_;
 };

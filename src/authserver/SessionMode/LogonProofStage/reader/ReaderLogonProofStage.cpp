@@ -29,5 +29,10 @@ void ReaderLogonProofStage::process_read_buffer(std::shared_ptr<ClientSession> s
 
     std::vector<uint8_t> payload(data, data + packet_size);
     buffer.read_completed(packet_size);
-    HandlersLogonProofStage::HandleLogonProof(session, payload);
+
+    boost::asio::co_spawn(
+            session->socket().get_executor(),
+            HandlersLogonProofStage::HandleLogonProof(session, payload),
+            boost::asio::detached
+    );
 }

@@ -7,5 +7,5 @@
 /** only AUTH_LOGON_PROOF **/
 namespace HandlersLogonProofStage
 {
-    void HandleLogonProof(std::shared_ptr<ClientSession> session, const std::vector<uint8_t>& payload);
+    boost::asio::awaitable<void> HandleLogonProof(std::shared_ptr<ClientSession> session, const std::vector<uint8_t>& payload);
 }

@@ -3,14 +3,13 @@
 
 void AccountInfo::setUserName(const std::string &username) {
     username_ = username;
-    srp()->set_only_username(username);
 }
 
 void AccountInfo::handle_auth_state() {
     setIsAuthenticated(true);
-    Logger::get()->info("Account {} was successfully authorized", srp()->getUserName());
+    Logger::get()->info("Account {} was successfully authorized", username_);
 }
 
 void AccountInfo::handle_close_state() {
-    Logger::get()->info("Account {} was successfully closed connection", srp()->getUserName());
+    Logger::get()->info("Account {} was successfully closed connection", username_);
 }

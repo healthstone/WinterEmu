@@ -26,7 +26,7 @@ void ReaderChallengeStage::process_read_buffer(std::shared_ptr<ClientSession> se
         case AuthCmd::AUTH_LOGON_CHALLENGE: {
             boost::asio::co_spawn(
                     session->socket().get_executor(),
-                    HandlersChallenge::HandleLogonChallenge(session, payload),
+                    HandlersChallenge::HandleLogonChallenge("AUTH_LOGON_CHALLENGE", session, payload),
                     boost::asio::detached
             );
             break;
@@ -34,7 +34,7 @@ void ReaderChallengeStage::process_read_buffer(std::shared_ptr<ClientSession> se
         case AuthCmd::AUTH_RECONNECT_CHALLENGE: {
             boost::asio::co_spawn(
                     session->socket().get_executor(),
-                    HandlersChallenge::HandleReconnectChallenge(session, payload),
+                    HandlersChallenge::HandleLogonChallenge("AUTH_RECONNECT_CHALLENGE", session, payload),
                     boost::asio::detached
             );
             break;
