@@ -114,9 +114,24 @@ public:
 
     std::string read_string_raw_le(size_t length) {
         check_read(length, ReadSource::READ_STRING_RAW);
+
         std::string str(reinterpret_cast<const char*>(&buffer_[read_pos_]), length);
         read_pos_ += length;
-        std::reverse(str.begin(), str.end());
+
+        // Если последний символ - нулевой байт, то разворачиваем все, кроме последнего символа
+        if (!str.empty() && str.back() == '\0') {
+            std::reverse(str.begin(), str.end() - 1);
+        } else {
+            // Иначе разворачиваем всю строку целиком
+            std::reverse(str.begin(), str.end());
+        }
+
+        // Обрезаем всё после первого '\0' если он есть (на всякий случай)
+        auto pos = str.find('\0');
+        if (pos != std::string::npos) {
+            str.resize(pos);
+        }
+
         return str;
     }
 
