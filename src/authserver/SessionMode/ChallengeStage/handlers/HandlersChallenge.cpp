@@ -9,7 +9,10 @@
 
 using namespace HandlersChallenge;
 
-std::array<uint8_t, 16> VersionChallenge = { { 0xBA, 0xA3, 0x1E, 0x99, 0xA0, 0x0B, 0x21, 0x57, 0xFC, 0x37, 0x3F, 0xB3, 0x69, 0xCD, 0xD2, 0xF1 } };
+uint8_t VersionChallenge[16] = {
+        0xBA, 0xA3, 0x1E, 0x99, 0xA0, 0x0B, 0x21, 0x57,
+        0xFC, 0x37, 0x3F, 0xB3, 0x69, 0xCD, 0xD2, 0xF1
+};
 
 boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::string &opcode_name, std::shared_ptr<ClientSession> session, const std::vector<uint8_t>& payload) {
     auto log = Logger::get();
@@ -194,12 +197,7 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
             auto salt = srp->GetSalt();
             reply.write_bytes(salt.data(), salt.size());
 
-            // Твоя версия клиента (16 байт), например:
-            uint8_t version[16] = {
-                    0xBA, 0xA3, 0x1E, 0x99, 0xA0, 0x0B, 0x21, 0x57,
-                    0xFC, 0x37, 0x3F, 0xB3, 0x69, 0xCD, 0xD2, 0xF1
-            };
-            reply.write_bytes(version, 16);
+            reply.write_bytes(VersionChallenge, 16);
             reply.write_uint8(0x00); // securityFlags
 
             // 👉 Лог и отправка
