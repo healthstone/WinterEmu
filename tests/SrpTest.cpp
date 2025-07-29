@@ -62,7 +62,7 @@ TEST_CASE("SRP6: load verifier stores salt and verifier", "[srp6]") {
     std::cout << "✅ 'SRP6: load verifier stores salt and verifier\n";
 }
 
-TEST_CASE("SRP6: server ephemeral generates different B each time", "[srp6]") {
+TEST_CASE("SRP6: authserver ephemeral generates different B each time", "[srp6]") {
     SRP6 srp;
     std::vector<uint8_t> salt = { 1, 2, 3, 4, 5 };
     std::vector<uint8_t> verifier(32, 0x01);
@@ -76,5 +76,5 @@ TEST_CASE("SRP6: server ephemeral generates different B each time", "[srp6]") {
     auto B2 = srp.get_B_bytes();
 
     REQUIRE(B1 != B2);
-    std::cout << "✅ 'SRP6: server ephemeral generates different B each time\n";
+    std::cout << "✅ 'SRP6: authserver ephemeral generates different B each time\n";
 }

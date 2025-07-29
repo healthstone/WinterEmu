@@ -127,7 +127,7 @@ Example for Linux:
 export DB_URL=192.168.1.100
 export DB_USER=myuser
 export DB_PASSWORD=mypass
-./server
+./authserver
 ```
 
 This makes it easy to configure the server without changing the source code! ✅

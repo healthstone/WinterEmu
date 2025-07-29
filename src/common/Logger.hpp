@@ -131,7 +131,7 @@ private:
 
             if (enable_file_log) {
                 auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-                        "logs/server.log", 1024 * 1024 * 5, 3);
+                        "logs/authserver.log", 1024 * 1024 * 5, 3);
                 file_sink->set_level(spdlog::level::debug);
                 file_sink->set_formatter(std::make_unique<JsonFormatter>());
                 sinks.push_back(file_sink);

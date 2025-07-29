@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11)
-project(purity)
+project(WinterEmu)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,8 +18,7 @@ set(SPDLOG_DIR ${CMAKE_SOURCE_DIR}/deps/spdlog-1.15.3)
 add_subdirectory(${SPDLOG_DIR})
 
 file(GLOB_RECURSE COMMON_SOURCES CONFIGURE_DEPENDS src/common/*.cpp)
-file(GLOB_RECURSE CLIENT_SOURCES CONFIGURE_DEPENDS src/Client/*.cpp)
-file(GLOB_RECURSE SERVER_SOURCES CONFIGURE_DEPENDS src/server/*.cpp)
+file(GLOB_RECURSE SERVER_SOURCES CONFIGURE_DEPENDS src/authserver/*.cpp)
 file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS tests/*.cpp)
 
 set(COMMON_INCLUDE_DIRS
@@ -27,33 +26,14 @@ set(COMMON_INCLUDE_DIRS
         ${CMAKE_SOURCE_DIR}/src/common/database
 )
 
-# === Клиент ===
-add_executable(client
-        src/main_client.cpp
-        ${CLIENT_SOURCES}
-        ${COMMON_SOURCES}
-)
-
-target_link_libraries(client PRIVATE
-        Boost::boost Boost::system
-        spdlog::spdlog
-        OpenSSL::Crypto
-)
-
-target_include_directories(client PRIVATE
-        ${COMMON_INCLUDE_DIRS}
-        ${CMAKE_SOURCE_DIR}
-        ${Boost_INCLUDE_DIRS}
-)
-
 # === Сервер ===
-add_executable(server
-        src/main_server.cpp
+add_executable(authserver
+        src/main_authserver.cpp
         ${SERVER_SOURCES}
         ${COMMON_SOURCES}
 )
 
-target_link_libraries(server PRIVATE
+target_link_libraries(authserver PRIVATE
         Boost::boost Boost::system
         ${PostgreSQL_LIBRARIES}
         ${PQXX_LIBRARIES}
@@ -61,7 +41,7 @@ target_link_libraries(server PRIVATE
         OpenSSL::Crypto
 )
 
-target_include_directories(server PRIVATE
+target_include_directories(authserver PRIVATE
         ${COMMON_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}
         ${Boost_INCLUDE_DIRS}
