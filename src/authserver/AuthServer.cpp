@@ -9,10 +9,7 @@ AuthServer::AuthServer(boost::asio::io_context &io_context,
                        std::shared_ptr<Database> db,
                        int port)
         : io_context_(io_context), acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
-          db_(std::move(db)),
-          account_cache_(std::make_shared<AccountCache>(io_context, std::chrono::minutes(5), std::chrono::minutes(1)))
-{
-
+          db_(std::move(db)) {
 }
 
 void AuthServer::start_accept() {
@@ -69,7 +66,7 @@ void AuthServer::stop() {
             sessions_copy = sessions_;
         }
 
-        for (auto &s : sessions_copy) {
+        for (auto &s: sessions_copy) {
             if (s->isOpened()) s->close();
         }
     }
@@ -99,7 +96,7 @@ void AuthServer::log_session_count() {
 }
 
 bool AuthServer::disconnectSessionIfExists(const std::string &username) {
-    for (auto &session : sessions_) {
+    for (auto &session: sessions_) {
         auto accountInfo = session->getAccountInfo();
         if (accountInfo && accountInfo->getUserName() == username) {
             Logger::get()->warn("[AuthServer] Found duplicate session for '{}', disconnecting old session.", username);
@@ -117,6 +114,8 @@ void AuthServer::init() {
 
     realmList_ = std::make_shared<RealmList>(io_context_, shared_from_this(), std::chrono::seconds(20));
     realmList_->load_realms(true);
+
+    account_cache_ = std::make_shared<AccountCache>(io_context_, std::chrono::minutes(5), std::chrono::minutes(1));
 
     // Запускаем всякие таймеры
     account_cache_->start();

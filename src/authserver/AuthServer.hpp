@@ -34,7 +34,8 @@ private:
     boost::asio::io_context &io_context_;
     boost::asio::ip::tcp::acceptor acceptor_;
     const std::shared_ptr<Database> db_;
-    const std::shared_ptr<AccountCache> account_cache_;
+
+    std::shared_ptr<AccountCache> account_cache_;
     std::shared_ptr<RealmList> realmList_;
 
     std::unordered_set<std::shared_ptr<ClientSession>> sessions_;
