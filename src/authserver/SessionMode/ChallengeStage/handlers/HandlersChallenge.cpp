@@ -172,27 +172,32 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
             RawPacket reply;
             reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE));
             reply.write_uint8(0);
-            reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS));
 
-            reply.write_bytes(srp.B.data(), srp.B.size());
+            if (AuthHelper::IsAcceptedClientBuild(session->_build)) {
+                reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS));
 
-            reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::g.size()));
-            reply.write_uint8(Crypto::SRP6::g[0]);
+                reply.write_bytes(srp.B.data(), srp.B.size());
 
-            reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::N.size()));
-            reply.write_bytes(Crypto::SRP6::N.data(), Crypto::SRP6::N.size());
+                reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::g.size()));
+                reply.write_uint8(Crypto::SRP6::g[0]);
 
-            reply.write_bytes(srp.s.data(), srp.s.size());
+                reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::N.size()));
+                reply.write_bytes(Crypto::SRP6::N.data(), Crypto::SRP6::N.size());
 
-            reply.write_bytes(VersionChallenge, 16);
-            reply.write_uint8(0x00);
+                reply.write_bytes(srp.s.data(), srp.s.size());
+
+                reply.write_bytes(VersionChallenge, 16);
+                reply.write_uint8(0x00);
+
+                session->set_session_mode(SessionMode::STATUS_LOGON_PROOF);
+            }
+            else {
+                reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_VERSION_INVALID));
+            }
 
             // 👉 Лог и отправка
             Packet::log_raw_payload("AUTH_LOGON_CHALLENGE", reply.serialize());
-            session->set_session_mode(SessionMode::STATUS_LOGON_PROOF);
-
             PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
-
             co_return;
         }
         catch (const std::exception &ex) {

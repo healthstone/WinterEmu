@@ -12,8 +12,6 @@ void ReaderRealmStage::process_read_buffer(std::shared_ptr<ClientSession> sessio
     auto& buffer = session->read_buffer();
 
     constexpr size_t packet_size = REALM_LIST_PACKET_SIZE;
-
-    Logger::get()->warn("ReaderAuthStage: buffer.get_active_size() = {}", buffer.get_active_size());
     if (buffer.get_active_size() < packet_size)
         return;
 
