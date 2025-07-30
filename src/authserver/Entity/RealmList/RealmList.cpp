@@ -89,8 +89,8 @@ void RealmList::load_realms(bool isFirst) {
 }
 
 boost::asio::awaitable<void> RealmList::update() {
-    co_await boost::asio::post(strand_, boost::asio::use_awaitable);
     load_realms();
+    co_return;
 }
 
 std::optional<std::reference_wrapper<const Realm>> RealmList::get(const RealmHandle &id) const {
