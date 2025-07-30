@@ -66,9 +66,9 @@ public:
         return ScopedConnection(*this, std::move(conn));
     }
 
-    /// Выполнить запрос синхронно
+    /// Выполнить запрос одиночный запрос( возврат 0 или 1 строки)
     template<typename Struct>
-    std::optional<Struct> execute_sync(const PreparedStatement &stmt) {
+    std::optional<Struct> execute_sync_one(const PreparedStatement &stmt) {
         auto scoped = acquire_scoped_connection();
 
         try {
@@ -94,6 +94,38 @@ public:
             }
 
             return PgRowMapper<Struct>::map(result[0]);
+        }
+        catch (const pqxx::broken_connection &) {
+            Logger::get()->error("[Database] Connection broken. Attempting to reconnect.");
+            auto reconnect = reconnect_connection();
+            if (!reconnect) throw std::runtime_error("Reconnection failed");
+            throw;
+        }
+    }
+
+    template<typename Struct>
+    std::vector<Struct> execute_sync_many(const PreparedStatement &stmt) {
+        auto scoped = acquire_scoped_connection();
+
+        try {
+            pqxx::work txn(scoped.get());
+            auto invoc = txn.prepared(stmt.name());
+            for (const auto &param: stmt.params()) {
+                if (param.has_value()) {
+                    invoc(param.value());
+                } else {
+                    invoc(static_cast<const char *>(nullptr));
+                }
+            }
+
+            auto result = invoc.exec();
+            txn.commit();
+
+            std::vector<Struct> rows;
+            for (auto const& row : result) {
+                rows.push_back(PgRowMapper<Struct>::map(row));
+            }
+            return rows;
         }
         catch (const pqxx::broken_connection &) {
             Logger::get()->error("[Database] Connection broken. Attempting to reconnect.");
@@ -143,11 +175,16 @@ private:
         pqxx::work txn(conn);
         conn.prepare("SELECT_ACCOUNT_BY_USERNAME",
                      "SELECT id, username, salt, verifier, email, created_at FROM accounts WHERE username = $1");
-        conn.prepare("INSERT_ACCOUNT_BY_USERNAME",
-                     "INSERT INTO accounts (username, salt, verifier) VALUES ($1, $2, $3) RETURNING id");
+        conn.prepare("SELECT_BUILD_INFO",
+                     "SELECT majorVersion, minorVersion, bugfixVersion, hotfixVersion, build FROM build_info ORDER BY build ASC");
+        conn.prepare("SELECT_BUILD_EXECUTABLE_HASH",
+                     "SELECT build, platform, executableHash FROM build_executable_hash");
 
         conn.prepare("UPDATE_LOGIN_LOGONPROOF",
                      "UPDATE accounts SET session_key_auth = decode($1, 'hex'), last_ip = $2, last_login = NOW() WHERE username = $3");
+
+        conn.prepare("INSERT_ACCOUNT_BY_USERNAME",
+                     "INSERT INTO accounts (username, salt, verifier) VALUES ($1, $2, $3) RETURNING id");
         txn.commit();
     }
 

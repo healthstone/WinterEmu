@@ -1,6 +1,7 @@
 #include "AuthServer.hpp"
 #include "ClientSession/ClientSession.hpp"
 #include "Logger.hpp"
+#include "src/authserver/Entity/ClientBuildInfo/ClientBuildInfo.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -11,6 +12,9 @@ AuthServer::AuthServer(boost::asio::io_context &io_context,
           db_(std::move(db)),
           account_cache_(std::make_shared<AccountCache>(io_context, std::chrono::minutes(5), std::chrono::minutes(1)))
 {
+    // Загружаем различные данные
+    ClientBuild::LoadBuildInfo(db_);
+
     account_cache_->start(); // <-- Запускаем таймер только после make_shared
 }
 
@@ -45,6 +49,8 @@ void AuthServer::start_accept() {
 
 void AuthServer::stop() {
     auto log = Logger::get();
+
+    ClientBuild::Clear();
 
     if (account_cache_) {
         account_cache_->stop();

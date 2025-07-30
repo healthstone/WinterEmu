@@ -5,7 +5,7 @@
 #include <vector>
 #include <chrono>
 #include <optional>
-
+#include <algorithm>
 #include "utils/TimeUtils.hpp"
 
 // === Структуры ===
@@ -19,12 +19,56 @@ struct AccountsRow {
     std::optional<std::chrono::system_clock::time_point> created_at;
 };
 
+struct BuildInfoRow {
+    std::optional<uint32_t> majorVersion;
+    std::optional<uint32_t> minorVersion;
+    std::optional<uint32_t> bugfixVersion;
+    std::optional<std::string> hotfixVersion;
+    uint32_t build; // Primary Key, NOT NULL
+};
+
+struct BuildExeHashRow {
+    uint32_t build;
+    std::string platform;
+    std::array<uint8_t, 20> executableHash; // Например SHA1 = 20 байт
+};
+
 struct NothingRow {};
 
 // === Шаблон PgRowMapper ===
 
 template<typename T>
 struct PgRowMapper;
+
+
+template<>
+struct PgRowMapper<BuildInfoRow> {
+    static BuildInfoRow map(const pqxx::row& r) {
+        BuildInfoRow row;
+        row.majorVersion = r["majorversion"].is_null() ? std::nullopt : std::make_optional(r["majorversion"].as<uint32_t>());
+        row.minorVersion = r["minorversion"].is_null() ? std::nullopt : std::make_optional(r["minorversion"].as<uint32_t>());
+        row.bugfixVersion = r["bugfixversion"].is_null() ? std::nullopt : std::make_optional(r["bugfixversion"].as<uint32_t>());
+        row.hotfixVersion = r["hotfixversion"].is_null() ? std::nullopt : std::make_optional(r["hotfixversion"].as<std::string>());
+        row.build = r["build"].as<uint32_t>();
+        return row;
+    }
+};
+
+template<>
+struct PgRowMapper<BuildExeHashRow> {
+    static BuildExeHashRow map(const pqxx::row& r) {
+        BuildExeHashRow row;
+        row.build = r["build"].as<uint32_t>();
+        row.platform = r["platform"].as<std::string>();
+
+        pqxx::binarystring hash_bin(r["executableHash"]);
+        if (hash_bin.size() != row.executableHash.size())
+            throw std::runtime_error("PgRowMapper: Invalid executableHash size, expected 20 bytes");
+        std::copy_n(hash_bin.begin(), hash_bin.size(), row.executableHash.begin());
+
+        return row;
+    }
+};
 
 template<>
 struct PgRowMapper<AccountsRow> {

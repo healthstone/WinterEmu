@@ -6,6 +6,7 @@
 #include "utils/utf8utils/UTF8Utils.hpp"
 #include "packet/RawPacket.hpp"
 #include "utils/PacketUtils.hpp"
+#include "src/authserver/Entity/AuthCodes/AuthCodes.hpp"
 
 using namespace HandlersChallenge;
 
@@ -71,6 +72,11 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
         }
 
         session->getAccountInfo()->setUserName(username);
+        session->_build = build;
+        session->_expversion = uint8_t(AuthHelper::IsPostBCAcceptedClientBuild(build) ? POST_BC_EXP_FLAG : (AuthHelper::IsPreBCAcceptedClientBuild(build) ? PRE_BC_EXP_FLAG : NO_VALID_EXP_FLAG));
+
+        session->_timezoneOffset = timezone_bias;
+        session->_localizationName = country;
 
         auto cache = session->server()->account_cache();
         auto cached_user_opt = cache->get(username);
@@ -122,7 +128,7 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
             PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
             stmt.set_param(0, username);
 
-            auto user = session->server()->db()->execute_sync<AccountsRow>(stmt);
+            auto user = session->server()->db()->execute_sync_one<AccountsRow>(stmt);
 
             // 5 - если нет аккаунта
             if (!user) {

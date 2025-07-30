@@ -17,8 +17,8 @@ enum class SessionMode {
     STATUS_CHALLENGE = 0,
     STATUS_LOGON_PROOF,
     STATUS_RECONNECT_PROOF,
-    STATUS_AUTHED,
     STATUS_WAITING_FOR_REALM_LIST,
+    STATUS_AUTHED,
     STATUS_CLOSED
 };
 
@@ -47,6 +47,7 @@ public:
         return read_buffer_;
     }
 
+    // AuthSession part
     AccountInfo *getAccountInfo() { return accountInfo_.get(); }
 
     std::optional<Crypto::SRP6> _srp6;
@@ -57,6 +58,7 @@ public:
     std::string _ipCountry;
     uint16_t _build;
     uint16_t _timezoneOffset;
+    uint8_t _expversion;
 
 private:
     void do_read();

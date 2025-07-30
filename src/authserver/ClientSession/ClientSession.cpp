@@ -3,7 +3,7 @@
 #include "src/authserver/SessionMode/ChallengeStage/reader/ReaderChallengeStage.hpp"
 #include "src/authserver/SessionMode/LogonProofStage/reader/ReaderLogonProofStage.hpp"
 #include "src/authserver/SessionMode/ReconnectProofStage/reader/ReaderReconnectProofStage.hpp"
-#include "src/authserver/SessionMode/AuthedStage/reader/ReaderAuthStage.hpp"
+#include "src/authserver/SessionMode/RealmStage//reader/ReaderRealmStage.hpp"
 #include <iostream>
 
 using boost::asio::ip::tcp;
@@ -95,8 +95,8 @@ void ClientSession::process_read_buffer() {
         case SessionMode::STATUS_RECONNECT_PROOF:
             ReaderReconnectProofStage::process_read_buffer(shared_from_this());
             break;
-        case SessionMode::STATUS_AUTHED:
-            ReaderAuthStage::process_read_buffer(shared_from_this());
+        case SessionMode::STATUS_WAITING_FOR_REALM_LIST:
+            ReaderRealmStage::process_read_buffer(shared_from_this());
             break;
         default:
             Logger::get()->error("[client_session][process_read_buffer] Unknown session mode!");

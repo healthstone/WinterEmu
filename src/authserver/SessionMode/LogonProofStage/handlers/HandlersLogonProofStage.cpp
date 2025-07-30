@@ -4,6 +4,7 @@
 #include "src/authserver/enums/AuthResult.hpp"
 #include "utils/PacketUtils.hpp"
 #include "utils/NetUtils.hpp"
+#include "src/authserver/Entity/AuthCodes/AuthCodes.hpp"
 
 using namespace HandlersLogonProofStage;
 
@@ -70,7 +71,7 @@ boost::asio::awaitable<void> HandlersLogonProofStage::HandleLogonProof(std::shar
             stmt.set_param(1, safe_ip);
             stmt.set_param(2, session->getAccountInfo()->getUserName());
 
-            session->server()->db()->execute_sync<NothingRow>(stmt);
+            session->server()->db()->execute_sync_one<NothingRow>(stmt);
         } catch (const std::exception& e) {
             log->error("[HandleLogonProof] Database update error: {}", e.what());
             RawPacket failReply;
@@ -84,13 +85,21 @@ boost::asio::awaitable<void> HandlersLogonProofStage::HandleLogonProof(std::shar
         // 9. Отправка подтверждения клиенту (M2)
         auto M2 = Crypto::SRP6::GetSessionVerifier(A, clientM, *K_opt);
 
-        RawPacket reply;
-        reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_PROOF));
-        reply.write_uint8(0x00); // reserved or error = 0
-        reply.write_bytes(M2.data(), M2.size());
+        RawPacket packet;
+        packet.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_PROOF));
+        packet.write_uint8(0x00); // reserved or error = 0
+        packet.write_bytes(M2.data(), M2.size());
 
-        session->set_session_mode(SessionMode::STATUS_AUTHED);
-        PacketUtils::send_packet_as<RawPacket>(session, reply);
+        if (session->_expversion & POST_BC_EXP_FLAG) {  // 2.x and 3.x clients
+            packet.write_uint32_le(0x00800000);         // AccountFlags
+            packet.write_uint32_le(0);                  // SurveyId
+            packet.write_uint16_le(0);                  // LoginFlags
+        } else {
+            packet.write_uint32_le(0);                  // unk2
+        }
+
+        session->set_session_mode(SessionMode::STATUS_WAITING_FOR_REALM_LIST);
+        PacketUtils::send_packet_as<RawPacket>(session, packet);
         co_return;
     }
     catch (const std::exception& ex) {
