@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <vector>
 #include <string>
 #include <cstdint>
@@ -279,6 +280,15 @@ public:
         std::vector<uint8_t> bytes(buffer_.begin() + read_pos_, buffer_.begin() + read_pos_ + length);
         read_pos_ += length;
         return bytes;
+    }
+
+    template <size_t N>
+    std::array<uint8_t, N> read_bytes_as_array() {
+        check_read(N, ReadSource::READ_BYTES);
+        std::array<uint8_t, N> arr{};
+        std::copy(buffer_.begin() + read_pos_, buffer_.begin() + read_pos_ + N, arr.begin());
+        read_pos_ += N;
+        return arr;
     }
 
     // ==================== UTILITY METHODS ====================

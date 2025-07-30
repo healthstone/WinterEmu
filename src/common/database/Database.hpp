@@ -145,6 +145,9 @@ private:
                      "SELECT id, username, salt, verifier, email, created_at FROM accounts WHERE username = $1");
         conn.prepare("INSERT_ACCOUNT_BY_USERNAME",
                      "INSERT INTO accounts (username, salt, verifier) VALUES ($1, $2, $3) RETURNING id");
+
+        conn.prepare("UPDATE_LOGIN_LOGONPROOF",
+                     "UPDATE accounts SET session_key_auth = decode($1, 'hex'), last_ip = $2, last_login = NOW() WHERE username = $3");
         txn.commit();
     }
 

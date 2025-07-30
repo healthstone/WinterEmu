@@ -50,6 +50,13 @@ public:
     AccountInfo *getAccountInfo() { return accountInfo_.get(); }
 
     std::optional<Crypto::SRP6> _srp6;
+    SessionKey _sessionKey = {};
+    std::optional<std::vector<uint8_t>> _totpSecret;
+    std::string _localizationName;
+    std::string _os;
+    std::string _ipCountry;
+    uint16_t _build;
+    uint16_t _timezoneOffset;
 
 private:
     void do_read();

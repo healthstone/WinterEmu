@@ -37,7 +37,7 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
         uint8_t I_len = buffer.read_uint8();
         std::string username = buffer.read_string_raw_le(I_len);
 
-        log->trace(
+        log->debug(
                 "{}: cmd=0x{:02X} size={} Game: {} Version: {}.{}.{} Build: {} Platform: {} OS: {} Country: {} TZ: {} IP: {} Username: {}",
                 opcode_name, cmd, size, gamename, v1, v2, v3, build, platform, os, country, timezone_bias, NetUtils::uint32_to_ip_le(ip), username);
 
@@ -75,11 +75,7 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
         auto cache = session->server()->account_cache();
         auto cached_user_opt = cache->get(username);
 
-        auto auth = session->getAccountInfo();
-
         uint8_t securityFlags = 0;
-
-
 
         // 3 - пробуем взять из кэша
         if (cached_user_opt) {

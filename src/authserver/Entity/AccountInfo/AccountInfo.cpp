@@ -6,7 +6,6 @@ void AccountInfo::setUserName(const std::string &username) {
 }
 
 void AccountInfo::handle_auth_state() {
-    setIsAuthenticated(true);
     Logger::get()->info("Account {} was successfully authorized", username_);
 }
 
