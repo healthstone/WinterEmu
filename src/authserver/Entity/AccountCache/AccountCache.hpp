@@ -8,15 +8,17 @@
 
 class AccountCache : public std::enable_shared_from_this<AccountCache> {
 public:
-    AccountCache(boost::asio::io_context& io_context,
-                 std::chrono::seconds ttl = std::chrono::minutes(5),
-                 std::chrono::seconds cleanup_interval = std::chrono::minutes(1))
+    explicit AccountCache(boost::asio::io_context &io_context,
+                          std::chrono::seconds ttl = std::chrono::minutes(5),
+                          std::chrono::seconds cleanup_interval = std::chrono::minutes(1))
             : io_context_(io_context),
               cleanup_timer_(io_context),
               ttl_(ttl),
-              cleanup_interval_(cleanup_interval)
-    {
-        // ❌ В конструкторе НЕ запускаем таймер!
+              cleanup_interval_(cleanup_interval) {
+    }
+
+    ~AccountCache() {
+        stop();
     }
 
     void start() {
@@ -26,6 +28,7 @@ public:
     void stop() {
         boost::system::error_code ec;
         cleanup_timer_.cancel(ec);
+        cache_.clear();
     }
 
     struct AccountCacheEntry {
@@ -34,7 +37,7 @@ public:
         std::chrono::steady_clock::time_point last_access; // скользящий TTL
     };
 
-    std::optional<AccountCacheEntry> get(const std::string& username) {
+    std::optional<AccountCacheEntry> get(const std::string &username) {
         std::lock_guard lock(mutex_);
         auto it = cache_.find(username);
         if (it == cache_.end()) return std::nullopt;
@@ -50,7 +53,7 @@ public:
         return it->second;
     }
 
-    void put(const std::string& username, const AccountCacheEntry& entry) {
+    void put(const std::string &username, const AccountCacheEntry &entry) {
         std::lock_guard lock(mutex_);
         auto now = std::chrono::steady_clock::now();
         auto new_entry = entry;
@@ -58,7 +61,7 @@ public:
         cache_[username] = std::move(new_entry);
     }
 
-    void invalidate(const std::string& username) {
+    void invalidate(const std::string &username) {
         std::lock_guard lock(mutex_);
         cache_.erase(username);
     }
@@ -66,7 +69,7 @@ public:
 private:
     void start_cleanup_timer() {
         cleanup_timer_.expires_after(cleanup_interval_);
-        cleanup_timer_.async_wait([self = shared_from_this()](const boost::system::error_code& ec) {
+        cleanup_timer_.async_wait([self = shared_from_this()](const boost::system::error_code &ec) {
             if (!ec) {
                 self->cleanup_expired_entries();
                 self->start_cleanup_timer();
@@ -79,7 +82,7 @@ private:
         std::lock_guard lock(mutex_);
         auto now = std::chrono::steady_clock::now();
 
-        for (auto it = cache_.begin(); it != cache_.end(); ) {
+        for (auto it = cache_.begin(); it != cache_.end();) {
             if (now - it->second.last_access > ttl_) {
                 it = cache_.erase(it);
             } else {
@@ -88,7 +91,7 @@ private:
         }
     }
 
-    boost::asio::io_context& io_context_;
+    boost::asio::io_context &io_context_;
     boost::asio::steady_timer cleanup_timer_;
 
     std::unordered_map<std::string, AccountCacheEntry> cache_;

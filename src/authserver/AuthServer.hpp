@@ -7,7 +7,8 @@
 
 #include "Database.hpp"
 #include "ClientSession/ClientSession.hpp"
-#include "AccountCache/AccountCache.hpp"
+#include "Entity/AccountCache/AccountCache.hpp"
+#include "src/authserver/Entity/RealmList/RealmList.hpp"
 
 class ClientSession;
 
@@ -24,14 +25,17 @@ public:
 
     bool disconnectSessionIfExists(const std::string &username);
 
+    void init();
+
     std::shared_ptr<Database> db() { return db_; }
     std::shared_ptr<AccountCache> account_cache() { return account_cache_; }
 
 private:
     boost::asio::io_context &io_context_;
     boost::asio::ip::tcp::acceptor acceptor_;
-    std::shared_ptr<Database> db_;
-    std::shared_ptr<AccountCache> account_cache_;
+    const std::shared_ptr<Database> db_;
+    const std::shared_ptr<AccountCache> account_cache_;
+    std::shared_ptr<RealmList> realmList_;
 
     std::unordered_set<std::shared_ptr<ClientSession>> sessions_;
     std::mutex sessions_mutex_;

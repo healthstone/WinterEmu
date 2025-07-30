@@ -179,6 +179,8 @@ private:
                      "SELECT majorVersion, minorVersion, bugfixVersion, hotfixVersion, build FROM build_info ORDER BY build ASC");
         conn.prepare("SELECT_BUILD_EXECUTABLE_HASH",
                      "SELECT build, platform, executableHash FROM build_executable_hash");
+        conn.prepare("SELECT_REALMLIST",
+                     "SELECT id, name, address, local_address, local_subnet_mask, port, icon, flag, timezone, allowed_security_level, population, gamebuild FROM realmlist WHERE flag <> 3 ORDER BY name");
 
         conn.prepare("UPDATE_LOGIN_LOGONPROOF",
                      "UPDATE accounts SET session_key_auth = decode($1, 'hex'), last_ip = $2, last_login = NOW() WHERE username = $3");

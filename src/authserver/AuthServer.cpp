@@ -12,10 +12,7 @@ AuthServer::AuthServer(boost::asio::io_context &io_context,
           db_(std::move(db)),
           account_cache_(std::make_shared<AccountCache>(io_context, std::chrono::minutes(5), std::chrono::minutes(1)))
 {
-    // Загружаем различные данные
-    ClientBuild::LoadBuildInfo(db_);
 
-    account_cache_->start(); // <-- Запускаем таймер только после make_shared
 }
 
 void AuthServer::start_accept() {
@@ -50,11 +47,8 @@ void AuthServer::start_accept() {
 void AuthServer::stop() {
     auto log = Logger::get();
 
+    // Выгружаем различные данные
     ClientBuild::Clear();
-
-    if (account_cache_) {
-        account_cache_->stop();
-    }
 
     boost::system::error_code ec;
     acceptor_.cancel(ec);
@@ -105,8 +99,6 @@ void AuthServer::log_session_count() {
 }
 
 bool AuthServer::disconnectSessionIfExists(const std::string &username) {
-    //std::lock_guard<std::mutex> lock(sessions_mutex_);
-
     for (auto &session : sessions_) {
         auto accountInfo = session->getAccountInfo();
         if (accountInfo && accountInfo->getUserName() == username) {
@@ -117,4 +109,16 @@ bool AuthServer::disconnectSessionIfExists(const std::string &username) {
     }
 
     return false;
+}
+
+void AuthServer::init() {
+    // Загружаем различные данные
+    ClientBuild::LoadBuildInfo(db_);
+
+    realmList_ = std::make_shared<RealmList>(io_context_, shared_from_this(), std::chrono::seconds(20));
+    realmList_->load_realms(true);
+
+    // Запускаем всякие таймеры
+    account_cache_->start();
+    realmList_->start();
 }

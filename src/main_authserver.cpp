@@ -35,6 +35,7 @@ int main() {
         );
 
         auto server = std::make_shared<AuthServer>(io_context, db, port);
+        server->init();
         server->start_accept();
         log->info("[AuthServer] Running on port {}", port);
 
