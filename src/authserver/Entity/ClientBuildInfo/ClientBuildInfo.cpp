@@ -77,7 +77,7 @@ namespace ClientBuild
 
                 build.Build = row.build;
             }
-            log->info(">>> LoadBuildInfo: loaded {} 'build_info' rows", rows.size());
+            log->info(">>> LoadBuildInfo: loaded {} build_info", rows.size());
         }
         catch (const std::exception& ex) {
             log->error("LoadBuildInfo:SELECT_BUILD_INFO {}", ex.what());
@@ -114,7 +114,7 @@ namespace ClientBuild
                 buildKey.Platform = ToFourCC(row.platform);
                 buildKey.Hash = row.executableHash;
             }
-            log->info(">>> LoadBuildInfo: loaded {} 'build_executable_hash' rows", exeHashRows.size());
+            log->info(">>> LoadBuildInfo: loaded {} build_executable_hash", exeHashRows.size());
         }catch (const std::exception& ex) {
             log->error("LoadBuildInfo:SELECT_BUILD_EXECUTABLE_HASH {}", ex.what());
         }

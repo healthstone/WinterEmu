@@ -12,11 +12,12 @@
 #include <sstream>
 
 #include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_sinks.h>           // НЕ цветной консольный sink
+#include <spdlog/sinks/stdout_color_sinks.h>   // Цветной консольный sink
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/async.h>
 #include <spdlog/async_logger.h>
 #include <fmt/format.h>
+#include "spdlog/pattern_formatter.h"
 
 class MDC {
 public:
@@ -78,7 +79,7 @@ public:
         logger_->critical("{}", format_with_mdc(message, mdc));
     }
 
-    // --- Regular log methods with fmt::format_string ---
+    // --- Regular log methods ---
     template<typename... Args>
     void trace(fmt::format_string<Args...> fmt, Args&&... args) {
         log_json(spdlog::level::trace, fmt, std::forward<Args>(args)...);
@@ -112,10 +113,26 @@ public:
 private:
     Logger() {
         try {
-            // НЕ цветной консольный sink
-            auto console_sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
+            auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
             console_sink->set_level(spdlog::level::debug);
-            console_sink->set_formatter(std::make_unique<JsonFormatter>());
+
+            bool use_json = false;
+            if (const char* env = std::getenv("LOG_FORMAT_JSON")) {
+                std::string val(env);
+                std::transform(val.begin(), val.end(), val.begin(), ::tolower);
+                if (val == "1" || val == "true" || val == "yes") {
+                    use_json = true;
+                }
+            }
+
+            if (use_json) {
+                console_sink->set_formatter(std::make_unique<JsonFormatter>());
+            } else {
+                // Цветная консоль
+                console_sink->set_formatter(
+                        std::make_unique<spdlog::pattern_formatter>("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [%t] %v")
+                );
+            }
 
             std::vector<spdlog::sink_ptr> sinks{ console_sink };
 
@@ -133,7 +150,13 @@ private:
                 auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
                         "logs/authserver.log", 1024 * 1024 * 5, 3);
                 file_sink->set_level(spdlog::level::debug);
-                file_sink->set_formatter(std::make_unique<JsonFormatter>());
+                if (use_json) {
+                    file_sink->set_formatter(std::make_unique<JsonFormatter>());
+                } else {
+                    file_sink->set_formatter(
+                            std::make_unique<spdlog::pattern_formatter>("[%Y-%m-%d %H:%M:%S.%e] [%l] [%t] %v")
+                    );
+                }
                 sinks.push_back(file_sink);
             }
 
@@ -192,7 +215,7 @@ private:
         return out;
     }
 
-    // JSON форматтер без цвета (консоль и файл)
+    // JSON форматтер без цвета
     class JsonFormatter : public spdlog::formatter {
     public:
         void format(const spdlog::details::log_msg& msg, spdlog::memory_buf_t& dest) override {
@@ -214,7 +237,6 @@ private:
             char time_buf[64];
             std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%dT%H:%M:%S", &tm);
 
-            // msg.payload уже содержит JSON без внешних скобок, вставляем "как есть"
             fmt::format_to(
                     std::back_inserter(dest),
                     "{{\"timestamp\":\"{}.{:03}{:03}\",\"level\":\"{}\",\"thread_id\":{},{} }}\n",

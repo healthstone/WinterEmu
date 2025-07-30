@@ -79,7 +79,7 @@ void RealmList::load_realms(bool isFirst) {
         }
 
         if (isFirst)
-            log->info(">>> RealmList: {} realms loaded", realms_.size());
+            log->info(">>> RealmList: loaded {} realms", realms_.size());
         else
             log->trace("RealmList: Updated, {} realms loaded", realms_.size());
 
