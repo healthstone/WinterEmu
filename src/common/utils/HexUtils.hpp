@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <iomanip>
+#include <array>
 
 namespace HexUtils {
 
@@ -40,6 +41,24 @@ namespace HexUtils {
 
     inline std::string bytes_to_hex(const std::vector<uint8_t>& bytes) {
         return bytes_to_hex(bytes.data(), bytes.size());
+    }
+
+    template <size_t Size>
+    std::array<uint8_t, Size> hex_str_to_byte_array(const std::string& hexStr, bool littleEndian = false) {
+        auto bytes = hex_to_bytes(hexStr);
+        if (bytes.size() != Size) {
+            throw std::invalid_argument("Hex string size does not match expected array size");
+        }
+        std::array<uint8_t, Size> arr{};
+        if (littleEndian) {
+            // Reverse order for little endian
+            for (size_t i = 0; i < Size; ++i) {
+                arr[i] = bytes[Size - 1 - i];
+            }
+        } else {
+            std::copy(bytes.begin(), bytes.end(), arr.begin());
+        }
+        return arr;
     }
 
 } // namespace HexUtils

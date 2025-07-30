@@ -76,24 +76,24 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
         auto cached_user_opt = cache->get(username);
 
         auto auth = session->getAccountInfo();
-        auto srp = auth->srp();
 
         uint8_t securityFlags = 0;
+
+
 
         // 3 - пробуем взять из кэша
         if (cached_user_opt) {
             auto &cached_user = *cached_user_opt;
 
-            // Загружаем salt и verifier из кэша
-            srp->LoadVerifier(cached_user.salt, cached_user.verifier);
-            // Генерируем B
-            srp->GenerateServerEphemeral();
+            // Инициализация SRP6 с salt и verifier
+            session->_srp6.emplace(username, cached_user.salt, cached_user.verifier);
+            auto& srp = *session->_srp6;
 
             log->debug("[HandleLogonChallenge] {}: B.size={}, g={}, N.size={}, salt.size={}",
                        opcode_name,
-                       srp->GetBBytes().size(),
-                       srp->GetGenerator(),
-                       srp->GetNBytes().size(),
+                       srp.B.size(),
+                       Crypto::SRP6::g[0],
+                       Crypto::SRP6::N.size(),
                        cached_user.salt.size());
 
             RawPacket reply;
@@ -101,25 +101,17 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
             reply.write_uint8(0x00); // reserved
             reply.write_uint8(0x00); // WOW_SUCCESS
 
-            auto B_bytes = srp->GetBBytes();
-            reply.write_bytes(B_bytes.data(), B_bytes.size());
+            reply.write_bytes(srp.B.data(), srp.B.size());
 
-            reply.write_uint8(1); // length of g
-            reply.write_uint8(srp->GetGenerator());
+            reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::g.size())); // length of g
+            reply.write_uint8(Crypto::SRP6::g[0]); // g
 
-            auto N_bytes = srp->GetNBytes();
-            reply.write_uint8(static_cast<uint8_t>(N_bytes.size()));
-            reply.write_bytes(N_bytes.data(), N_bytes.size());
+            reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::N.size()));
+            reply.write_bytes(Crypto::SRP6::N.data(), Crypto::SRP6::N.size());
 
-            auto salt = srp->GetSalt();
-            reply.write_bytes(salt.data(), salt.size());
+            reply.write_bytes(srp.s.data(), srp.s.size());
 
-            // Твоя версия клиента (16 байт), например:
-            uint8_t version[16] = {
-                    0xBA, 0xA3, 0x1E, 0x99, 0xA0, 0x0B, 0x21, 0x57,
-                    0xFC, 0x37, 0x3F, 0xB3, 0x69, 0xCD, 0xD2, 0xF1
-            };
-            reply.write_bytes(version, 16);
+            reply.write_bytes(VersionChallenge, 16);
             reply.write_uint8(0x00); // securityFlags
             Packet::log_raw_payload("cache reply " + opcode_name, reply.serialize());
 
@@ -166,39 +158,32 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
             cacheEntry.verifier = *user->verifier;
             cache->put(username, cacheEntry);
 
-            // 7 --- Инициализация SRP ---
-            // Загружаем salt и verifier из БД (из user)
-            srp->LoadVerifier(*user->salt, *user->verifier);
-            // Генерируем ephemeral B
-            srp->GenerateServerEphemeral();
-
+            session->_srp6.emplace(username, *user->salt, *user->verifier);
+            auto& srp = *session->_srp6;
             log->debug("[HandleLogonChallenge] {}: B.size={}, g={}, N.size={}, salt.size={}",
                        opcode_name,
-                       srp->GetBBytes().size(),
-                       srp->GetGenerator(),
-                       srp->GetNBytes().size(),
+                       srp.B.size(),
+                       Crypto::SRP6::g[0],
+                       Crypto::SRP6::N.size(),
                        user->salt->size());
 
             RawPacket reply;
-            reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE)); // AUTH_LOGON_CHALLENGE opcode ID
-            reply.write_uint8(0x00); // reserved
-            reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS)); // WOW_SUCCESS
+            reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE));
+            reply.write_uint8(0);
+            reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS));
 
-            auto B_bytes = srp->GetBBytes();
-            reply.write_bytes(B_bytes.data(), B_bytes.size());
+            reply.write_bytes(srp.B.data(), srp.B.size());
 
-            reply.write_uint8(1); // length of g
-            reply.write_uint8(srp->GetGenerator());
+            reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::g.size()));
+            reply.write_uint8(Crypto::SRP6::g[0]);
 
-            auto N_bytes = srp->GetNBytes();
-            reply.write_uint8(static_cast<uint8_t>(N_bytes.size()));
-            reply.write_bytes(N_bytes.data(), N_bytes.size());
+            reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::N.size()));
+            reply.write_bytes(Crypto::SRP6::N.data(), Crypto::SRP6::N.size());
 
-            auto salt = srp->GetSalt();
-            reply.write_bytes(salt.data(), salt.size());
+            reply.write_bytes(srp.s.data(), srp.s.size());
 
             reply.write_bytes(VersionChallenge, 16);
-            reply.write_uint8(0x00); // securityFlags
+            reply.write_uint8(0x00);
 
             // 👉 Лог и отправка
             Packet::log_raw_payload("AUTH_LOGON_CHALLENGE", reply.serialize());
@@ -209,7 +194,7 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
             co_return;
         }
         catch (const std::exception &ex) {
-            log->error("[HandlersAuth] {}: {}", opcode_name, ex.what());
+            log->error("[HandleLogonChallenge] DB exception {}: {}", opcode_name, ex.what());
             RawPacket reply;
             reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE));
             reply.write_uint8(0);

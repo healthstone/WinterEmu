@@ -13,8 +13,8 @@
 struct AccountsRow {
     uint64_t id;
     std::optional<std::string> name;
-    std::optional<std::vector<uint8_t>> salt;
-    std::optional<std::vector<uint8_t>> verifier;
+    std::optional<std::array<uint8_t, 32>> salt;
+    std::optional<std::array<uint8_t, 32>> verifier;
     std::optional<std::string> email;
     std::optional<std::chrono::system_clock::time_point> created_at;
 };
@@ -39,12 +39,20 @@ struct PgRowMapper<AccountsRow> {
 
         if (!r["salt"].is_null()) {
             pqxx::binarystring salt_bin(r["salt"]);
-            row.salt = std::vector<uint8_t>(salt_bin.begin(), salt_bin.end());
+            if (salt_bin.size() != 32)
+                throw std::runtime_error("PgRowMapper: Invalid salt size, expected 32 bytes");
+            std::array<uint8_t, 32> salt_arr{};
+            std::copy_n(salt_bin.begin(), 32, salt_arr.begin());
+            row.salt = salt_arr;
         }
 
         if (!r["verifier"].is_null()) {
             pqxx::binarystring verifier_bin(r["verifier"]);
-            row.verifier = std::vector<uint8_t>(verifier_bin.begin(), verifier_bin.end());
+            if (verifier_bin.size() != 32)
+                throw std::runtime_error("PgRowMapper: Invalid verifier size, expected 32 bytes");
+            std::array<uint8_t, 32> verifier_arr{};
+            std::copy_n(verifier_bin.begin(), 32, verifier_arr.begin());
+            row.verifier = verifier_arr;
         }
 
         if (!r["email"].is_null())

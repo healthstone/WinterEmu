@@ -1,104 +1,67 @@
-#pragma once
+#ifndef SRP6_H
+#define SRP6_H
 
+#include "AuthDefines.hpp"
 #include "BigNumber.hpp"
-#include "Sha1Hash.hpp"
-#include <vector>
-#include <string>
-#include <stdexcept>
+#include "CryptoHash.hpp"
+#include <array>
+#include <optional>
 
-class SRP6 {
-public:
-    SRP6() {
-        // N и g — TrinityCore эталон
-        N_.SetHexStr("B79B3E2A87823CAB8F5EBFBF8EB1010853506298B5BADBD5B53E1895E644B89");
-        g_.SetDword(7);
+namespace Crypto {
+    class SRP6 {
+    public:
+        static constexpr size_t SALT_LENGTH = 32;
+        using Salt = std::array<uint8_t, SALT_LENGTH>;
+        static constexpr size_t VERIFIER_LENGTH = 32;
+        using Verifier = std::array<uint8_t, VERIFIER_LENGTH>;
+        static constexpr size_t EPHEMERAL_KEY_LENGTH = 32;
+        using EphemeralKey = std::array<uint8_t, EPHEMERAL_KEY_LENGTH>;
 
-        // k = SHA1(N | PAD(g))
-        auto N_bytes = N_.AsBytes();
-        auto g_bytes = PadTo(N_bytes.size(), g_);
-        Sha1Hash sha;
-        sha.Update(N_bytes);
-        sha.Update(g_bytes);
-        auto hash = sha.Finalize();
-        k_.SetBinary(hash.data(), hash.size());
-    }
+        static std::array<uint8_t, 1> const g;
+        static std::array<uint8_t, 32> const N;
 
-    void LoadVerifier(const std::vector<uint8_t>& salt, const std::vector<uint8_t>& verifier) {
-        salt_ = salt;
-        v_.SetBinary(verifier.data(), verifier.size());
-    }
+        // username + password must be passed through Utf8ToUpperOnlyLatin FIRST!
+        static std::pair<Salt, Verifier> MakeRegistrationData(std::string const &username, std::string const &password);
 
-    void GenerateServerEphemeral() {
-        b_.SetRand(256);
-        BigNumber gb = g_.ModExp(b_, N_);
-        BigNumber kv = k_.ModMul(v_, N_);
-        B_ = kv.ModAdd(gb, N_);
-    }
+        // username + password must be passed through Utf8ToUpperOnlyLatin FIRST!
+        static bool CheckLogin(std::string const &username, std::string const &password, Salt const &salt,
+                               Verifier const &verifier) {
+            return (verifier == CalculateVerifier(username, password, salt));
+        }
 
-    std::vector<uint8_t> GetBBytes() const {
-        return B_.AsBytes();
-    }
+        static SHA1::Digest
+        GetSessionVerifier(EphemeralKey const &A, SHA1::Digest const &clientM, SessionKey const &K) {
+            return SHA1::GetDigestOf(A, clientM, K);
+        }
 
-    std::vector<uint8_t> GetNBytes() const {
-        return N_.AsBytes();
-    }
+        SRP6(std::string const &username, Salt const &salt, Verifier const &verifier);
 
-    uint8_t GetGenerator() const {
-        return 7;
-    }
+        std::optional<SessionKey> VerifyChallengeResponse(EphemeralKey const &A, SHA1::Digest const &clientM);
 
-    std::vector<uint8_t> GetSalt() const {
-        return salt_;
-    }
+    private:
+        bool _used = false; // a single instance can only be used to verify once
 
-    // --- u = SHA1(A | B)
-    BigNumber CalculateU(const BigNumber& A, const BigNumber& B) {
-        auto A_bytes = A.AsBytes();
-        auto B_bytes = B.AsBytes();
-        Sha1Hash sha;
-        sha.Update(A_bytes);
-        sha.Update(B_bytes);
-        auto u_bytes = sha.Finalize();
+        static Verifier CalculateVerifier(std::string const &username, std::string const &password, Salt const &salt);
 
-        BigNumber u;
-        u.SetBinary(u_bytes.data(), u_bytes.size());
-        return u;
-    }
+        static SessionKey SHA1Interleave(EphemeralKey const &S);
 
-    // S = (A * v^u) ^ b mod N
-    BigNumber CalculateS(const BigNumber& A) {
-        BigNumber u = CalculateU(A, B_);
-        BigNumber vu = v_.ModExp(u, N_);
-        BigNumber Avu = A.ModMul(vu, N_);
-        S_ = Avu.ModExp(b_, N_);
-        return S_;
-    }
+        /* global algorithm parameters */
+        static BigNumber const _g; // a [g]enerator for the ring of integers mod N, algorithm parameter
+        static BigNumber const _N; // the modulus, an algorithm parameter; all operations are mod this
 
-    std::vector<uint8_t> CalculateSessionKey() {
-        auto S_bytes = S_.AsBytes();
-        Sha1Hash sha;
-        sha.Update(S_bytes);
-        session_key_ = sha.Finalize();
-        return session_key_;
-    }
+        static EphemeralKey _B(BigNumber const &b, BigNumber const &v) {
+            return ((_g.ModExp(b, _N) + (v * 3)) % N).ToByteArray<EPHEMERAL_KEY_LENGTH>();
+        }
 
-private:
-    std::vector<uint8_t> PadTo(size_t size, const BigNumber& num) {
-        auto bytes = num.AsBytes();
-        if (bytes.size() >= size)
-            return bytes;
-        std::vector<uint8_t> padded(size, 0);
-        std::copy_backward(bytes.begin(), bytes.end(), padded.end());
-        return padded;
-    }
+        /* per-instantiation parameters, set on construction */
+        SHA1::Digest const _I; // H(I) - the username, all uppercase
+        BigNumber const _b; // b - randomly chosen by the server, 19 bytes, never given out
+        BigNumber const _v; // v - the user's password verifier, derived from s + H(USERNAME || ":" || PASSWORD)
 
-    BigNumber N_;
-    BigNumber g_;
-    BigNumber k_;
-    BigNumber v_;
-    BigNumber b_;
-    BigNumber B_;
-    BigNumber S_;
-    std::vector<uint8_t> salt_;
-    std::vector<uint8_t> session_key_;
-};
+    public:
+        Salt const s; // s - the user's password salt, random, used to calculate v on registration
+        EphemeralKey const B; // B = 3v + g^b
+    };
+}
+
+#endif

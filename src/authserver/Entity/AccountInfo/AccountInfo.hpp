@@ -8,8 +8,6 @@ public:
 
     ~AccountInfo() = default;
 
-    SRP6 *srp() { return srp_.get(); }
-
     void setIsAuthenticated(bool value) { isAuth = value; }
 
     bool isAuthenticated() { return isAuth; }
@@ -24,7 +22,6 @@ public:
     void handle_close_state();
 
 private:
-    std::shared_ptr<SRP6> srp_ = std::make_shared<SRP6>();
     bool isAuth = false;
     std::string username_;
 };

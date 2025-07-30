@@ -29,8 +29,8 @@ public:
     }
 
     struct AccountCacheEntry {
-        std::vector<uint8_t> salt;
-        std::vector<uint8_t> verifier;
+        std::array<uint8_t, 32> salt{};
+        std::array<uint8_t, 32> verifier{};
         std::chrono::steady_clock::time_point last_access; // скользящий TTL
     };
 

@@ -49,6 +49,8 @@ public:
 
     AccountInfo *getAccountInfo() { return accountInfo_.get(); }
 
+    std::optional<Crypto::SRP6> _srp6;
+
 private:
     void do_read();
 
