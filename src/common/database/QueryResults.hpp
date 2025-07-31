@@ -48,6 +48,11 @@ struct RealmRow {
     uint32_t build;
 };
 
+struct RealmCharactersRow {
+    uint32_t realmid;
+    uint16_t numchars;
+};
+
 struct NothingRow {};
 
 // === Шаблон PgRowMapper ===
@@ -55,6 +60,16 @@ struct NothingRow {};
 template<typename T>
 struct PgRowMapper;
 
+
+template<>
+struct PgRowMapper<RealmCharactersRow> {
+    static RealmCharactersRow map(const pqxx::row& r) {
+        RealmCharactersRow row;
+        row.realmid = r["realmid"].as<uint32_t>();
+        row.numchars = static_cast<uint16_t>(r["numchars"].as<int>());
+        return row;
+    }
+};
 
 template<>
 struct PgRowMapper<RealmRow> {

@@ -98,7 +98,7 @@ void AuthServer::log_session_count() {
 bool AuthServer::disconnectSessionIfExists(const std::string &username) {
     for (auto &session: sessions_) {
         auto accountInfo = session->getAccountInfo();
-        if (accountInfo && accountInfo->getUserName() == username) {
+        if (accountInfo && accountInfo->Login == username) {
             Logger::get()->warn("[AuthServer] Found duplicate session for '{}', disconnecting old session.", username);
             session->close();  // Предположим, что у ClientSession есть метод close()
             return true;

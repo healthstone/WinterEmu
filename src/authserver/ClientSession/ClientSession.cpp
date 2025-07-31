@@ -99,6 +99,9 @@ void ClientSession::process_read_buffer() {
             ReaderRealmStage::process_read_buffer(shared_from_this());
             break;
         default:
+            const uint8_t* data = read_buffer_.read_ptr();
+            std::vector<uint8_t> payload(data, data + read_buffer_.get_active_size());
+            Packet::log_raw_payload("UNEXPECTED", payload);
             Logger::get()->error("[client_session][process_read_buffer] Unknown session mode!");
             break;
     }

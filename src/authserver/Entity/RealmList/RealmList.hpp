@@ -10,7 +10,7 @@
 #include <mutex>
 #include <memory>
 
-class AuthServer; // Вперёд объявляем
+class AuthServer;
 
 class RealmList : public std::enable_shared_from_this<RealmList> {
 public:
@@ -26,12 +26,16 @@ public:
     void load_realms(bool isFirst = false);
     boost::asio::awaitable<void> update();
 
-    std::optional<std::reference_wrapper<const Realm>> get(const RealmHandle& id) const;
+    std::shared_ptr<Realm> get(uint32_t id) const;
+
+    const std::unordered_map<uint32_t, std::shared_ptr<Realm>>& getRealmsMap() const {
+        return realms_;
+    }
 
 private:
     void start_update_timer();
 
-    std::unordered_map<uint32_t, Realm> realms_;
+    std::unordered_map<uint32_t, std::shared_ptr<Realm>> realms_;
 
     boost::asio::io_context &io_context_;
     boost::asio::steady_timer update_timer_;

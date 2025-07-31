@@ -38,11 +38,11 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
         uint8_t I_len = buffer.read_uint8();
         std::string accountName = buffer.read_string_raw_le(I_len);
 
-        log->debug(
+        log->trace(
                 "{}: cmd=0x{:02X} size={} Game: {} Version: {}.{}.{} Build: {} Platform: {} OS: {} Country: {} TZ: {} IP: {} Username: {}",
                 opcode_name, cmd, size, gamename, v1, v2, v3, build, platform, os, country, timezone_bias, NetUtils::uint32_to_ip_le(ip), accountName);
 
-        Packet::log_raw_payload(opcode_name, payload);
+        //Packet::log_raw_payload(opcode_name, payload);
 
         // 1 - проверка на UTF8
         if (!UTF8Utils::is_valid_utf8(accountName)) {
@@ -71,7 +71,7 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
             co_return;
         }
 
-        session->getAccountInfo()->setUserName(accountName);
+        session->getAccountInfo()->Login = accountName;
         session->_build = build;
         session->_expversion = uint8_t(AuthHelper::IsPostBCAcceptedClientBuild(build) ? POST_BC_EXP_FLAG : (AuthHelper::IsPreBCAcceptedClientBuild(build) ? PRE_BC_EXP_FLAG : NO_VALID_EXP_FLAG));
 
@@ -86,13 +86,13 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
         // 3 - пробуем взять из кэша
         if (cached_user_opt) {
             auto &cached_user = *cached_user_opt;
-            session->_accountID = cached_user.accountID;
+            session->getAccountInfo()->AccountID = cached_user.accountID;
 
             // Инициализация SRP6 с salt и verifier
             session->_srp6.emplace(accountName, cached_user.salt, cached_user.verifier);
             auto& srp = *session->_srp6;
 
-            log->debug("[HandleLogonChallenge] AccID: {} opcode: {} B.size={}, g={}, N.size={}, salt.size={}",
+            log->trace("[HandleLogonChallenge] AccID: {} opcode: {} B.size={}, g={}, N.size={}, salt.size={}",
                        cached_user.accountID,
                        opcode_name,
                        srp.B.size(),
@@ -117,10 +117,11 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
 
             reply.write_bytes(VersionChallenge, 16);
             reply.write_uint8(0x00); // securityFlags
-            Packet::log_raw_payload("cache reply " + opcode_name, reply.serialize());
+
+            Packet::log_raw_payload("REQUEST " + opcode_name, payload);
+            Packet::log_raw_payload("RESPONSE " + opcode_name, reply.serialize());
 
             session->set_session_mode(SessionMode::STATUS_LOGON_PROOF);
-
             PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
             co_return;
         }
@@ -157,7 +158,7 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
                 co_return;
             }
 
-            session->_accountID = user->id;
+            session->getAccountInfo()->AccountID = user->id;
 
             AccountCache::AccountCacheEntry cacheEntry;
             cacheEntry.accountID = user->id;
@@ -167,7 +168,7 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
 
             session->_srp6.emplace(accountName, *user->salt, *user->verifier);
             auto& srp = *session->_srp6;
-            log->debug("[HandleLogonChallenge] AccID: {}, opcode: {} B.size={}, g={}, N.size={}, salt.size={}",
+            log->trace("[HandleLogonChallenge] AccID: {}, opcode: {} B.size={}, g={}, N.size={}, salt.size={}",
                        user->id,
                        opcode_name,
                        srp.B.size(),
@@ -202,7 +203,9 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
             }
 
             // 👉 Лог и отправка
-            Packet::log_raw_payload("AUTH_LOGON_CHALLENGE", reply.serialize());
+            Packet::log_raw_payload("REQUEST " + opcode_name, payload);
+            Packet::log_raw_payload("RESPONSE " + opcode_name, reply.serialize());
+
             PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
             co_return;
         }

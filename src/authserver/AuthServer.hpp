@@ -29,6 +29,7 @@ public:
 
     std::shared_ptr<Database> db() { return db_; }
     std::shared_ptr<AccountCache> account_cache() { return account_cache_; }
+    std::shared_ptr<RealmList> realm_list() { return realmList_; }
 
 private:
     boost::asio::io_context &io_context_;

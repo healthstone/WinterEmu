@@ -34,15 +34,11 @@ public:
             fmt::format_to(std::back_inserter(hex_dump), "{:02X} ", b);
         }
 
-        std::string log_message = fmt::format("{} opcode ID: {} ({} bytes) RAW: {}",
-                                              prefix,
-                                              opcode,
-                                              payload.size(),
-                                              hex_dump);
-
-        MDC mdc;
-        mdc.put("opcode", opcode);
-        Logger::get()->debug_with_mdc(log_message, mdc);
+        Logger::get()->debug("{} {} ({} bytes) RAW: {}",
+                             prefix,
+                             opcode,
+                             payload.size(),
+                             hex_dump);
     }
 
     // ==================== WRITE METHODS ====================

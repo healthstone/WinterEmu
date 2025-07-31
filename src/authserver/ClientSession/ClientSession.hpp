@@ -50,6 +50,12 @@ public:
     // AuthSession part
     AccountInfo *getAccountInfo() { return accountInfo_.get(); }
 
+    boost::asio::ip::address GetRemoteIpAddress() const
+    {
+        boost::asio::ip::tcp::endpoint remote_ep = socket_.remote_endpoint();
+        return remote_ep.address();
+    }
+
     std::optional<Crypto::SRP6> _srp6;
     SessionKey _sessionKey = {};
     std::optional<std::vector<uint8_t>> _totpSecret;
@@ -59,7 +65,6 @@ public:
     uint16_t _build;
     uint16_t _timezoneOffset;
     uint8_t _expversion;
-    uint64_t _accountID;
 
 private:
     void do_read();

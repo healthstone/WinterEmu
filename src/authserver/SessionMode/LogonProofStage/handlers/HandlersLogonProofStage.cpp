@@ -43,7 +43,7 @@ boost::asio::awaitable<void> HandlersLogonProofStage::HandleLogonProof(std::shar
         // 4. Проверка SRP результата
         auto K_opt = srp.VerifyChallengeResponse(A, clientM);
         if (!K_opt) {
-            log->info("[HandleLogonProof] Invalid SRP proof for user {}", session->getAccountInfo()->getUserName());
+            log->warn("[HandleLogonProof] Invalid SRP proof for user {}", session->getAccountInfo()->Login);
             // Неверный пароль или SRP проверка не прошла
             RawPacket failReply;
             failReply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_PROOF));
@@ -59,7 +59,7 @@ boost::asio::awaitable<void> HandlersLogonProofStage::HandleLogonProof(std::shar
         // 6. TODO Проверка 2FA токена, если используется (пример)
 
         // 7. TODO Проверка версии клиента (логика ValidateVersion)
-        log->debug("[HandleLogonProof] User '{}' successfully authenticated", session->getAccountInfo()->getUserName());
+        log->trace("[HandleLogonProof] User '{}' successfully authenticated", session->getAccountInfo()->Login);
 
         // 8. Обновление записи в базе (асинхронно, пример)
         try {
@@ -69,7 +69,7 @@ boost::asio::awaitable<void> HandlersLogonProofStage::HandleLogonProof(std::shar
             PreparedStatement stmt("UPDATE_LOGIN_LOGONPROOF");
             stmt.set_param(0, *K_opt);
             stmt.set_param(1, safe_ip);
-            stmt.set_param(2, session->getAccountInfo()->getUserName());
+            stmt.set_param(2, session->getAccountInfo()->Login);
 
             session->server()->db()->execute_sync_one<NothingRow>(stmt);
         } catch (const std::exception& e) {
@@ -99,6 +99,8 @@ boost::asio::awaitable<void> HandlersLogonProofStage::HandleLogonProof(std::shar
         }
 
         session->set_session_mode(SessionMode::STATUS_WAITING_FOR_REALM_LIST);
+        Packet::log_raw_payload("REQUEST AUTH_LOGON_PROOF", payload);
+        Packet::log_raw_payload("RESPONSE AUTH_LOGON_PROOF", packet.serialize());
         PacketUtils::send_packet_as<RawPacket>(session, packet);
         co_return;
     }
