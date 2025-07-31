@@ -1,11 +1,8 @@
 #include "HandlersChallenge.hpp"
-#include "src/authserver/enums/AuthResult.hpp"
-#include "src/authserver/enums/AuthCmd.hpp"
-#include "src/authserver/enums/LoginResult.hpp"
 #include "utils/NetUtils.hpp"
 #include "utils/utf8utils/UTF8Utils.hpp"
-#include "packet/RawPacket.hpp"
 #include "utils/PacketUtils.hpp"
+#include "packet/RawPacket.hpp"
 #include "src/authserver/Entity/AuthCodes/AuthCodes.hpp"
 
 using namespace HandlersChallenge;
@@ -20,7 +17,7 @@ HandlersChallenge::HandleLogonChallenge(std::shared_ptr<ClientSession> session,
                                         const std::vector<uint8_t> &payload) {
     // 1 - Проверяем общими проверками
     if (!isPassedCommonLogic(AuthCmd::AUTH_LOGON_CHALLENGE, session, payload))
-        co_return ;
+        co_return;
 
     // 2 - Проверяем, можем ли обработать из кэша
     if (!isPassedCache(AuthCmd::AUTH_LOGON_CHALLENGE, session->getAccountInfo()->Login, session))
@@ -36,7 +33,7 @@ HandlersChallenge::HandleReconnectChallenge(std::shared_ptr<ClientSession> sessi
                                             const std::vector<uint8_t> &payload) {
     // 1 - Проверяем общими проверками
     if (!isPassedCommonLogic(AuthCmd::AUTH_RECONNECT_CHALLENGE, session, payload))
-        co_return ;
+        co_return;
 
     // 2 - Проверяем, можем ли обработать из кэша
     if (!isPassedCache(AuthCmd::AUTH_RECONNECT_CHALLENGE, session->getAccountInfo()->Login, session))
@@ -47,7 +44,8 @@ HandlersChallenge::HandleReconnectChallenge(std::shared_ptr<ClientSession> sessi
     co_return;
 }
 
-bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, std::shared_ptr<ClientSession> session, const std::vector<uint8_t>& payload) {
+bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, std::shared_ptr<ClientSession> session,
+                                            const std::vector<uint8_t> &payload) {
     auto log = Logger::get();
     ByteBuffer buffer(payload);
     session->set_session_mode(SessionMode::STATUS_CLOSED);
@@ -57,11 +55,7 @@ bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, std::shared_ptr<ClientS
     // 1 - читаем поля
     auto logonChallenge = ReadPacketFields(opcode_name, payload);
     if (!logonChallenge) {
-        RawPacket reply;
-        reply.write_uint8(static_cast<uint8_t>(cmd));
-        reply.write_uint8(0);
-        reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_DISCONNECTED));
-        PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
+        send_auth_result(cmd, AuthResult::WOW_FAIL_DISCONNECTED, session);
         return false;
     }
 
@@ -70,12 +64,7 @@ bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, std::shared_ptr<ClientS
         log->error("[HandleLogonChallenge] {} - Invalid UTF-8 accountName received: {}",
                    opcode_name,
                    logonChallenge->accountName);
-        // Обработка ошибки, например отказ
-        RawPacket reply;
-        reply.write_uint8(static_cast<uint8_t>(cmd));
-        reply.write_uint8(0);
-        reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_UNKNOWN_ACCOUNT));
-        PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
+        send_auth_result(cmd, AuthResult::WOW_FAIL_UNKNOWN_ACCOUNT, session);
         return false;
     }
 
@@ -85,12 +74,7 @@ bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, std::shared_ptr<ClientS
     // 4 - кикаем все сессии, где уже авторизованы под данным логином + откидываем этого с оповещением, что уже авторизован
     if (session->server()->disconnectSessionIfExists(accountName)) {
         log->warn("[HandleLogonChallenge] Duplicate session for AccID: {}", accountName);
-
-        RawPacket reply;
-        reply.write_uint8(static_cast<uint8_t>(cmd));
-        reply.write_uint8(0);
-        reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_ALREADY_ONLINE));
-        PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
+        send_auth_result(cmd, AuthResult::WOW_FAIL_ALREADY_ONLINE, session);
         return false;
     }
 
@@ -160,7 +144,7 @@ HandlersChallenge::ReadPacketFields(const std::string &opcode_name, const std::v
 }
 
 bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_name,
-                                           std::shared_ptr<ClientSession> session) {
+                                      std::shared_ptr<ClientSession> session) {
     auto cache = session->server()->account_cache();
     auto cached_user_opt = cache->get(account_name);
     if (cached_user_opt) {
@@ -220,12 +204,7 @@ void HandlersChallenge::LogonChallengeLogic(std::shared_ptr<ClientSession> sessi
         // 1 - если нет аккаунта
         if (!user) {
             log->error("[HandleLogonChallenge] Account {} not found", accountName);
-
-            RawPacket reply;
-            reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE));
-            reply.write_uint8(0);
-            reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_NO_GAME_ACCOUNT));
-            PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
+            send_auth_result(AuthCmd::AUTH_LOGON_CHALLENGE, AuthResult::WOW_FAIL_NO_GAME_ACCOUNT, session);
             return;
         }
 
@@ -233,12 +212,7 @@ void HandlersChallenge::LogonChallengeLogic(std::shared_ptr<ClientSession> sessi
         if (!user->salt.has_value() || !user->verifier.has_value() ||
             user->salt->size() != 32 || user->verifier->size() != 32) {
             log->error("[HandleLogonChallenge] Account {} has invalid salt/verifier length", accountName);
-
-            RawPacket reply;
-            reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE));
-            reply.write_uint8(0);
-            reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_INCORRECT_PASSWORD));
-            PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
+            send_auth_result(AuthCmd::AUTH_LOGON_CHALLENGE, AuthResult::WOW_FAIL_INCORRECT_PASSWORD, session);
             return;
         }
 
@@ -292,11 +266,7 @@ void HandlersChallenge::LogonChallengeLogic(std::shared_ptr<ClientSession> sessi
     }
     catch (const std::exception &ex) {
         log->error("[HandleLogonChallenge] DB exception AUTH_LOGON_CHALLENGE: {}", ex.what());
-        RawPacket reply;
-        reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE));
-        reply.write_uint8(0);
-        reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_DB_BUSY));
-        PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
+        send_auth_result(AuthCmd::AUTH_LOGON_CHALLENGE, AuthResult::WOW_FAIL_DB_BUSY, session);
         return;
     }
 }
@@ -304,4 +274,12 @@ void HandlersChallenge::LogonChallengeLogic(std::shared_ptr<ClientSession> sessi
 void HandlersChallenge::ReconnectChallengeLogic(std::shared_ptr<ClientSession> session) {
     auto log = Logger::get();
     log->error("[ReconnectChallengeLogic] should not be called");
+}
+
+void HandlersChallenge::send_auth_result(AuthCmd cmd, AuthResult result, std::shared_ptr<ClientSession> session) {
+    RawPacket reply;
+    reply.write_uint8(static_cast<uint8_t>(cmd));
+    reply.write_uint8(0);
+    reply.write_uint8(static_cast<uint8_t>(result));
+    PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
 }

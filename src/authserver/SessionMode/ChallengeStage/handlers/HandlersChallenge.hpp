@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include "src/authserver/ClientSession/ClientSession.hpp"
+#include "src/authserver/enums/AuthResult.hpp"
 #include "src/authserver/enums/AuthCmd.hpp"
 #include "LogonChallenge.hpp"
 
@@ -20,4 +21,6 @@ namespace HandlersChallenge
 
     void LogonChallengeLogic(std::shared_ptr<ClientSession> session);
     void ReconnectChallengeLogic(std::shared_ptr<ClientSession> session);
+
+    void send_auth_result(AuthCmd cmd, AuthResult result, std::shared_ptr<ClientSession> session);
 }
