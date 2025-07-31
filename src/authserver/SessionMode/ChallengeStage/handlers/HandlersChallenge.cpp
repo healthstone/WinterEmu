@@ -18,6 +18,7 @@ uint8_t VersionChallenge[16] = {
 boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::string &opcode_name, std::shared_ptr<ClientSession> session, const std::vector<uint8_t>& payload) {
     auto log = Logger::get();
     ByteBuffer buffer(payload);
+    session->set_session_mode(SessionMode::STATUS_CLOSED);
 
     // 1 - читаем поля
     try {

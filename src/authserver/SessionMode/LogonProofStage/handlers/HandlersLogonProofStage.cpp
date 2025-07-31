@@ -12,6 +12,7 @@ boost::asio::awaitable<void> HandlersLogonProofStage::HandleLogonProof(std::shar
 {
     auto log = Logger::get();
     ByteBuffer buffer(payload);
+    session->set_session_mode(SessionMode::STATUS_CLOSED);
 
     try {
         // 1. Проверка сессии и получение SRP объекта

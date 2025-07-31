@@ -56,8 +56,15 @@ public:
         return remote_ep.address();
     }
 
+    uint16_t GetRemotePort() const
+    {
+        boost::asio::ip::tcp::endpoint remote_ep = socket_.remote_endpoint();
+        return remote_ep.port();
+    }
+
     std::optional<Crypto::SRP6> _srp6;
     SessionKey _sessionKey = {};
+    std::array<uint8_t, 16> _reconnectProof = {};
     std::optional<std::vector<uint8_t>> _totpSecret;
     std::string _localizationName;
     std::string _os;

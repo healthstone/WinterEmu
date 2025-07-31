@@ -96,6 +96,10 @@ void ClientSession::process_read_buffer() {
         case SessionMode::STATUS_WAITING_FOR_REALM_LIST:
             ReaderRealmStage::process_read_buffer(shared_from_this());
             break;
+        case SessionMode::STATUS_CLOSED:
+            Logger::get()->warn("[client_session][process_read_buffer] client[{}] sending data from STATUS_CLOSED, drop him!", getAccountInfo()->Login);
+            close();
+            break;
         default:
             const uint8_t* data = read_buffer_.read_ptr();
             std::vector<uint8_t> payload(data, data + read_buffer_.get_active_size());
