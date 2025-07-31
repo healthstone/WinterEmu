@@ -4,6 +4,7 @@
 #include "utils/PacketUtils.hpp"
 #include "packet/RawPacket.hpp"
 #include "src/authserver/Entity/AuthCodes/AuthCodes.hpp"
+#include "srp6/CryptoRandom.hpp"
 
 using namespace HandlersChallenge;
 
@@ -150,129 +151,166 @@ bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_na
     if (cached_user_opt) {
         auto &cached_user = *cached_user_opt;
         session->getAccountInfo()->AccountID = cached_user.accountID;
-
-        // Инициализация SRP6 с salt и verifier
-        session->_srp6.emplace(account_name, cached_user.salt, cached_user.verifier);
-        auto &srp = *session->_srp6;
-
         std::string opcode_name =
                 cmd == AuthCmd::AUTH_LOGON_CHALLENGE ? "AUTH_LOGON_CHALLENGE" : "AUTH_RECONNECT_CHALLENGE";
-        Logger::get()->trace(
-                "[HandleLogonChallenge] AccID: {} opcode: {} B.size={}, g={}, N.size={}, salt.size={}",
-                cached_user.accountID,
-                opcode_name,
-                srp.B.size(),
-                Crypto::SRP6::g[0],
-                Crypto::SRP6::N.size(),
-                cached_user.salt.size());
 
-        RawPacket reply;
-        reply.write_uint8(static_cast<uint8_t>(cmd)); // opcode ID
-        reply.write_uint8(0x00); // reserved
-        reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS)); // WOW_SUCCESS
+        RawPacket pkt;
+        pkt.write_uint8(static_cast<uint8_t>(cmd));                       // opcode ID
 
-        reply.write_bytes(srp.B.data(), srp.B.size());
+        switch(cmd) {
+            case AuthCmd::AUTH_LOGON_CHALLENGE: {
+                // Инициализация SRP6 с salt и verifier
+                if (!session->_srp6)
+                    session->_srp6.emplace(account_name, cached_user.salt, cached_user.verifier);
+                auto &srp = *session->_srp6;
 
-        reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::g.size())); // length of g
-        reply.write_uint8(Crypto::SRP6::g[0]); // g
+                Logger::get()->trace(
+                        "[HandleLogonChallenge] AccID: {} opcode: {} B.size={}, g={}, N.size={}, salt.size={}",
+                        cached_user.accountID,
+                        opcode_name,
+                        srp.B.size(),
+                        Crypto::SRP6::g[0],
+                        Crypto::SRP6::N.size(),
+                        cached_user.salt.size());
 
-        reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::N.size()));
-        reply.write_bytes(Crypto::SRP6::N.data(), Crypto::SRP6::N.size());
+                pkt.write_uint8(0x00); // reserved
+                pkt.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS));   // WOW_SUCCESS
+                pkt.write_bytes(srp.B.data(), srp.B.size());
+                pkt.write_uint8(static_cast<uint8_t>(Crypto::SRP6::g.size()));    // length of g
+                pkt.write_uint8(Crypto::SRP6::g[0]);                              // g
+                pkt.write_uint8(static_cast<uint8_t>(Crypto::SRP6::N.size()));
+                pkt.write_bytes(Crypto::SRP6::N.data(), Crypto::SRP6::N.size());
+                pkt.write_bytes(srp.s.data(), srp.s.size());
+                pkt.write_bytes(VersionChallenge, 16);
+                pkt.write_uint8(0x00);                                            // securityFlags
 
-        reply.write_bytes(srp.s.data(), srp.s.size());
+                session->set_session_mode(SessionMode::STATUS_LOGON_PROOF);
+                break;
+            }
+            case AuthCmd::AUTH_RECONNECT_CHALLENGE: {
+                if (cached_user.sessionKey.empty())
+                    return true;
 
-        reply.write_bytes(VersionChallenge, 16);
-        reply.write_uint8(0x00); // securityFlags
+                session->_sessionKey = cached_user.sessionKey;
+                Crypto::GetRandomBytes(session->_reconnectProof);
+                session->set_session_mode(SessionMode::STATUS_RECONNECT_PROOF);
 
-        Packet::log_raw_payload("RESPONSE " + opcode_name, reply.serialize());
-        session->set_session_mode(SessionMode::STATUS_LOGON_PROOF);
-        PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
+                pkt.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS));   // WOW_SUCCESS
+                pkt.write_bytes(session->_reconnectProof.data(), session->_reconnectProof.size());
+                pkt.write_bytes(VersionChallenge, 16);
+                break;
+            }
+            default:
+                return true;
+        }
+
+        Packet::log_raw_payload("CACHE RESPONSE " + opcode_name, pkt.serialize());
+        PacketUtils::send_packet_as<RawPacket>(std::move(session), pkt);
         return false;
     } else
         return true;
+}
+
+std::optional<AccountsRow> HandlersChallenge::fetchFromDB(AuthCmd cmd, std::shared_ptr<ClientSession> session) {
+    try {
+        PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
+        stmt.set_param(0, session->getAccountInfo()->Login);
+        auto user = session->server()->db()->execute_sync_one<AccountsRow>(stmt);
+        return user;
+    } catch (const std::exception &ex) {
+        Logger::get()->error("[fetchFromDB] DB exception: {}", ex.what());
+        send_auth_result(cmd, AuthResult::WOW_FAIL_DB_BUSY, session);
+        return std::nullopt;
+    }
 }
 
 void HandlersChallenge::LogonChallengeLogic(std::shared_ptr<ClientSession> session) {
     auto log = Logger::get();
     std::string accountName = session->getAccountInfo()->Login;
 
-    try {
-        PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
-        stmt.set_param(0, accountName);
-        auto user = session->server()->db()->execute_sync_one<AccountsRow>(stmt);
+    auto user = fetchFromDB(AuthCmd::AUTH_LOGON_CHALLENGE, session);
+    if (!user)
+        return;
 
-        // 1 - если нет аккаунта
-        if (!user) {
-            log->error("[HandleLogonChallenge] Account {} not found", accountName);
-            send_auth_result(AuthCmd::AUTH_LOGON_CHALLENGE, AuthResult::WOW_FAIL_NO_GAME_ACCOUNT, session);
-            return;
-        }
-
-        // 2 --- Проверка salt и verifier ---
-        if (!user->salt.has_value() || !user->verifier.has_value()) {
-            log->error("[HandleLogonChallenge] Account {} has invalid salt/verifier length", accountName);
-            send_auth_result(AuthCmd::AUTH_LOGON_CHALLENGE, AuthResult::WOW_FAIL_INCORRECT_PASSWORD, session);
-            return;
-        }
-
-        session->getAccountInfo()->AccountID = user->id;
-
-        AccountCache::AccountCacheEntry cacheEntry;
-        cacheEntry.accountID = user->id;
-        cacheEntry.salt = *user->salt;
-        cacheEntry.verifier = *user->verifier;
-        session->server()->account_cache()->put(accountName, cacheEntry);
-
-        session->_srp6.emplace(accountName, *user->salt, *user->verifier);
-        auto &srp = *session->_srp6;
-        log->trace(
-                "[HandleLogonChallenge] AccID: {}, opcode: AUTH_LOGON_CHALLENGE B.size={}, g={}, N.size={}, salt.size={}",
-                user->id,
-                srp.B.size(),
-                Crypto::SRP6::g[0],
-                Crypto::SRP6::N.size(),
-                user->salt->size());
-
-        RawPacket reply;
-        reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE));
-        reply.write_uint8(0);
-
-        if (AuthHelper::IsAcceptedClientBuild(session->_build)) {
-            reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS));
-
-            reply.write_bytes(srp.B.data(), srp.B.size());
-
-            reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::g.size()));
-            reply.write_uint8(Crypto::SRP6::g[0]);
-
-            reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::N.size()));
-            reply.write_bytes(Crypto::SRP6::N.data(), Crypto::SRP6::N.size());
-
-            reply.write_bytes(srp.s.data(), srp.s.size());
-
-            reply.write_bytes(VersionChallenge, 16);
-            reply.write_uint8(0x00);
-
-            session->set_session_mode(SessionMode::STATUS_LOGON_PROOF);
-        } else {
-            reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_VERSION_INVALID));
-        }
-
-        // 👉 Лог и отправка
-        Packet::log_raw_payload("RESPONSE AUTH_LOGON_CHALLENGE", reply.serialize());
-        PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
+    // 1 - если нет аккаунта
+    if (!user) {
+        log->error("[HandleLogonChallenge] Account {} not found", accountName);
+        send_auth_result(AuthCmd::AUTH_LOGON_CHALLENGE, AuthResult::WOW_FAIL_NO_GAME_ACCOUNT, session);
         return;
     }
-    catch (const std::exception &ex) {
-        log->error("[HandleLogonChallenge] DB exception AUTH_LOGON_CHALLENGE: {}", ex.what());
-        send_auth_result(AuthCmd::AUTH_LOGON_CHALLENGE, AuthResult::WOW_FAIL_DB_BUSY, session);
+
+    // 2 --- Проверка salt и verifier ---
+    if (!user->salt.has_value() || !user->verifier.has_value()) {
+        log->error("[HandleLogonChallenge] Account {} has invalid salt/verifier length", accountName);
+        send_auth_result(AuthCmd::AUTH_LOGON_CHALLENGE, AuthResult::WOW_FAIL_INCORRECT_PASSWORD, session);
         return;
     }
+
+    session->getAccountInfo()->AccountID = user->id;
+    if (user->email)
+        session->getAccountInfo()->Email = user->email.value();
+
+    AccountCache::AccountCacheEntry cacheEntry;
+    cacheEntry.accountID = user->id;
+    cacheEntry.salt = *user->salt;
+    cacheEntry.verifier = *user->verifier;
+    if (user->sessionkey)
+        cacheEntry.sessionKey = user->sessionkey.value();
+    session->server()->account_cache()->put(accountName, cacheEntry);
+
+    session->_srp6.emplace(accountName, *user->salt, *user->verifier);
+    auto &srp = *session->_srp6;
+    log->trace(
+            "[HandleLogonChallenge] AccID: {}, opcode: AUTH_LOGON_CHALLENGE B.size={}, g={}, N.size={}, salt.size={}",
+            user->id,
+            srp.B.size(),
+            Crypto::SRP6::g[0],
+            Crypto::SRP6::N.size(),
+            user->salt->size());
+
+    RawPacket reply;
+    reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE));
+    reply.write_uint8(0);
+
+    if (AuthHelper::IsAcceptedClientBuild(session->_build)) {
+        reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS));
+        reply.write_bytes(srp.B.data(), srp.B.size());
+        reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::g.size()));
+        reply.write_uint8(Crypto::SRP6::g[0]);
+        reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::N.size()));
+        reply.write_bytes(Crypto::SRP6::N.data(), Crypto::SRP6::N.size());
+        reply.write_bytes(srp.s.data(), srp.s.size());
+        reply.write_bytes(VersionChallenge, 16);
+        reply.write_uint8(0x00);
+        session->set_session_mode(SessionMode::STATUS_LOGON_PROOF);
+    } else {
+        reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_VERSION_INVALID));
+    }
+
+    // 👉 Лог и отправка
+    Packet::log_raw_payload("RESPONSE AUTH_LOGON_CHALLENGE", reply.serialize());
+    PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
 }
 
 void HandlersChallenge::ReconnectChallengeLogic(const std::shared_ptr<ClientSession>& session) {
-    auto log = Logger::get();
-    log->error("[ReconnectChallengeLogic] should not be called");
+    RawPacket pkt;
+    pkt.write_uint8(static_cast<uint8_t>(static_cast<uint8_t>(AuthCmd::AUTH_RECONNECT_CHALLENGE)));                       // opcode ID
+
+    auto user = fetchFromDB(AuthCmd::AUTH_LOGON_CHALLENGE, session);
+    if (!user || !user->sessionkey) {
+        Logger::get()->error("[ReconnectChallengeLogic] no founded user or sessionkey");
+        pkt.write_uint8(static_cast<uint8_t>(static_cast<uint8_t>(AuthResult::WOW_FAIL_UNKNOWN_ACCOUNT)));
+        PacketUtils::send_packet_as<RawPacket>(session, pkt);
+    }
+
+    session->_sessionKey = user->sessionkey.value();
+    Crypto::GetRandomBytes(session->_reconnectProof);
+    session->set_session_mode(SessionMode::STATUS_RECONNECT_PROOF);
+
+    pkt.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS));   // WOW_SUCCESS
+    pkt.write_bytes(session->_reconnectProof.data(), session->_reconnectProof.size());
+    pkt.write_bytes(VersionChallenge, 16);
+    PacketUtils::send_packet_as<RawPacket>(session, pkt);
 }
 
 void HandlersChallenge::send_auth_result(AuthCmd cmd, AuthResult result, std::shared_ptr<ClientSession> session) {

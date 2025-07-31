@@ -8,11 +8,13 @@
 
 using namespace HandlersLogonProofStage;
 
-boost::asio::awaitable<void> HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<ClientSession> session, const std::vector<uint8_t>& payload)
-{
+boost::asio::awaitable<void>
+HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<ClientSession> session, const std::vector<uint8_t> &payload) {
     auto log = Logger::get();
     ByteBuffer buffer(payload);
     session->set_session_mode(SessionMode::STATUS_CLOSED);
+
+    std::string accountName = session->getAccountInfo()->Login;
 
     try {
         // 1. Проверка сессии и получение SRP объекта
@@ -25,15 +27,15 @@ boost::asio::awaitable<void> HandlersLogonProofStage::HandleLogonProof(std::shar
             PacketUtils::send_packet_as<RawPacket>(session, failReply);
             co_return;
         }
-        Crypto::SRP6& srp = *session->_srp6;
+        Crypto::SRP6 &srp = *session->_srp6;
 
         // 2. Разбор payload
-        uint8_t cmd                   = buffer.read_uint8();
-        Crypto::SRP6::EphemeralKey A  = buffer.read_bytes_as_array<32>();
-        Crypto::SHA1::Digest clientM  = buffer.read_bytes_as_array<20>();
+        uint8_t cmd = buffer.read_uint8();
+        Crypto::SRP6::EphemeralKey A = buffer.read_bytes_as_array<32>();
+        Crypto::SHA1::Digest clientM = buffer.read_bytes_as_array<20>();
         Crypto::SHA1::Digest crc_hash = buffer.read_bytes_as_array<20>();
-        uint8_t number_of_keys        = buffer.read_uint8();
-        uint8_t securityFlags         = buffer.read_uint8();
+        uint8_t number_of_keys = buffer.read_uint8();
+        uint8_t securityFlags = buffer.read_uint8();
 
         // 3. TODO Проверка версии клиента (заменить на свой метод)
 //        if (session->getAccountInfo()->expversion == NO_VALID_EXP_FLAG) {
@@ -44,7 +46,7 @@ boost::asio::awaitable<void> HandlersLogonProofStage::HandleLogonProof(std::shar
         // 4. Проверка SRP результата
         auto K_opt = srp.VerifyChallengeResponse(A, clientM);
         if (!K_opt) {
-            log->warn("[HandleLogonProof] Invalid SRP proof for user {}", session->getAccountInfo()->Login);
+            log->warn("[HandleLogonProof] Invalid SRP proof for user {}", accountName);
             // Неверный пароль или SRP проверка не прошла
             RawPacket failReply;
             failReply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_PROOF));
@@ -56,24 +58,26 @@ boost::asio::awaitable<void> HandlersLogonProofStage::HandleLogonProof(std::shar
 
         // 5. Сохраняем session key
         session->_sessionKey = *K_opt;
+        session->server()->account_cache()->update_session_key(accountName, *K_opt);
 
         // 6. TODO Проверка 2FA токена, если используется (пример)
 
         // 7. TODO Проверка версии клиента (логика ValidateVersion)
-        log->trace("[HandleLogonProof] User '{}' successfully authenticated", session->getAccountInfo()->Login);
+        log->trace("[HandleLogonProof] User '{}' successfully authenticated", accountName);
 
-        // 8. Обновление записи в базе (асинхронно, пример)
+        // 8. Обновление записи в базе
         try {
-            std::string ip_str = NetUtils::uint32_to_ip_be(session->socket().remote_endpoint().address().to_v4().to_uint());
+            std::string ip_str = NetUtils::uint32_to_ip_be(
+                    session->socket().remote_endpoint().address().to_v4().to_uint());
             std::string safe_ip = ip_str.empty() ? "127.0.0.1" : ip_str;
 
             PreparedStatement stmt("UPDATE_LOGIN_LOGONPROOF");
             stmt.set_param(0, *K_opt);
             stmt.set_param(1, safe_ip);
-            stmt.set_param(2, session->getAccountInfo()->Login);
+            stmt.set_param(2, accountName);
 
             session->server()->db()->execute_sync_one<NothingRow>(stmt);
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             log->error("[HandleLogonProof] Database update error: {}", e.what());
             RawPacket failReply;
             failReply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_PROOF));
@@ -105,7 +109,7 @@ boost::asio::awaitable<void> HandlersLogonProofStage::HandleLogonProof(std::shar
         PacketUtils::send_packet_as<RawPacket>(session, packet);
         co_return;
     }
-    catch (const std::exception& ex) {
+    catch (const std::exception &ex) {
         log->error("[HandleLogonProof] Exception in read packet: {}", ex.what());
         RawPacket failReply;
         failReply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_PROOF));

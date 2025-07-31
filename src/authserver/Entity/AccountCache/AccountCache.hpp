@@ -35,6 +35,7 @@ public:
         uint64_t accountID;
         std::array<uint8_t, 32> salt{};
         std::array<uint8_t, 32> verifier{};
+        std::array<uint8_t, 40> sessionKey{};
         std::chrono::steady_clock::time_point last_access; // скользящий TTL
     };
 
@@ -65,6 +66,14 @@ public:
     void invalidate(const std::string &username) {
         std::lock_guard lock(mutex_);
         cache_.erase(username);
+    }
+
+    void update_session_key(const std::string &accountName, const std::array<uint8_t, 40> &K) {
+        std::lock_guard lock(mutex_);
+        auto it = cache_.find(accountName);
+        if (it != cache_.end()) {
+            it->second.sessionKey = K;
+        }
     }
 
 private:

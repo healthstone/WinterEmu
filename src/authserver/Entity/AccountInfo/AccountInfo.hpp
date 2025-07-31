@@ -17,6 +17,7 @@ public:
 
     uint64_t AccountID = 0;
     std::string Login;
+    std::string Email;
     bool IsLockedToIP = false;
     std::string LockCountry;
     std::string LastIP;

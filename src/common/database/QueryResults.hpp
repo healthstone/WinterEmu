@@ -15,6 +15,7 @@ struct AccountsRow {
     std::optional<std::string> name;
     std::optional<std::array<uint8_t, 32>> salt;
     std::optional<std::array<uint8_t, 32>> verifier;
+    std::optional<std::array<uint8_t, 40>> sessionkey;
     std::optional<std::string> email;
     std::optional<std::chrono::system_clock::time_point> created_at;
 };
@@ -149,6 +150,15 @@ struct PgRowMapper<AccountsRow> {
             std::array<uint8_t, 32> verifier_arr{};
             std::copy_n(verifier_bin.begin(), 32, verifier_arr.begin());
             row.verifier = verifier_arr;
+        }
+
+        if (!r["session_key_auth"].is_null()) {
+            pqxx::binarystring session_key_bin(r["session_key_auth"]);
+            if (session_key_bin.size() != 40)
+                throw std::runtime_error("PgRowMapper: Invalid sessionkey size, expected 40 bytes");
+            std::array<uint8_t, 40> session_key_bin_arr{};
+            std::copy_n(session_key_bin.begin(), 40, session_key_bin_arr.begin());
+            row.sessionkey = session_key_bin_arr;
         }
 
         if (!r["email"].is_null())

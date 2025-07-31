@@ -174,7 +174,7 @@ private:
     void prepare_all(pqxx::connection &conn) {
         pqxx::work txn(conn);
         conn.prepare("SELECT_ACCOUNT_BY_USERNAME",
-                     "SELECT id, username, salt, verifier, email, created_at FROM accounts WHERE username = $1");
+                     "SELECT id, username, salt, verifier, session_key_auth, email, created_at FROM accounts WHERE username = $1");
         conn.prepare("SELECT_BUILD_INFO",
                      "SELECT majorVersion, minorVersion, bugfixVersion, hotfixVersion, build FROM build_info ORDER BY build ASC");
         conn.prepare("SELECT_BUILD_EXECUTABLE_HASH",
