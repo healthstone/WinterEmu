@@ -66,7 +66,7 @@ void ClientSession::do_read() {
                     if (ec == boost::asio::error::operation_aborted ||
                         ec == boost::asio::error::eof ||
                         ec == boost::asio::error::connection_reset) {
-                        log->debug("[client_session][do_read] Client disconnected: {}", ec.message());
+                        //log->debug("[client_session][do_read] Client disconnected: {}", ec.message());
                     } else {
                         log->error("[client_session][do_read] Read error: {}", ec.message());
                     }
