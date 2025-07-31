@@ -48,8 +48,6 @@ void ClientSession::close() {
     read_buffer_.clear();
     write_queue_.clear();
 
-    log->debug("[client_session][close] Socket closed. closed_={}", closed_.load());
-
     if (server_) {
         server_->remove_session(shared_from_this());
     }
