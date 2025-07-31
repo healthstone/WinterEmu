@@ -38,6 +38,7 @@ std::string db_name = std::getenv("DB_NAME") ? std::getenv("DB_NAME") : "postgre
 - **DB_USER** — database user (default `postgres`)
 - **DB_PASSWORD** — database password (default `postgres`)
 - **DB_NAME** — database name (default `postgres`)
+- **LOG_FORMAT_JSON** — log formatter in JSON type (actually for k8s deployment and usage elastic+kibana). MDC support. (default `null`)
 
 If an environment variable is not set, a safe fallback will be used. The log output shows exactly which values are applied.
 
