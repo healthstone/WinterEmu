@@ -209,8 +209,7 @@ void HandlersChallenge::LogonChallengeLogic(std::shared_ptr<ClientSession> sessi
         }
 
         // 2 --- Проверка salt и verifier ---
-        if (!user->salt.has_value() || !user->verifier.has_value() ||
-            user->salt->size() != 32 || user->verifier->size() != 32) {
+        if (!user->salt.has_value() || !user->verifier.has_value()) {
             log->error("[HandleLogonChallenge] Account {} has invalid salt/verifier length", accountName);
             send_auth_result(AuthCmd::AUTH_LOGON_CHALLENGE, AuthResult::WOW_FAIL_INCORRECT_PASSWORD, session);
             return;
