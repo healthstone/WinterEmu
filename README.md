@@ -1,76 +1,22 @@
-# Purity Server: Overview
+# ❄️ WinterEmu — World of Warcraft Auth Server Emulator
 
-This C++ project implements a **Asynchronous server** using **Boost.Asio**, a custom binary protocol with **MMORPG standart** packet framing, SRP (Secure Remote Password) for authentication logic, and PostgreSQL integration.
-
-## Key Components
-
-### 🧩 **Session Modes**
-
-The server supports **multi-stage session modes** to switch between authentication and work phases:
-
-- **AUTH_SESSION**
-    - Packet format: `[Opcode (1 byte)][Length (2 bytes BE)][Payload]`
-    - Used for authentication handshake (SRP).
-    - Example opcodes: `CMSG_AUTH_LOGON_CHALLENGE`, `CMSG_PING`.
-
-- **WORK_SESSION**
-    - Packet format: `[Opcode (2 bytes BE)][Length (2 bytes BE)][Payload]`
-    - Used for post-auth gameplay or chat.
-    - Example opcodes: `CMSG_PING`, `CMSG_MESSAGE`.
-
-**Note:**
-- `BE` = Big Endian for network consistency.
-- Payloads are binary buffers encoded with a custom `ByteBuffer`.
-- The **Client** auto-switches session mode (e.g., from `AUTH_SESSION` to `WORK_SESSION`) after receiving `SMSG_AUTH_LOGON_PROOF`.
+**WinterEmu** is a modern World of Warcraft **auth server emulator** (inspired by TrinityCore) written in **C++**, using an asynchronous networking model with **Boost.Asio** and a **PostgreSQL** backend. This component handles account authentication, client build verification, and realmlist delivery.
 
 ---
 
-- For each SessionMode you can create child of Packet with new structure. All methods (read_uint8, write_uint8 and etc... ) already exist and tested by ByteBufferTest
+## 📌 Features
 
-### ⚙️ **Packet Handlers**
+✅ Fully asynchronous `AuthServer` using `Boost.Asio`  
+✅ Clean architecture: `ClientSession`, `RealmList`, `AccountCache`  
+✅ Account and realm storage in **PostgreSQL**  
+✅ SRP6 authentication protocol implemented  
+✅ Full packet hex logging with `Packet::log_raw_payload`  
+✅ Automatic duplicate session kick on multiple logins  
+✅ Account caching with SRP6 verifier, salt, and SessionKey  
+✅ Supports multiple WoW client builds up to **3.3.5a**  
+✅ Unit tests are included
 
-- `HandlersAuth` and `HandlersWork` dispatch packets by opcode.
-- All packets have an async `dispatch` system for routing.
-- For DB operations (e.g., account lookups), blocking calls run safely in worker threads, responses marshal back to the I/O thread.
-
-### ✅ **ClientSession** (`ClientSession.cpp`)
-- Owns a TCP socket and buffers.
-- Fully **thread-safe**: `send_packet()` posts safely back to the I/O thread.
-- Reads framed packets using handlers and reader from session mode.
-- Uses a `MessageBuffer` for incremental reading.
-- Manages its own lifetime via `shared_from_this()`.
-
-### ✅ **Server** (`Server.cpp`)
-- Accepts new connections asynchronously.
-- Manages active sessions with a `std::mutex`.
-- Cleanly stops all sessions and the DB pool on shutdown.
-
-### ✅ **SRP (Secure Remote Password)** (`SRP.cpp`)
-- Implements RFC 5054 style ephemeral key generation and proof.
-- Supports fake challenges to mitigate timing attacks.
-- Uses OpenSSL BIGNUMs with proper lifetime management.
-
-### Technical Highlights
-
-- **All packet headers (opcode and length fields) are big-endian.**
-- Safe async write queue for each client.
-- `Handlers` run CPU-bound DB calls in dedicated threads but serialize back replies to the main I/O thread.
-- `SRP` is prepared for PvPGN-like proof-of-concept authentication.
-- All socket writes are guarded against race conditions.
-
-### Security & Stability
-
-- All OpenSSL BIGNUMs are freed properly.
-- DB pool handles broken connections.
-- Sessions auto-cleanup on error or disconnect.
-- No leaks in the async read/write chain.
-
-### How to Extend
-
-- Add new **opcodes** in `HandlersAuth` or `HandlersWork`.
-- Add new SQL prepared statements in your DB class.
-- Extend `SRP` for real password verification.
-- Add new session modes if needed (copy `AUTH_SESSION` structure).
+---
 
 ### 📦 Configuration via Environment Variables
 
@@ -82,33 +28,6 @@ std::string db_port = std::getenv("DB_PORT") ? std::getenv("DB_PORT") : "5432";
 std::string db_user = std::getenv("DB_USER") ? std::getenv("DB_USER") : "postgres";
 std::string db_password = std::getenv("DB_PASSWORD") ? std::getenv("DB_PASSWORD") : "postgres";
 std::string db_name = std::getenv("DB_NAME") ? std::getenv("DB_NAME") : "postgres";
-```
-
----
-
-### Database example:
-
-Table **accounts** with example account: login: **1**, pass: **1**
-
-```
-CREATE TABLE accounts (
-  id BIGSERIAL PRIMARY KEY,
-  username VARCHAR(50) UNIQUE NOT NULL,
-  salt BYTEA NOT NULL CHECK (octet_length(salt) = 32),
-  verifier BYTEA NOT NULL CHECK (octet_length(verifier) = 32),
-  email VARCHAR(100),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO accounts (id, username, salt, verifier, email, created_at) VALUES
-(
-  1,
-  '1',
-  decode('0A3E57EEA85D222817B72F5A6299B642D56DB174F522FF0F8C72172D1223AE63', 'hex'),
-  decode('D08A4D3949264CFA1536E41EE8E0FCA3000D07B8BF3DCC1D524AA10535723689', 'hex'),
-  'test@gmail.com',
-  '2025-05-01 23:11:58'
-);
 ```
 
 ---
@@ -132,6 +51,46 @@ export DB_PASSWORD=mypass
 
 This makes it easy to configure the server without changing the source code! ✅
 
+---
+
+## ⚙️ Structure
+
+- `AuthServer` — the main server entry point, handles connections and sessions.
+- `ClientSession` — represents a connected client, tracks SRP6 states, SessionKey, Proofs, and manages the WoW protocol.
+- `RealmList` — keeps the current realm list from the database, resolves IP for the client.
+- `AccountCache` — fast in-memory cache for account SRP6 data and SessionKeys.
+- `Packet` / `RawPacket` — binary packet abstraction for WoW login protocol.
+
+---
+
+## 🗄️ Database
+
+- Uses **PostgreSQL**.
+- Example tables:
+  - `accounts` — stores login, salt, verifier, session_key.
+  - `realmlist` — stores realm IPs, build version, flags.
+  - `build_info` — stores build info data.
+  - `build_executable_hash` — stores build exe hash data.
+- Uses prepared statements for queries.
+
+## 🔑 How Authentication Works
+
+1. The client sends `AUTH_LOGON_CHALLENGE` or `AUTH_RECONNECT_CHALLENGE`.
+2. The server parses the packet, validates UTF-8, verifies account.
+3. If the account is cached — SRP6 B, salt, and SessionKey are sent immediately.
+4. Otherwise, salt/verifier are loaded from the database and cached.
+5. The server responds with proof challenge, and validates proof.
+6. On success, the `SessionKey` is saved back into the cache.
+
+---
+
+## 🧩 Dependencies
+
+- `C++20`
+- `Boost.Asio`
+- `PostgreSQL client library`
+- `spdlog` (for logging)
+- `Catch2` or any other unit testing framework
 
 ---
 
@@ -147,12 +106,45 @@ pkg-config \
 catch2
 ```
 
-### ⚡️Compilation
+## 🚀 Getting Started
 
-mkdir build && cd build
-
+```bash
+mkdir build
+cd build
 cmake ..
+make
+./authserver
+```
 
-make -j 4             (or another threads count)
+- Make sure **PostgreSQL** is running and schema is created.
+- Adjust database connection strings in your config files.
 
 ---
+
+## 📜 Example Logs
+
+```
+[client_session][start] New connection from 127.0.0.1:33044
+[Packet] DUMP opcode ID: REQUEST AUTH_LOGON_CHALLENGE ...
+[Packet] DUMP opcode ID: RESPONSE AUTH_LOGON_CHALLENGE ...
+```
+
+Every raw packet is hex-dumped for debugging.
+
+---
+
+## ✅ Unit Testing
+
+The project includes unit tests for critical parts such as SRP6, packet parsing, and database logic.
+
+Framework: Catch2
+
+---
+
+## 🤝 Contributing
+
+PRs and issues are welcome!
+
+---
+
+**WinterEmu** — Blizzard may freeze, but you control the realms. ❄️
