@@ -100,7 +100,7 @@ boost::asio::awaitable<void> HandlersLogonProofStage::HandleLogonProof(std::shar
         }
 
         session->set_session_mode(SessionMode::STATUS_WAITING_FOR_REALM_LIST);
-        Packet::log_raw_payload("REQUEST AUTH_LOGON_PROOF", payload);
+        Packet::log_raw_payload("REQUEST  AUTH_LOGON_PROOF", payload);
         Packet::log_raw_payload("RESPONSE AUTH_LOGON_PROOF", packet.serialize());
         PacketUtils::send_packet_as<RawPacket>(session, packet);
         co_return;

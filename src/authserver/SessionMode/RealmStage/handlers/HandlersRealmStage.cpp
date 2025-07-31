@@ -110,7 +110,7 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
         hdr.write_bytes(packet.serialize());
 
         //session->set_session_mode(SessionMode::STATUS_AUTHED);
-        Packet::log_raw_payload("REQUEST REALM_LIST", payload);
+        Packet::log_raw_payload("REQUEST  REALM_LIST", payload);
         Packet::log_raw_payload("RESPONSE REALM_LIST", hdr.serialize());
         PacketUtils::send_packet_as<RawPacket>(session, hdr);
         co_return;

@@ -44,7 +44,7 @@ HandlersChallenge::HandleReconnectChallenge(std::shared_ptr<ClientSession> sessi
     co_return;
 }
 
-bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, std::shared_ptr<ClientSession> session,
+bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, const std::shared_ptr<ClientSession>& session,
                                             const std::vector<uint8_t> &payload) {
     auto log = Logger::get();
     ByteBuffer buffer(payload);
@@ -270,7 +270,7 @@ void HandlersChallenge::LogonChallengeLogic(std::shared_ptr<ClientSession> sessi
     }
 }
 
-void HandlersChallenge::ReconnectChallengeLogic(std::shared_ptr<ClientSession> session) {
+void HandlersChallenge::ReconnectChallengeLogic(const std::shared_ptr<ClientSession>& session) {
     auto log = Logger::get();
     log->error("[ReconnectChallengeLogic] should not be called");
 }
