@@ -26,5 +26,10 @@ void ReaderRealmStage::process_read_buffer(std::shared_ptr<ClientSession> sessio
 
     std::vector<uint8_t> payload(data, data + packet_size);
     buffer.read_completed(packet_size);
-    HandlersRealmStage::HandleRealmList(session, payload);
+
+    boost::asio::co_spawn(
+            session->socket().get_executor(),
+            HandlersRealmStage::HandleRealmList(session, payload),
+            boost::asio::detached
+    );
 }

@@ -36,17 +36,17 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
         uint32_t timezone_bias = buffer.read_uint32_le();
         uint32_t ip = buffer.read_uint32_le();
         uint8_t I_len = buffer.read_uint8();
-        std::string username = buffer.read_string_raw_le(I_len);
+        std::string accountName = buffer.read_string_raw_le(I_len);
 
         log->debug(
                 "{}: cmd=0x{:02X} size={} Game: {} Version: {}.{}.{} Build: {} Platform: {} OS: {} Country: {} TZ: {} IP: {} Username: {}",
-                opcode_name, cmd, size, gamename, v1, v2, v3, build, platform, os, country, timezone_bias, NetUtils::uint32_to_ip_le(ip), username);
+                opcode_name, cmd, size, gamename, v1, v2, v3, build, platform, os, country, timezone_bias, NetUtils::uint32_to_ip_le(ip), accountName);
 
         Packet::log_raw_payload(opcode_name, payload);
 
         // 1 - проверка на UTF8
-        if (!UTF8Utils::is_valid_utf8(username)) {
-            log->error("[HandleLogonChallenge] {} - Invalid UTF-8 username received: {}", opcode_name, username);
+        if (!UTF8Utils::is_valid_utf8(accountName)) {
+            log->error("[HandleLogonChallenge] {} - Invalid UTF-8 accountName received: {}", opcode_name, accountName);
             // Обработка ошибки, например отказ
             RawPacket reply;
             reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE));
@@ -57,11 +57,11 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
         }
 
         // 2 - делаем верхний регистр
-        username = UTF8Utils::to_uppercase(username);
+        accountName = UTF8Utils::to_uppercase(accountName);
 
         // 2.5 - кикаем все сессии, где уже авторизованы под данным логином + откидываем этого с оповещением, что уже авторизован
-        if (session->server()->disconnectSessionIfExists(username)) {
-            log->warn("[HandleLogonChallenge] Duplicate session for '{}'", username);
+        if (session->server()->disconnectSessionIfExists(accountName)) {
+            log->warn("[HandleLogonChallenge] Duplicate session for AccID: {}", accountName);
 
             RawPacket reply;
             reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE));
@@ -71,7 +71,7 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
             co_return;
         }
 
-        session->getAccountInfo()->setUserName(username);
+        session->getAccountInfo()->setUserName(accountName);
         session->_build = build;
         session->_expversion = uint8_t(AuthHelper::IsPostBCAcceptedClientBuild(build) ? POST_BC_EXP_FLAG : (AuthHelper::IsPreBCAcceptedClientBuild(build) ? PRE_BC_EXP_FLAG : NO_VALID_EXP_FLAG));
 
@@ -79,19 +79,21 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
         session->_localizationName = country;
 
         auto cache = session->server()->account_cache();
-        auto cached_user_opt = cache->get(username);
+        auto cached_user_opt = cache->get(accountName);
 
         uint8_t securityFlags = 0;
 
         // 3 - пробуем взять из кэша
         if (cached_user_opt) {
             auto &cached_user = *cached_user_opt;
+            session->_accountID = cached_user.accountID;
 
             // Инициализация SRP6 с salt и verifier
-            session->_srp6.emplace(username, cached_user.salt, cached_user.verifier);
+            session->_srp6.emplace(accountName, cached_user.salt, cached_user.verifier);
             auto& srp = *session->_srp6;
 
-            log->debug("[HandleLogonChallenge] {}: B.size={}, g={}, N.size={}, salt.size={}",
+            log->debug("[HandleLogonChallenge] AccID: {} opcode: {} B.size={}, g={}, N.size={}, salt.size={}",
+                       cached_user.accountID,
                        opcode_name,
                        srp.B.size(),
                        Crypto::SRP6::g[0],
@@ -126,13 +128,13 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
         // 4 - лезем в бд
         try {
             PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
-            stmt.set_param(0, username);
+            stmt.set_param(0, accountName);
 
             auto user = session->server()->db()->execute_sync_one<AccountsRow>(stmt);
 
             // 5 - если нет аккаунта
             if (!user) {
-                log->error("[HandleLogonChallenge] User '{}' not found", username);
+                log->error("[HandleLogonChallenge] Account {} not found", accountName);
 
                 RawPacket reply;
                 reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE));
@@ -145,7 +147,7 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
             // 6 --- Проверка salt и verifier ---
             if (!user->salt.has_value() || !user->verifier.has_value() ||
                 user->salt->size() != 32 || user->verifier->size() != 32) {
-                log->error("[HandleLogonChallenge] User '{}' has invalid salt/verifier length", username);
+                log->error("[HandleLogonChallenge] Account {} has invalid salt/verifier length", accountName);
 
                 RawPacket reply;
                 reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE));
@@ -155,14 +157,18 @@ boost::asio::awaitable<void> HandlersChallenge::HandleLogonChallenge(const std::
                 co_return;
             }
 
+            session->_accountID = user->id;
+
             AccountCache::AccountCacheEntry cacheEntry;
+            cacheEntry.accountID = user->id;
             cacheEntry.salt = *user->salt;
             cacheEntry.verifier = *user->verifier;
-            cache->put(username, cacheEntry);
+            cache->put(accountName, cacheEntry);
 
-            session->_srp6.emplace(username, *user->salt, *user->verifier);
+            session->_srp6.emplace(accountName, *user->salt, *user->verifier);
             auto& srp = *session->_srp6;
-            log->debug("[HandleLogonChallenge] {}: B.size={}, g={}, N.size={}, salt.size={}",
+            log->debug("[HandleLogonChallenge] AccID: {}, opcode: {} B.size={}, g={}, N.size={}, salt.size={}",
+                       user->id,
                        opcode_name,
                        srp.B.size(),
                        Crypto::SRP6::g[0],

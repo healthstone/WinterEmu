@@ -32,6 +32,7 @@ public:
     }
 
     struct AccountCacheEntry {
+        uint64_t accountID;
         std::array<uint8_t, 32> salt{};
         std::array<uint8_t, 32> verifier{};
         std::chrono::steady_clock::time_point last_access; // скользящий TTL

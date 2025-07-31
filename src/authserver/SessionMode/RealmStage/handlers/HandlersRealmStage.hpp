@@ -7,5 +7,5 @@
 /** only REALM_LIST **/
 namespace HandlersRealmStage
 {
-    void HandleRealmList(std::shared_ptr<ClientSession> session, const std::vector<uint8_t>& payload);
+    boost::asio::awaitable<void> HandleRealmList(std::shared_ptr<ClientSession> session, const std::vector<uint8_t>& payload);
 }

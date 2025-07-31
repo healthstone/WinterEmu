@@ -59,6 +59,7 @@ public:
     uint16_t _build;
     uint16_t _timezoneOffset;
     uint8_t _expversion;
+    uint64_t _accountID;
 
 private:
     void do_read();
