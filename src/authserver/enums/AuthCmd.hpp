@@ -1,3 +1,5 @@
+#pragma once
+
 enum class AuthCmd : uint8_t
 {
     AUTH_LOGON_CHALLENGE        = 0x00,
