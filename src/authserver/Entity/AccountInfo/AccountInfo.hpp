@@ -2,6 +2,7 @@
 #include <memory>
 #include "srp6/SRP6.hpp"
 #include "src/authserver/enums/AccountTypes.hpp"
+#include <boost/uuid/uuid.hpp>
 
 class AccountInfo {
 public:
@@ -15,7 +16,7 @@ public:
     /** метод, вызываемый, когда acc завершает соединение **/
     void handle_close_state();
 
-    uint64_t AccountID = 0;
+    boost::uuids::uuid AccountID;
     std::string Login;
     std::string Email;
     bool IsLockedToIP = false;

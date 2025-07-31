@@ -173,22 +173,28 @@ private:
 
     void prepare_all(pqxx::connection &conn) {
         pqxx::work txn(conn);
+
+        std::string auth_schema = std::getenv("AUTH_SCHEMA") ?: "auth_server";
+
         conn.prepare("SELECT_ACCOUNT_BY_USERNAME",
-                     "SELECT id, username, salt, verifier, session_key_auth, email, created_at FROM accounts WHERE username = $1");
+                     fmt::format("SELECT id, username, salt, verifier, session_key_auth, email, created_at FROM {}.accounts WHERE username = $1", auth_schema));
         conn.prepare("SELECT_BUILD_INFO",
-                     "SELECT majorVersion, minorVersion, bugfixVersion, hotfixVersion, build FROM build_info ORDER BY build ASC");
+                     fmt::format("SELECT majorVersion, minorVersion, bugfixVersion, hotfixVersion, build FROM {}.build_info ORDER BY build ASC", auth_schema));
         conn.prepare("SELECT_BUILD_EXECUTABLE_HASH",
-                     "SELECT build, platform, executableHash FROM build_executable_hash");
+                     fmt::format("SELECT build, platform, executableHash FROM {}.build_executable_hash", auth_schema));
         conn.prepare("SELECT_REALMLIST",
-                     "SELECT id, name, address, local_address, local_subnet_mask, port, icon, flag, timezone, allowed_security_level, population, gamebuild FROM realmlist WHERE flag <> 3 ORDER BY name");
+                     fmt::format("SELECT id, name, address, local_address, local_subnet_mask, port, icon, flag, timezone, allowed_security_level, population, gamebuild FROM {}.realmlist WHERE flag <> 3 ORDER BY name", auth_schema));
         conn.prepare("SELECT_REALM_CHARACTERS",
-                     "SELECT realmid, numchars FROM realmcharacters WHERE  acctid = $1");
+                     fmt::format("SELECT realmid, numchars FROM {}.realmcharacters WHERE acctid = $1", auth_schema));
 
         conn.prepare("UPDATE_LOGIN_LOGONPROOF",
-                     "UPDATE accounts SET session_key_auth = decode($1, 'hex'), last_ip = $2, last_login = NOW() WHERE username = $3");
+                     fmt::format("UPDATE {}.accounts SET session_key_auth = decode($1, 'hex'), last_ip = $2, last_login = NOW() WHERE username = $3", auth_schema));
 
-        conn.prepare("INSERT_ACCOUNT_BY_USERNAME",
-                     "INSERT INTO accounts (username, salt, verifier) VALUES ($1, $2, $3) RETURNING id");
+// just example
+//        conn.prepare("INSERT_ACCOUNT_BY_USERNAME",
+//                     "INSERT INTO accounts (username, salt, verifier) VALUES ($1, $2, $3) RETURNING id");
+        conn.prepare("INSERT_REALM_CHARACTERS",
+                     fmt::format("INSERT INTO {}.realmcharacters (realmid, acctid, numchars) VALUES ($1, $2, $3)", auth_schema));
         txn.commit();
     }
 

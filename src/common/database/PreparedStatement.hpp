@@ -9,6 +9,9 @@
 #include <sstream>
 #include <iomanip>
 
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp> // для boost::uuids::to_string
+
 class PreparedStatement {
 public:
     explicit PreparedStatement(const std::string& name) : name_(name) {}
@@ -55,6 +58,12 @@ public:
     void set_null(size_t index) {
         ensure_size(index);
         params_[index].reset();
+    }
+
+    // --- Support for boost::uuids::uuid ---
+    void set_param(size_t index, const boost::uuids::uuid& value) {
+        ensure_size(index);
+        params_[index] = boost::uuids::to_string(value);
     }
 
     // ======== UTILITY ========

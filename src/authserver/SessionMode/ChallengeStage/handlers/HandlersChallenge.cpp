@@ -5,6 +5,7 @@
 #include "packet/RawPacket.hpp"
 #include "src/authserver/Entity/AuthCodes/AuthCodes.hpp"
 #include "srp6/CryptoRandom.hpp"
+#include "utils/UUIDUtils.hpp"
 
 using namespace HandlersChallenge;
 
@@ -166,7 +167,7 @@ bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_na
 
                 Logger::get()->trace(
                         "[HandleLogonChallenge] AccID: {} opcode: {} B.size={}, g={}, N.size={}, salt.size={}",
-                        cached_user.accountID,
+                        UUIDUtils::UUIDtoString(cached_user.accountID),
                         opcode_name,
                         srp.B.size(),
                         Crypto::SRP6::g[0],
@@ -262,7 +263,7 @@ void HandlersChallenge::LogonChallengeLogic(std::shared_ptr<ClientSession> sessi
     auto &srp = *session->_srp6;
     log->trace(
             "[HandleLogonChallenge] AccID: {}, opcode: AUTH_LOGON_CHALLENGE B.size={}, g={}, N.size={}, salt.size={}",
-            user->id,
+            UUIDUtils::UUIDtoString(user->id),
             srp.B.size(),
             Crypto::SRP6::g[0],
             Crypto::SRP6::N.size(),

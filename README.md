@@ -28,6 +28,8 @@ std::string db_port = std::getenv("DB_PORT") ? std::getenv("DB_PORT") : "5432";
 std::string db_user = std::getenv("DB_USER") ? std::getenv("DB_USER") : "postgres";
 std::string db_password = std::getenv("DB_PASSWORD") ? std::getenv("DB_PASSWORD") : "postgres";
 std::string db_name = std::getenv("DB_NAME") ? std::getenv("DB_NAME") : "postgres";
+
+std::string auth_schema = std::getenv("AUTH_SCHEMA") ?: "auth_server";
 ```
 
 ---
@@ -39,6 +41,7 @@ std::string db_name = std::getenv("DB_NAME") ? std::getenv("DB_NAME") : "postgre
 - **DB_PASSWORD** — database password (default `postgres`)
 - **DB_NAME** — database name (default `postgres`)
 - **LOG_FORMAT_JSON** — log formatter in JSON type (actually for k8s deployment and usage elastic+kibana). MDC support. (default `null`)
+- **AUTH_SCHEMA** — database auth schema name (default `auth_server`)
 
 If an environment variable is not set, a safe fallback will be used. The log output shows exactly which values are applied.
 

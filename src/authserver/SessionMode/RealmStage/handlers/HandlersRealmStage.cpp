@@ -14,12 +14,17 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
     try {
         std::map<uint32_t, uint8_t> characterCounts;
 
-        PreparedStatement stmt("SELECT_REALM_CHARACTERS");
-        stmt.set_param(0, session->getAccountInfo()->AccountID);
+        PreparedStatement stmt1("SELECT_REALM_CHARACTERS");
+        stmt1.set_param(0, session->getAccountInfo()->AccountID);
 
-        auto rows = session->server()->db()->execute_sync_many<RealmCharactersRow>(stmt);
-        for (const auto& row : rows) {
-            characterCounts[row.realmid] = row.numchars;
+        auto rows = session->server()->db()->execute_sync_many<RealmCharactersRow>(stmt1);
+        if (!rows.empty()) {
+            for (const auto& row : rows) {
+                characterCounts[row.realmid] = row.numchars;
+            }
+        }
+        else {
+            fillInitialRealmCharacters(session);
         }
 
         RawPacket packet;
@@ -118,5 +123,20 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
     } catch (const std::exception& ex) {
         Logger::get()->error("[HandleRealmList] exception: {}", ex.what());
         co_return;
+    }
+}
+
+void HandlersRealmStage::fillInitialRealmCharacters(const std::shared_ptr<ClientSession>& session) {
+    try{
+        const auto& realmsMap = session->server()->realm_list()->getRealmsMap();
+        for (const auto& [id, realm] : realmsMap) {
+            PreparedStatement stmt("INSERT_REALM_CHARACTERS");
+            stmt.set_param(0, id);
+            stmt.set_param(1, session->getAccountInfo()->AccountID);
+            stmt.set_param(2, 0);
+            session->server()->db()->execute_sync_one<NothingRow>(stmt);
+        }
+    } catch (const std::exception& ex) {
+        Logger::get()->error("[HandlersRealmStage][fillInitialRealmCharacters] exception: {}", ex.what());
     }
 }

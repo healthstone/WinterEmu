@@ -32,7 +32,7 @@ public:
     }
 
     struct AccountCacheEntry {
-        uint64_t accountID;
+        boost::uuids::uuid accountID;
         std::array<uint8_t, 32> salt{};
         std::array<uint8_t, 32> verifier{};
         std::array<uint8_t, 40> sessionKey{};

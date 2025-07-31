@@ -7,11 +7,13 @@
 #include <optional>
 #include <algorithm>
 #include "utils/TimeUtils.hpp"
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/string_generator.hpp>
 
 // === Структуры ===
 
 struct AccountsRow {
-    uint64_t id;
+    boost::uuids::uuid id;
     std::optional<std::string> name;
     std::optional<std::array<uint8_t, 32>> salt;
     std::optional<std::array<uint8_t, 32>> verifier;
@@ -128,8 +130,15 @@ struct PgRowMapper<AccountsRow> {
     static AccountsRow map(const pqxx::row &r) {
         AccountsRow row;
 
-        // PostgreSQL BIGINT -> int64_t -> uint64_t ( 0 … 9223372036854775807 )
-        row.id = static_cast<uint64_t>(r["id"].as<int64_t>());
+        // Парсим UUID строку
+        // Преобразуем поле id из строки в boost::uuids::uuid
+        std::string id_str = r["id"].as<std::string>();
+        try {
+            boost::uuids::string_generator gen;
+            row.id = gen(id_str);
+        } catch (const std::exception &e) {
+            throw std::runtime_error("PgRowMapper: invalid UUID string in 'id' field: " + id_str);
+        }
 
         if (!r["username"].is_null())
             row.name = r["username"].as<std::string>();
