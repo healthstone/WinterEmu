@@ -16,8 +16,9 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
 
         PreparedStatement stmt1("SELECT_REALM_CHARACTERS");
         stmt1.set_param(0, session->getAccountInfo()->AccountID);
+        Packet::log_raw_payload("REQUEST  REALM_LIST", payload);
 
-        auto rows = session->server()->db()->execute_sync_many<RealmCharactersRow>(stmt1);
+        auto rows = co_await session->server()->db()->execute_async_many<RealmCharactersRow>(stmt1);
         if (!rows.empty()) {
             for (const auto& row : rows) {
                 characterCounts[row.realmid] = row.numchars;
@@ -114,7 +115,6 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
         hdr.write_bytes(packet.serialize());
 
         //session->set_session_mode(SessionMode::STATUS_AUTHED);
-        Packet::log_raw_payload("REQUEST  REALM_LIST", payload);
         Packet::log_raw_payload("RESPONSE REALM_LIST", hdr.serialize());
         PacketUtils::send_packet_as<RawPacket>(session, hdr);
         co_return;

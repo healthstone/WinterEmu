@@ -64,6 +64,7 @@ HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<ClientSession> session
 
         // 7. TODO Проверка версии клиента (логика ValidateVersion)
         log->trace("[HandleLogonProof] User '{}' successfully authenticated", accountName);
+        Packet::log_raw_payload("REQUEST  AUTH_LOGON_PROOF", payload);
 
         // 8. Обновление записи в базе
         try {
@@ -72,11 +73,11 @@ HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<ClientSession> session
             std::string safe_ip = ip_str.empty() ? "127.0.0.1" : ip_str;
 
             PreparedStatement stmt("UPDATE_LOGIN_LOGONPROOF");
-            stmt.set_param(0, *K_opt);
+            stmt.set_param(0, session->_sessionKey);
             stmt.set_param(1, safe_ip);
             stmt.set_param(2, accountName);
 
-            session->server()->db()->execute_sync_one<NothingRow>(stmt);
+            co_await session->server()->db()->execute_async_one<NothingRow>(stmt);
         } catch (const std::exception &e) {
             log->error("[HandleLogonProof] Database update error: {}", e.what());
             RawPacket failReply;
@@ -104,7 +105,6 @@ HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<ClientSession> session
         }
 
         session->set_session_mode(SessionMode::STATUS_WAITING_FOR_REALM_LIST);
-        Packet::log_raw_payload("REQUEST  AUTH_LOGON_PROOF", payload);
         Packet::log_raw_payload("RESPONSE AUTH_LOGON_PROOF", packet.serialize());
         PacketUtils::send_packet_as<RawPacket>(session, packet);
         co_return;
