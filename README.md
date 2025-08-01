@@ -30,6 +30,9 @@ std::string db_password = std::getenv("DB_PASSWORD") ? std::getenv("DB_PASSWORD"
 std::string db_name = std::getenv("DB_NAME") ? std::getenv("DB_NAME") : "postgres";
 
 std::string auth_schema = std::getenv("AUTH_SCHEMA") ?: "auth_server";
+
+int port = std::getenv("AUTH_PORT") ? static_cast<int>(std::stoi(std::getenv("AUTH_PORT"))) : 3724;
+unsigned int max_threads = std::getenv("NETWORK_THREADS") ?: default: max threads - async db threads - 1 ( for example if 8 max: 2 async and 5 network  and 1 for system and logs );
 ```
 
 ---
