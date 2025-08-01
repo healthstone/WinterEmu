@@ -9,8 +9,7 @@ using namespace HandlersRealmStage;
 
 boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
         std::shared_ptr<ClientSession> session,
-        const std::vector<uint8_t>& payload)
-{
+        const std::vector<uint8_t> &payload) {
     try {
         std::map<uint32_t, uint8_t> characterCounts;
 
@@ -20,19 +19,18 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
 
         auto rows = co_await session->server()->db()->execute_async_many<RealmCharactersRow>(stmt1);
         if (!rows.empty()) {
-            for (const auto& row : rows) {
+            for (const auto &row: rows) {
                 characterCounts[row.realmid] = row.numchars;
             }
-        }
-        else {
-            fillInitialRealmCharacters(session);
+        } else {
+            co_await fillInitialRealmCharacters(session);
         }
 
         RawPacket packet;
         size_t realmListSize = 0;
 
-        const auto& realmsMap = session->server()->realm_list()->getRealmsMap();
-        for (const auto& [id, realm] : realmsMap) {
+        const auto &realmsMap = session->server()->realm_list()->getRealmsMap();
+        for (const auto &[id, realm]: realmsMap) {
             if (!realm) continue;
 
             // Работай через realm->
@@ -42,7 +40,7 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
 
             uint32_t flag = realm->Flags;
 
-            const ClientBuild::Info* buildInfo = ClientBuild::GetBuildInfo(realm->Build);
+            const ClientBuild::Info *buildInfo = ClientBuild::GetBuildInfo(realm->Build);
             if (!okBuild) {
                 if (!buildInfo) continue;
                 flag |= REALM_FLAG_OFFLINE | REALM_FLAG_SPECIFYBUILD;
@@ -119,23 +117,24 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
         PacketUtils::send_packet_as<RawPacket>(session, hdr);
         co_return;
 
-    } catch (const std::exception& ex) {
+    } catch (const std::exception &ex) {
         Logger::get()->error("[HandleRealmList] exception: {}", ex.what());
         co_return;
     }
 }
 
-void HandlersRealmStage::fillInitialRealmCharacters(const std::shared_ptr<ClientSession>& session) {
-    try{
-        const auto& realmsMap = session->server()->realm_list()->getRealmsMap();
-        for (const auto& [id, realm] : realmsMap) {
+boost::asio::awaitable<void>
+HandlersRealmStage::fillInitialRealmCharacters(const std::shared_ptr<ClientSession> &session) {
+    try {
+        const auto &realmsMap = session->server()->realm_list()->getRealmsMap();
+        for (const auto &[id, realm]: realmsMap) {
             PreparedStatement stmt("INSERT_REALM_CHARACTERS");
             stmt.set_param(0, id);
             stmt.set_param(1, session->getAccountInfo()->AccountID);
             stmt.set_param(2, 0);
-            session->server()->db()->execute_sync_one<NothingRow>(stmt);
+            co_await session->server()->db()->execute_async_one<NothingRow>(stmt);
         }
-    } catch (const std::exception& ex) {
+    } catch (const std::exception &ex) {
         Logger::get()->error("[HandlersRealmStage][fillInitialRealmCharacters] exception: {}", ex.what());
     }
 }
