@@ -71,8 +71,7 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
 
             boost::asio::ip::address clientAddr = session->GetRemoteIpAddress();
             boost::asio::ip::tcp::endpoint endpoint = realm->GetAddressForClient(clientAddr);
-            std::string addressStr = endpoint.address().to_string();
-            packet.write_string_nt_be(addressStr);
+            packet.write_string_nt_be(fmt::format("{}:{}", endpoint.address().to_string(), endpoint.port()));
 
             packet.write_float_le(realm->PopulationLevel);
             packet.write_uint8(characterCounts[realm->Id]);
