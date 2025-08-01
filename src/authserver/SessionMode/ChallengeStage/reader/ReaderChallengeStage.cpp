@@ -4,7 +4,7 @@
 
 using namespace ReaderChallengeStage;
 
-void ReaderChallengeStage::process_read_buffer(std::shared_ptr<ClientSession> session) {
+void ReaderChallengeStage::process_read_buffer(const std::shared_ptr<AuthSession>& session) {
     auto log = Logger::get();
     auto& buffer = session->read_buffer();
 
@@ -19,7 +19,7 @@ void ReaderChallengeStage::process_read_buffer(std::shared_ptr<ClientSession> se
     if (buffer.get_active_size() < 4 + size)
         return;
 
-    std::vector<uint8_t> payload(data, data + 4 + size);
+    auto payload = std::make_shared<std::vector<uint8_t>>(data, data + 4 + size);
     buffer.read_completed(4 + size);
 
     switch (static_cast<AuthCmd>(cmd)) {

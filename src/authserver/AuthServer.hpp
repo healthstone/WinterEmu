@@ -6,11 +6,11 @@
 #include <mutex>
 
 #include "Database.hpp"
-#include "ClientSession/ClientSession.hpp"
+#include "AuthSession/AuthSession.hpp"
 #include "Entity/AccountCache/AccountCache.hpp"
 #include "src/authserver/Entity/RealmList/RealmList.hpp"
 
-class ClientSession;
+class AuthSession;
 
 class AuthServer : public std::enable_shared_from_this<AuthServer> {
 public:
@@ -20,7 +20,7 @@ public:
 
     void start_accept();
     void stop();
-    void remove_session(std::shared_ptr<ClientSession> session);
+    void remove_session(std::shared_ptr<AuthSession> session);
     void log_session_count();
 
     bool disconnectSessionIfExists(const std::string &username);
@@ -39,6 +39,6 @@ private:
     std::shared_ptr<AccountCache> account_cache_;
     std::shared_ptr<RealmList> realmList_;
 
-    std::unordered_set<std::shared_ptr<ClientSession>> sessions_;
+    std::unordered_set<std::shared_ptr<AuthSession>> sessions_;
     std::mutex sessions_mutex_;
 };

@@ -22,9 +22,9 @@ enum class SessionMode {
     STATUS_CLOSED
 };
 
-class ClientSession : public std::enable_shared_from_this<ClientSession> {
+class AuthSession : public std::enable_shared_from_this<AuthSession> {
 public:
-    ClientSession(boost::asio::ip::tcp::socket socket, std::shared_ptr<AuthServer> server);
+    AuthSession(boost::asio::ip::tcp::socket socket, std::shared_ptr<AuthServer> server);
 
     void start();
 
@@ -32,7 +32,7 @@ public:
 
     bool isOpened() const { return !closed_; }
 
-    void send_packet(std::shared_ptr<const Packet> packet);
+    void send_packet(const std::shared_ptr<const Packet>& packet);
 
     boost::asio::ip::tcp::socket &socket() { return socket_; }
 

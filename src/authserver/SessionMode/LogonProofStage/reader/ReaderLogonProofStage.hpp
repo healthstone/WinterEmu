@@ -1,5 +1,5 @@
-#include "src/authserver/ClientSession/ClientSession.hpp"
+#include "src/authserver/AuthSession/AuthSession.hpp"
 
 namespace ReaderLogonProofStage {
-    void process_read_buffer(std::shared_ptr<ClientSession> session);
+    void process_read_buffer(const std::shared_ptr<AuthSession>& session);
 }

@@ -9,9 +9,9 @@
 using namespace HandlersLogonProofStage;
 
 boost::asio::awaitable<void>
-HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<ClientSession> session, const std::vector<uint8_t> &payload) {
+HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>>& payload) {
     auto log = Logger::get();
-    ByteBuffer buffer(payload);
+    ByteBuffer buffer(*payload);
     session->set_session_mode(SessionMode::STATUS_CLOSED);
 
     std::string accountName = session->getAccountInfo()->Login;
@@ -64,7 +64,7 @@ HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<ClientSession> session
 
         // 7. TODO Проверка версии клиента (логика ValidateVersion)
         log->trace("[HandleLogonProof] User '{}' successfully authenticated", accountName);
-        Packet::log_raw_payload("REQUEST  AUTH_LOGON_PROOF", payload);
+        Packet::log_raw_payload("REQUEST  AUTH_LOGON_PROOF", *payload);
 
         // 8. Обновление записи в базе
         try {

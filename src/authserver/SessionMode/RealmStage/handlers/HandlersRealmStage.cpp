@@ -8,14 +8,14 @@
 using namespace HandlersRealmStage;
 
 boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
-        std::shared_ptr<ClientSession> session,
-        const std::vector<uint8_t> &payload) {
+        std::shared_ptr<AuthSession> session,
+        std::shared_ptr<std::vector<uint8_t>>& payload) {
     try {
         std::map<uint32_t, uint8_t> characterCounts;
 
         PreparedStatement stmt1("SELECT_REALM_CHARACTERS");
         stmt1.set_param(0, session->getAccountInfo()->AccountID);
-        Packet::log_raw_payload("REQUEST  REALM_LIST", payload);
+        Packet::log_raw_payload("REQUEST  REALM_LIST", *payload);
 
         auto rows = co_await session->server()->db()->execute_async_many<RealmCharactersRow>(stmt1);
         if (!rows.empty()) {
@@ -124,7 +124,7 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
 }
 
 boost::asio::awaitable<void>
-HandlersRealmStage::fillInitialRealmCharacters(const std::shared_ptr<ClientSession> &session) {
+HandlersRealmStage::fillInitialRealmCharacters(const std::shared_ptr<AuthSession> &session) {
     try {
         const auto &realmsMap = session->server()->realm_list()->getRealmsMap();
         for (const auto &[id, realm]: realmsMap) {

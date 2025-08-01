@@ -4,7 +4,7 @@
 
 using namespace ReaderReconnectProofStage;
 
-void ReaderReconnectProofStage::process_read_buffer(std::shared_ptr<ClientSession> session) {
+void ReaderReconnectProofStage::process_read_buffer(const std::shared_ptr<AuthSession>& session) {
     auto& buffer = session->read_buffer();
 
     constexpr size_t packet_size = sizeof(uint8_t)    // cmd
@@ -26,7 +26,7 @@ void ReaderReconnectProofStage::process_read_buffer(std::shared_ptr<ClientSessio
         return;
     }
 
-    std::vector<uint8_t> payload(data, data + packet_size);
+    auto payload = std::make_shared<std::vector<uint8_t>>(data, data + packet_size);
     buffer.read_completed(packet_size);
     HandlersReconnectProofStage::HandleReconnectProof(session, payload);
 }

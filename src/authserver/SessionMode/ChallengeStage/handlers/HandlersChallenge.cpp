@@ -15,8 +15,8 @@ uint8_t VersionChallenge[16] = {
 };
 
 boost::asio::awaitable<void>
-HandlersChallenge::HandleLogonChallenge(std::shared_ptr<ClientSession> session,
-                                        const std::vector<uint8_t> &payload) {
+HandlersChallenge::HandleLogonChallenge(std::shared_ptr<AuthSession> session,
+                                        std::shared_ptr<std::vector<uint8_t>> &payload) {
     // 1 - Проверяем общими проверками
     if (!isPassedCommonLogic(AuthCmd::AUTH_LOGON_CHALLENGE, session, payload))
         co_return;
@@ -31,8 +31,8 @@ HandlersChallenge::HandleLogonChallenge(std::shared_ptr<ClientSession> session,
 }
 
 boost::asio::awaitable<void>
-HandlersChallenge::HandleReconnectChallenge(std::shared_ptr<ClientSession> session,
-                                            const std::vector<uint8_t> &payload) {
+HandlersChallenge::HandleReconnectChallenge(std::shared_ptr<AuthSession> session,
+                                            std::shared_ptr<std::vector<uint8_t>> &payload) {
     // 1 - Проверяем общими проверками
     if (!isPassedCommonLogic(AuthCmd::AUTH_RECONNECT_CHALLENGE, session, payload))
         co_return;
@@ -46,10 +46,10 @@ HandlersChallenge::HandleReconnectChallenge(std::shared_ptr<ClientSession> sessi
     co_return;
 }
 
-bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, const std::shared_ptr<ClientSession>& session,
-                                            const std::vector<uint8_t> &payload) {
+bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, const std::shared_ptr<AuthSession>& session,
+                                            std::shared_ptr<std::vector<uint8_t>> &payload) {
     auto log = Logger::get();
-    ByteBuffer buffer(payload);
+    ByteBuffer buffer(*payload);
     session->set_session_mode(SessionMode::STATUS_CLOSED);
     std::string opcode_name =
             cmd == AuthCmd::AUTH_LOGON_CHALLENGE ? "AUTH_LOGON_CHALLENGE" : "AUTH_RECONNECT_CHALLENGE";
@@ -92,14 +92,14 @@ bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, const std::shared_ptr<C
     session->_localizationName = logonChallenge->country;
     session->_os = logonChallenge->os;
 
-    Packet::log_raw_payload("REQUEST  " + opcode_name, payload);
+    Packet::log_raw_payload("REQUEST  " + opcode_name, *payload);
     return true;
 }
 
 std::optional<LogonChallenge>
-HandlersChallenge::ReadPacketFields(const std::string &opcode_name, const std::vector<uint8_t> &payload) {
+HandlersChallenge::ReadPacketFields(const std::string &opcode_name, std::shared_ptr<std::vector<uint8_t>> &payload) {
     auto log = Logger::get();
-    ByteBuffer buffer(payload);
+    ByteBuffer buffer(*payload);
     try {
         uint8_t cmd = buffer.read_uint8();
         uint8_t error = buffer.read_uint8();
@@ -146,7 +146,7 @@ HandlersChallenge::ReadPacketFields(const std::string &opcode_name, const std::v
 }
 
 bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_name,
-                                      std::shared_ptr<ClientSession> session) {
+                                      std::shared_ptr<AuthSession> session) {
     auto cache = session->server()->account_cache();
     auto cached_user_opt = cache->get(account_name);
     if (cached_user_opt) {
@@ -212,7 +212,7 @@ bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_na
         return true;
 }
 
-boost::asio::awaitable<std::optional<AccountsRow>> HandlersChallenge::fetchFromDB(AuthCmd cmd, std::shared_ptr<ClientSession> session) {
+boost::asio::awaitable<std::optional<AccountsRow>> HandlersChallenge::fetchFromDB(AuthCmd cmd, std::shared_ptr<AuthSession> session) {
     try {
         PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
         stmt.set_param(0, session->getAccountInfo()->Login);
@@ -225,7 +225,7 @@ boost::asio::awaitable<std::optional<AccountsRow>> HandlersChallenge::fetchFromD
     }
 }
 
-boost::asio::awaitable<void> HandlersChallenge::LogonChallengeLogic(std::shared_ptr<ClientSession> session) {
+boost::asio::awaitable<void> HandlersChallenge::LogonChallengeLogic(std::shared_ptr<AuthSession> session) {
     auto log = Logger::get();
     std::string accountName = session->getAccountInfo()->Login;
 
@@ -289,7 +289,7 @@ boost::asio::awaitable<void> HandlersChallenge::LogonChallengeLogic(std::shared_
     co_return;
 }
 
-boost::asio::awaitable<void> HandlersChallenge::ReconnectChallengeLogic(const std::shared_ptr<ClientSession>& session) {
+boost::asio::awaitable<void> HandlersChallenge::ReconnectChallengeLogic(const std::shared_ptr<AuthSession>& session) {
     RawPacket pkt;
     pkt.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_RECONNECT_CHALLENGE));  // opcode ID
 
@@ -313,7 +313,7 @@ boost::asio::awaitable<void> HandlersChallenge::ReconnectChallengeLogic(const st
     co_return;
 }
 
-void HandlersChallenge::send_auth_result(AuthCmd cmd, AuthResult result, std::shared_ptr<ClientSession> session) {
+void HandlersChallenge::send_auth_result(AuthCmd cmd, AuthResult result, std::shared_ptr<AuthSession> session) {
     RawPacket reply;
     reply.write_uint8(static_cast<uint8_t>(cmd));
     reply.write_uint8(0);

@@ -1,5 +1,5 @@
 #include "AuthServer.hpp"
-#include "ClientSession/ClientSession.hpp"
+#include "AuthSession/AuthSession.hpp"
 #include "Logger.hpp"
 #include "src/authserver/Entity/ClientBuildInfo/ClientBuildInfo.hpp"
 
@@ -26,7 +26,7 @@ void AuthServer::start_accept() {
                     return;
                 }
 
-                auto session = std::make_shared<ClientSession>(std::move(socket), self);
+                auto session = std::make_shared<AuthSession>(std::move(socket), self);
 
                 {
                     std::lock_guard<std::mutex> lock(self->sessions_mutex_);
@@ -60,7 +60,7 @@ void AuthServer::stop() {
 
     // Для избежания dead lock'a, нужно делать копию списка, закрыть открытые сокеты (где тоже мьютекс)
     {
-        std::unordered_set<std::shared_ptr<ClientSession>> sessions_copy;
+        std::unordered_set<std::shared_ptr<AuthSession>> sessions_copy;
         {
             std::lock_guard<std::mutex> lock(sessions_mutex_);
             sessions_copy = sessions_;
@@ -85,7 +85,7 @@ void AuthServer::stop() {
     log_session_count();
 }
 
-void AuthServer::remove_session(std::shared_ptr<ClientSession> session) {
+void AuthServer::remove_session(std::shared_ptr<AuthSession> session) {
     std::lock_guard<std::mutex> lock(sessions_mutex_);
     sessions_.erase(session);
     log_session_count();
@@ -100,7 +100,7 @@ bool AuthServer::disconnectSessionIfExists(const std::string &username) {
         auto accountInfo = session->getAccountInfo();
         if (accountInfo && accountInfo->Login == username) {
             Logger::get()->warn("[AuthServer] Found duplicate session for '{}', disconnecting old session.", username);
-            session->close();  // Предположим, что у ClientSession есть метод close()
+            session->close();  // Предположим, что у AuthSession есть метод close()
             return true;
         }
     }

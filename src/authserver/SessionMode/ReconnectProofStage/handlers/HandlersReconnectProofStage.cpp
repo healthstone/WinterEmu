@@ -8,10 +8,10 @@
 using namespace HandlersReconnectProofStage;
 
 /** AUTH_RECONNECT_PROOF **/
-void HandlersReconnectProofStage::HandleReconnectProof(const std::shared_ptr<ClientSession>& session,
-                                                       const std::vector<uint8_t> &payload) {
+void HandlersReconnectProofStage::HandleReconnectProof(const std::shared_ptr<AuthSession>& session,
+                                                       std::shared_ptr<std::vector<uint8_t>>& payload) {
     auto log = Logger::get();
-    ByteBuffer buffer(payload);
+    ByteBuffer buffer(*payload);
     session->set_session_mode(SessionMode::STATUS_CLOSED);
 
     try {
@@ -51,7 +51,7 @@ void HandlersReconnectProofStage::HandleReconnectProof(const std::shared_ptr<Cli
             packet.write_uint16_le(0);  // LoginFlags, 1 has account message
 
             session->set_session_mode(SessionMode::STATUS_WAITING_FOR_REALM_LIST);
-            Packet::log_raw_payload("REQUEST  AUTH_RECONNECT_PROOF", payload);
+            Packet::log_raw_payload("REQUEST  AUTH_RECONNECT_PROOF", *payload);
             Packet::log_raw_payload("RESPONSE AUTH_RECONNECT_PROOF", packet.serialize());
 
             PacketUtils::send_packet_as<RawPacket>(session, packet);
@@ -67,7 +67,7 @@ void HandlersReconnectProofStage::HandleReconnectProof(const std::shared_ptr<Cli
     }
 }
 
-bool HandlersReconnectProofStage::VerifyVersion(const std::shared_ptr<ClientSession>& session,
+bool HandlersReconnectProofStage::VerifyVersion(const std::shared_ptr<AuthSession>& session,
                                                 uint8_t const *a, int32_t aLength,
                                                 Crypto::SHA1::Digest const &versionProof, bool isReconnect) {
 //    if (!sConfigMgr->GetBoolDefault("StrictVersionCheck", false))

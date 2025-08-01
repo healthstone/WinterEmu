@@ -1,4 +1,4 @@
-#include "ClientSession.hpp"
+#include "AuthSession.hpp"
 #include "Logger.hpp"
 #include "src/authserver/SessionMode/ChallengeStage/reader/ReaderChallengeStage.hpp"
 #include "src/authserver/SessionMode/LogonProofStage/reader/ReaderLogonProofStage.hpp"
@@ -8,10 +8,10 @@
 
 using boost::asio::ip::tcp;
 
-ClientSession::ClientSession(tcp::socket socket, std::shared_ptr<AuthServer> server)
+AuthSession::AuthSession(tcp::socket socket, std::shared_ptr<AuthServer> server)
         : socket_(std::move(socket)), server_(std::move(server)), read_buffer_(4096) {}
 
-void ClientSession::start() {
+void AuthSession::start() {
     auto ep = socket_.remote_endpoint();
     Logger::get()->debug("[client_session][start] New connection from {}:{}",
                          ep.address().to_string(), ep.port());
@@ -20,7 +20,7 @@ void ClientSession::start() {
     do_read();
 }
 
-void ClientSession::close() {
+void AuthSession::close() {
     if (closed_.exchange(true)) return;
 
     if (getAccountInfo())
@@ -53,7 +53,7 @@ void ClientSession::close() {
     }
 }
 
-void ClientSession::do_read() {
+void AuthSession::do_read() {
     auto self = shared_from_this();
 
     read_buffer_.ensure_free_space(512);
@@ -82,7 +82,7 @@ void ClientSession::do_read() {
     );
 }
 
-void ClientSession::process_read_buffer() {
+void AuthSession::process_read_buffer() {
     switch (session_mode_) {
         case SessionMode::STATUS_CHALLENGE:
             ReaderChallengeStage::process_read_buffer(shared_from_this());
@@ -112,7 +112,7 @@ void ClientSession::process_read_buffer() {
 /**
  * Обертка для безопасной отправки пакета из любого потока и корутины
  */
-void ClientSession::send_packet(std::shared_ptr<const Packet> packet) {
+void AuthSession::send_packet(const std::shared_ptr<const Packet>& packet) {
     if (closed_) {
         Logger::get()->debug("[client_session][send_packet] called. closed_={}", closed_.load());
         return;
@@ -129,7 +129,7 @@ void ClientSession::send_packet(std::shared_ptr<const Packet> packet) {
 /**
  * Отправка пакета клиенту
  */
-void ClientSession::do_send_packet(const Packet &packet) {
+void AuthSession::do_send_packet(const Packet &packet) {
     std::vector<uint8_t> full_packet = packet.build_packet();
     write_queue_.push_back(std::move(full_packet));
 
@@ -138,7 +138,7 @@ void ClientSession::do_send_packet(const Packet &packet) {
     }
 }
 
-void ClientSession::do_write() {
+void AuthSession::do_write() {
     if (write_queue_.empty()) {
         writing_ = false;
         return;
