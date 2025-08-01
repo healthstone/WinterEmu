@@ -11,7 +11,13 @@
 #include <chrono>
 #include <thread>
 #include <vector>
+#include <functional>
+#include <future>
+
 #include <boost/asio.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <boost/asio/use_awaitable.hpp>
+#include <boost/asio/this_coro.hpp>
 
 #include "QueryResults.hpp"
 #include "PreparedStatement.hpp"
@@ -21,61 +27,202 @@ class Database {
 public:
     explicit Database(const std::string &conninfo, size_t sync_pool_size = 4, size_t async_threads = 2)
             : conninfo_(conninfo),
-              async_pool_(),
-              async_threads_count_(async_threads)
+              thread_pool_(async_threads),
+              work_guard_(boost::asio::make_work_guard(thread_pool_))
     {
-        Logger::get()->info("[Database] Setup Sync and Async connection pools...");
-        // Инициализация sync-пула соединений
+        Logger::get()->info("[Database] Setting up Sync connection pool...");
         for (size_t i = 0; i < sync_pool_size; ++i) {
             auto conn = std::make_unique<pqxx::connection>(conninfo_);
             prepare_all(*conn);
             Logger::get()->trace("[Database] Sync connection {} established.", i + 1);
-            connections_.push(std::move(conn));
+            {
+                std::lock_guard<std::mutex> lock(mutex_);
+                connections_.push(std::move(conn));
+            }
         }
-        Logger::get()->info("[Database] Sync  connection pool established - size {}", sync_pool_size);
+        Logger::get()->info("[Database] Sync connection pool established - size {}", sync_pool_size);
 
-        // Инициализация async-пула соединений
-        for (size_t i = 0; i < async_threads_count_; ++i) {
+        Logger::get()->info("[Database] Setting up Async connection pool...");
+        for (size_t i = 0; i < async_threads; ++i) {
             auto conn = std::make_unique<pqxx::connection>(conninfo_);
             prepare_all(*conn);
             Logger::get()->trace("[Database] Async connection {} established.", i + 1);
-            async_connections_.push(std::move(conn));
+            {
+                std::lock_guard<std::mutex> lock(async_mutex_);
+                async_connections_.push(std::move(conn));
+            }
         }
-        Logger::get()->info("[Database] Async connection pool established - size {}", async_threads_count_);
+        Logger::get()->info("[Database] Async connection pool established - size {}", async_threads);
+
+        Logger::get()->info("[Database] Starting async thread pool with {} threads...", async_threads);
+        for (size_t i = 0; i < async_threads; ++i) {
+            async_threads_.emplace_back([this]() {
+                thread_pool_.run();
+            });
+        }
     }
 
     ~Database() {
         shutdown();
     }
 
-    /// Запустить async-пул потоков
-    void start_async_pool() {
-        Logger::get()->info("[Database] Starting async pool with {} threads...", async_threads_count_);
-        for (size_t i = 0; i < async_threads_count_; ++i) {
-            async_threads_.emplace_back([this]() {
-                async_pool_.run();
-            });
+    // === Синхронный интерфейс ===
+
+    template<typename Struct>
+    std::optional<Struct> execute_sync_one(const PreparedStatement &stmt) {
+        auto scoped = acquire_scoped_connection();
+        pqxx::work txn(scoped.get());
+        auto invoc = txn.prepared(stmt.name());
+        for (const auto &param : stmt.params()) {
+            if (param.has_value())
+                invoc(param.value());
+            else
+                invoc(static_cast<const char *>(nullptr));
         }
+        auto result = invoc.exec();
+        txn.commit();
+
+        if constexpr (std::is_same_v<Struct, NothingRow>)
+            return Struct{};
+
+        if (result.empty())
+            return std::nullopt;
+
+        return PgRowMapper<Struct>::map(result[0]);
     }
 
-    /// Остановить async-пул
-    void stop_async_pool() {
-        Logger::get()->info("[Database] Stopping async pool...");
-        async_pool_.stop();
+    template<typename Struct>
+    std::vector<Struct> execute_sync_many(const PreparedStatement &stmt) {
+        auto scoped = acquire_scoped_connection();
+        pqxx::work txn(scoped.get());
+        auto invoc = txn.prepared(stmt.name());
+        for (const auto &param : stmt.params()) {
+            if (param.has_value())
+                invoc(param.value());
+            else
+                invoc(static_cast<const char *>(nullptr));
+        }
+        auto result = invoc.exec();
+        txn.commit();
+
+        std::vector<Struct> rows;
+        for (const auto &row : result)
+            rows.push_back(PgRowMapper<Struct>::map(row));
+
+        return rows;
     }
 
-    /// Дождаться завершения async-потоков
-    void join_async_pool() {
+    // === Асинхронный интерфейс ===
+
+    template<typename Struct>
+    boost::asio::awaitable<std::optional<Struct>> execute_async_one(const PreparedStatement &stmt) {
+        co_return co_await post_to_thread_pool<std::optional<Struct>>([this, stmt]() -> std::optional<Struct> {
+            auto conn = acquire_async_connection(std::chrono::seconds(5));
+            if (!conn) {
+                Logger::get()->error("[Database] Async connection unavailable.");
+                return std::nullopt;
+            }
+
+            try {
+                pqxx::work txn(*conn);
+                auto invoc = txn.prepared(stmt.name());
+                for (const auto &param : stmt.params()) {
+                    if (param.has_value())
+                        invoc(param.value());
+                    else
+                        invoc(static_cast<const char *>(nullptr));
+                }
+                auto result = invoc.exec();
+                txn.commit();
+
+                release_async_connection(std::move(conn));
+
+                if constexpr (std::is_same_v<Struct, NothingRow>)
+                    return Struct{};
+
+                if (result.empty())
+                    return std::nullopt;
+
+                return PgRowMapper<Struct>::map(result[0]);
+            } catch (const std::exception &e) {
+                Logger::get()->error("[Database] Async query failed: {}", e.what());
+                release_async_connection(std::move(conn));
+                return std::nullopt;
+            }
+        });
+    }
+
+    template<typename Struct>
+    boost::asio::awaitable<std::vector<Struct>> execute_async_many(const PreparedStatement &stmt) {
+        co_return co_await post_to_thread_pool<std::vector<Struct>>([this, stmt]() -> std::vector<Struct> {
+            auto conn = acquire_async_connection(std::chrono::seconds(5));
+            if (!conn) {
+                Logger::get()->error("[Database] Async connection unavailable.");
+                return {};
+            }
+
+            try {
+                pqxx::work txn(*conn);
+                auto invoc = txn.prepared(stmt.name());
+                for (const auto &param : stmt.params()) {
+                    if (param.has_value())
+                        invoc(param.value());
+                    else
+                        invoc(static_cast<const char *>(nullptr));
+                }
+                auto result = invoc.exec();
+                txn.commit();
+
+                release_async_connection(std::move(conn));
+
+                std::vector<Struct> rows;
+                for (const auto &row : result)
+                    rows.push_back(PgRowMapper<Struct>::map(row));
+
+                return rows;
+            } catch (const std::exception &e) {
+                Logger::get()->error("[Database] Async query failed: {}", e.what());
+                release_async_connection(std::move(conn));
+                return {};
+            }
+        });
+    }
+
+    void shutdown() {
+        Logger::get()->info("[Database] Shutting down...");
+        work_guard_.reset();
+        thread_pool_.stop();
+
         for (auto &t : async_threads_) {
             if (t.joinable()) t.join();
         }
-        Logger::get()->info("[Database] All async threads joined.");
+        async_threads_.clear();
+
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            while (!connections_.empty()) {
+                auto &c = connections_.front();
+                if (c && c->is_open()) {
+                    c->disconnect();
+                    Logger::get()->info("[Database] Sync connection closed.");
+                }
+                connections_.pop();
+            }
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(async_mutex_);
+            while (!async_connections_.empty()) {
+                auto &c = async_connections_.front();
+                if (c && c->is_open()) {
+                    c->disconnect();
+                    Logger::get()->info("[Database] Async connection closed.");
+                }
+                async_connections_.pop();
+            }
+        }
     }
 
-    /// Доступ к io_context async-пула
-    boost::asio::io_context &async_pool() { return async_pool_; }
-
-    /// RAII обёртка для sync соединений
     class ScopedConnection {
     public:
         ScopedConnection(Database &db, std::unique_ptr<pqxx::connection> conn)
@@ -86,6 +233,11 @@ public:
         }
 
         pqxx::connection &get() { return *conn_; }
+
+        ScopedConnection(const ScopedConnection &) = delete;
+        ScopedConnection &operator=(const ScopedConnection &) = delete;
+        ScopedConnection(ScopedConnection &&) = delete;
+        ScopedConnection &operator=(ScopedConnection &&) = delete;
 
     private:
         Database &db_;
@@ -98,146 +250,45 @@ public:
         return ScopedConnection(*this, std::move(conn));
     }
 
-    /// Синхронный запрос один результат
-    template<typename Struct>
-    std::optional<Struct> execute_sync_one(const PreparedStatement &stmt) {
-        auto scoped = acquire_scoped_connection();
-        pqxx::work txn(scoped.get());
-        auto invoc = txn.prepared(stmt.name());
-        for (const auto &param : stmt.params()) {
-            if (param.has_value()) invoc(param.value());
-            else invoc(static_cast<const char *>(nullptr));
-        }
-        auto result = invoc.exec();
-        txn.commit();
-
-        if constexpr (std::is_same_v<Struct, NothingRow>) return Struct{};
-        if (result.empty()) return std::nullopt;
-        return PgRowMapper<Struct>::map(result[0]);
-    }
-
-    /// Синхронный запрос много результатов
-    template<typename Struct>
-    std::vector<Struct> execute_sync_many(const PreparedStatement &stmt) {
-        auto scoped = acquire_scoped_connection();
-        pqxx::work txn(scoped.get());
-        auto invoc = txn.prepared(stmt.name());
-        for (const auto &param : stmt.params()) {
-            if (param.has_value()) invoc(param.value());
-            else invoc(static_cast<const char *>(nullptr));
-        }
-        auto result = invoc.exec();
-        txn.commit();
-
-        std::vector<Struct> rows;
-        for (auto const &row : result) rows.push_back(PgRowMapper<Struct>::map(row));
-        return rows;
-    }
-
-    /// Асинхронный запрос один результат (использует async пул соединений)
-    template<typename Struct>
-    void execute_async_one(const PreparedStatement &stmt, std::function<void(std::optional<Struct>)> callback) {
-        boost::asio::post(async_pool_, [this, stmt, callback]() {
-            auto conn = acquire_async_connection(std::chrono::seconds(5));
-            if (!conn) {
-                Logger::get()->error("[Database] Async connection unavailable.");
-                callback(std::nullopt);
-                return;
-            }
-            try {
-                pqxx::work txn(*conn);
-                auto invoc = txn.prepared(stmt.name());
-                for (const auto &param : stmt.params()) {
-                    if (param.has_value()) invoc(param.value());
-                    else invoc(static_cast<const char *>(nullptr));
-                }
-                auto result = invoc.exec();
-                txn.commit();
-
-                if constexpr (std::is_same_v<Struct, NothingRow>) {
-                    callback(Struct{});
-                } else if (result.empty()) {
-                    callback(std::nullopt);
-                } else {
-                    callback(PgRowMapper<Struct>::map(result[0]));
-                }
-            } catch (const std::exception &e) {
-                Logger::get()->error("[Database] Async query failed: {}", e.what());
-                callback(std::nullopt);
-            }
-            release_async_connection(std::move(conn));
-        });
-    }
-
-    /// Асинхронный запрос много результатов (использует async пул соединений)
-    template<typename Struct>
-    void execute_async_many(const PreparedStatement &stmt, std::function<void(std::vector<Struct>)> callback) {
-        boost::asio::post(async_pool_, [this, stmt, callback]() {
-            auto conn = acquire_async_connection(std::chrono::seconds(5));
-            if (!conn) {
-                Logger::get()->error("[Database] Async connection unavailable.");
-                callback({});
-                return;
-            }
-            try {
-                pqxx::work txn(*conn);
-                auto invoc = txn.prepared(stmt.name());
-                for (const auto &param : stmt.params()) {
-                    if (param.has_value()) invoc(param.value());
-                    else invoc(static_cast<const char *>(nullptr));
-                }
-                auto result = invoc.exec();
-                txn.commit();
-
-                std::vector<Struct> rows;
-                for (auto const &row : result) rows.push_back(PgRowMapper<Struct>::map(row));
-                callback(std::move(rows));
-            } catch (const std::exception &e) {
-                Logger::get()->error("[Database] Async query failed: {}", e.what());
-                callback({});
-            }
-            release_async_connection(std::move(conn));
-        });
-    }
-
-    /// Полная остановка и очистка всех ресурсов
-    void shutdown() {
-        Logger::get()->info("[Database] Shutting down...");
-        stop_async_pool();
-        join_async_pool();
-
-        {
-            std::unique_lock<std::mutex> lock(mutex_);
-            while (!connections_.empty()) {
-                auto &c = connections_.front();
-                if (c && c->is_open()) {
-                    c->disconnect();
-                    Logger::get()->info("[Database] Sync connection closed.");
-                }
-                connections_.pop();
-            }
-        }
-
-        {
-            std::unique_lock<std::mutex> lock(async_mutex_);
-            while (!async_connections_.empty()) {
-                auto &c = async_connections_.front();
-                if (c && c->is_open()) {
-                    c->disconnect();
-                    Logger::get()->info("[Database] Async connection closed.");
-                }
-                async_connections_.pop();
-            }
-        }
-    }
-
 private:
-    // Для sync соединений
+    // --- Helper: Post task to async thread pool и получить результат awaitable ---
+    template<typename ResultType, typename Func>
+    boost::asio::awaitable<ResultType> post_to_thread_pool(Func func) {
+        auto executor = co_await boost::asio::this_coro::executor;
+
+        auto prom = std::make_shared<std::promise<ResultType>>();
+        auto fut = prom->get_future();
+
+        boost::asio::post(thread_pool_, [prom, func = std::move(func)]() mutable {
+            try {
+                if constexpr (std::is_void_v<ResultType>) {
+                    func();
+                    prom->set_value();
+                } else {
+                    prom->set_value(func());
+                }
+            } catch (...) {
+                try {
+                    prom->set_exception(std::current_exception());
+                } catch (...) {}
+            }
+        });
+
+        boost::asio::steady_timer timer(executor);
+
+        while (fut.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
+            timer.expires_after(std::chrono::milliseconds(10));
+            co_await timer.async_wait(boost::asio::use_awaitable);
+        }
+
+        co_return fut.get();
+    }
+
     std::unique_ptr<pqxx::connection> acquire_connection(std::chrono::milliseconds timeout) {
         std::unique_lock<std::mutex> lock(mutex_);
         if (connections_.empty()) {
             if (!cond_.wait_for(lock, timeout, [this] { return !connections_.empty(); })) {
-                return nullptr; // timeout
+                return nullptr;
             }
         }
 
@@ -260,12 +311,11 @@ private:
         cond_.notify_one();
     }
 
-    // Для async соединений
     std::unique_ptr<pqxx::connection> acquire_async_connection(std::chrono::milliseconds timeout) {
         std::unique_lock<std::mutex> lock(async_mutex_);
         if (async_connections_.empty()) {
             if (!async_cond_.wait_for(lock, timeout, [this] { return !async_connections_.empty(); })) {
-                return nullptr; // timeout
+                return nullptr;
             }
         }
 
@@ -297,7 +347,7 @@ private:
 
     void prepare_all(pqxx::connection &conn) {
         pqxx::work txn(conn);
-        std::string auth_schema = std::getenv("AUTH_SCHEMA") ?: "auth_server";
+        std::string auth_schema = std::getenv("AUTH_SCHEMA") ? std::string(std::getenv("AUTH_SCHEMA")) : "auth_server";
 
         conn.prepare("SELECT_ACCOUNT_BY_USERNAME",
                      fmt::format("SELECT id, username, salt, verifier, session_key_auth, email, created_at FROM {}.accounts WHERE username = $1", auth_schema));
@@ -316,16 +366,15 @@ private:
         txn.commit();
     }
 
+private:
     std::string conninfo_;
 
-    // Sync pool
     std::queue<std::unique_ptr<pqxx::connection>> connections_;
     std::mutex mutex_;
     std::condition_variable cond_;
 
-    // Async pool
-    boost::asio::io_context async_pool_;
-    size_t async_threads_count_;
+    boost::asio::io_context thread_pool_;
+    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_guard_;
     std::vector<std::thread> async_threads_;
 
     std::queue<std::unique_ptr<pqxx::connection>> async_connections_;

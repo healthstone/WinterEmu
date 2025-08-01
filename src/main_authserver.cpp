@@ -43,7 +43,6 @@ int main() {
                 network_threads,   // Для каждого потока должна быть своя сессия к бд
                 async_threads      // Для асинхронных запросов должен быть выделен минимум 1 поток
         );
-        db->start_async_pool();
 
         auto server = std::make_shared<AuthServer>(io_context, db, port);
         server->init();

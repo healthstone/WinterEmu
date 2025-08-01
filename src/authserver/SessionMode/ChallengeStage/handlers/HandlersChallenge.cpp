@@ -26,7 +26,7 @@ HandlersChallenge::HandleLogonChallenge(std::shared_ptr<ClientSession> session,
         co_return;
 
     // 3 - дефолтная логика для AUTH_LOGON_CHALLENGE
-    LogonChallengeLogic(session);
+    co_await LogonChallengeLogic(session);
     co_return;
 }
 
@@ -42,7 +42,7 @@ HandlersChallenge::HandleReconnectChallenge(std::shared_ptr<ClientSession> sessi
         co_return;
 
     // 3 - дефолтная логика для AUTH_RECONNECT_CHALLENGE
-    ReconnectChallengeLogic(session);
+    co_await ReconnectChallengeLogic(session);
     co_return;
 }
 
@@ -212,39 +212,35 @@ bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_na
         return true;
 }
 
-std::optional<AccountsRow> HandlersChallenge::fetchFromDB(AuthCmd cmd, std::shared_ptr<ClientSession> session) {
+boost::asio::awaitable<std::optional<AccountsRow>> HandlersChallenge::fetchFromDB(AuthCmd cmd, std::shared_ptr<ClientSession> session) {
     try {
         PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
         stmt.set_param(0, session->getAccountInfo()->Login);
-        auto user = session->server()->db()->execute_sync_one<AccountsRow>(stmt);
-        return user;
+        auto user = co_await session->server()->db()->execute_async_one<AccountsRow>(stmt);
+        co_return user;
     } catch (const std::exception &ex) {
         Logger::get()->error("[fetchFromDB] DB exception: {}", ex.what());
         send_auth_result(cmd, AuthResult::WOW_FAIL_DB_BUSY, session);
-        return std::nullopt;
+        co_return std::nullopt;
     }
 }
 
-void HandlersChallenge::LogonChallengeLogic(std::shared_ptr<ClientSession> session) {
+boost::asio::awaitable<void> HandlersChallenge::LogonChallengeLogic(std::shared_ptr<ClientSession> session) {
     auto log = Logger::get();
     std::string accountName = session->getAccountInfo()->Login;
 
-    auto user = fetchFromDB(AuthCmd::AUTH_LOGON_CHALLENGE, session);
-    if (!user)
-        return;
-
-    // 1 - если нет аккаунта
+    auto user = co_await fetchFromDB(AuthCmd::AUTH_LOGON_CHALLENGE, session);
     if (!user) {
         log->error("[HandleLogonChallenge] Account {} not found", accountName);
         send_auth_result(AuthCmd::AUTH_LOGON_CHALLENGE, AuthResult::WOW_FAIL_NO_GAME_ACCOUNT, session);
-        return;
+        co_return;
     }
 
-    // 2 --- Проверка salt и verifier ---
+    // Проверка salt и verifier
     if (!user->salt.has_value() || !user->verifier.has_value()) {
         log->error("[HandleLogonChallenge] Account {} has invalid salt/verifier length", accountName);
         send_auth_result(AuthCmd::AUTH_LOGON_CHALLENGE, AuthResult::WOW_FAIL_INCORRECT_PASSWORD, session);
-        return;
+        co_return;
     }
 
     session->getAccountInfo()->AccountID = user->id;
@@ -288,30 +284,33 @@ void HandlersChallenge::LogonChallengeLogic(std::shared_ptr<ClientSession> sessi
         reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_VERSION_INVALID));
     }
 
-    // 👉 Лог и отправка
     Packet::log_raw_payload("RESPONSE AUTH_LOGON_CHALLENGE", reply.serialize());
     PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
+    co_return;
 }
 
-void HandlersChallenge::ReconnectChallengeLogic(const std::shared_ptr<ClientSession>& session) {
+boost::asio::awaitable<void> HandlersChallenge::ReconnectChallengeLogic(const std::shared_ptr<ClientSession>& session) {
     RawPacket pkt;
-    pkt.write_uint8(static_cast<uint8_t>(static_cast<uint8_t>(AuthCmd::AUTH_RECONNECT_CHALLENGE)));                       // opcode ID
+    pkt.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_RECONNECT_CHALLENGE));  // opcode ID
 
-    auto user = fetchFromDB(AuthCmd::AUTH_LOGON_CHALLENGE, session);
+    auto user = co_await fetchFromDB(AuthCmd::AUTH_RECONNECT_CHALLENGE, session);
     if (!user || !user->sessionkey) {
-        Logger::get()->error("[ReconnectChallengeLogic] no founded user or sessionkey");
-        pkt.write_uint8(static_cast<uint8_t>(static_cast<uint8_t>(AuthResult::WOW_FAIL_UNKNOWN_ACCOUNT)));
+        Logger::get()->error("[ReconnectChallengeLogic] no found user or sessionkey");
+        pkt.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_UNKNOWN_ACCOUNT));
         PacketUtils::send_packet_as<RawPacket>(session, pkt);
+        co_return;  // Завершаем корутину здесь, так как ошибка
     }
 
     session->_sessionKey = user->sessionkey.value();
     Crypto::GetRandomBytes(session->_reconnectProof);
     session->set_session_mode(SessionMode::STATUS_RECONNECT_PROOF);
 
-    pkt.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS));   // WOW_SUCCESS
+    pkt.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS));  // WOW_SUCCESS
     pkt.write_bytes(session->_reconnectProof.data(), session->_reconnectProof.size());
     pkt.write_bytes(VersionChallenge, 16);
     PacketUtils::send_packet_as<RawPacket>(session, pkt);
+
+    co_return;
 }
 
 void HandlersChallenge::send_auth_result(AuthCmd cmd, AuthResult result, std::shared_ptr<ClientSession> session) {
