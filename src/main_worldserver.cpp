@@ -1,4 +1,4 @@
-#include "authserver/AuthServer.hpp"
+#include "worldserver/WorldServer.hpp"
 #include "Database.hpp"
 #include "Logger.hpp"
 
@@ -11,16 +11,23 @@ int main() {
     auto log = Logger::get();
 
     try {
+        // all possible threads on machine
+        unsigned int max_threads = std::thread::hardware_concurrency();
+
         // read env DB_ASYNC_THREADS
         unsigned int async_threads = std::getenv("DB_ASYNC_THREADS") ? static_cast<unsigned int>(std::stoi(std::getenv("DB_ASYNC_THREADS"))) : 2; // default 2
-        unsigned int network_threads = 2;
+
+        // set default network_threads (max - async threads)
+        unsigned int network_threads = max_threads - async_threads;
+        if (network_threads > 2) network_threads -= 1;              // default: max - async ( for example if 8 max: 2 async and 5 network  and 1 for system and logs )
+        else if (network_threads == 0) network_threads = 1;
 
         // read env NETWORK_THREADS
         if (std::getenv("NETWORK_THREADS"))
             network_threads = static_cast<unsigned int>(std::stoi(std::getenv("NETWORK_THREADS")));
 
         // read env AUTH_PORT
-        int port = std::getenv("AUTH_PORT") ? static_cast<int>(std::stoi(std::getenv("AUTH_PORT"))) : 3724;
+        int port = std::getenv("WORLD_PORT") ? static_cast<int>(std::stoi(std::getenv("WORLD_PORT"))) : 8085;
 
         // 🟢 Используем только io_context
         boost::asio::io_context io_context;
@@ -37,14 +44,14 @@ int main() {
                 async_threads      // Для асинхронных запросов должен быть выделен минимум 1 поток
         );
 
-        auto server = std::make_shared<AuthServer>(io_context, db, port);
+        auto server = std::make_shared<WorldServer>(io_context, db, port);
         server->init();
         server->start_accept();
-        log->info("[AuthServer] Running on port {} with {} network threads", port, network_threads);
+        log->info("[WorldServer] Running on port {} with {} network threads", port, network_threads);
 
         boost::asio::signal_set signals(io_context, SIGINT, SIGTERM);
         signals.async_wait([&](const boost::system::error_code &, int signal_number) {
-            log->info("[AuthServer] Signal {} received, shutting down...", signal_number);
+            log->info("[WorldServer] Signal {} received, shutting down...", signal_number);
             server->stop();
             db->shutdown();
         });
@@ -58,9 +65,9 @@ int main() {
 
         for (auto &t : threads) t.join();
 
-        log->info("[AuthServer] Gracefully shut down.");
+        log->info("[WorldServer] Gracefully shut down.");
     } catch (const std::exception &e) {
-        log->error("[AuthServer] Exception: {}", e.what());
+        log->error("[WorldServer] Exception: {}", e.what());
     }
 
     spdlog::shutdown();

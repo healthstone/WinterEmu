@@ -1,5 +1,6 @@
 #include <memory>
 #include "src/authserver/ClientSession/ClientSession.hpp"
+#include "src/worldserver/WorldSession/WorldSession.hpp"
 
 namespace PacketUtils {
 
@@ -8,4 +9,8 @@ namespace PacketUtils {
         session->send_packet(std::make_shared<PacketType>(std::forward<Args>(args)...));
     }
 
+    template <typename PacketType, typename... Args>
+    void send_packet_as(std::shared_ptr<WorldSession> session, Args&&... args) {
+        session->send_packet(std::make_shared<PacketType>(std::forward<Args>(args)...));
+    }
 }
