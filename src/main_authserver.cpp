@@ -12,12 +12,12 @@ int main() {
 
     try {
         // read env DB_ASYNC_THREADS
-        unsigned int async_threads = std::getenv("DB_ASYNC_THREADS") ? static_cast<unsigned int>(std::stoi(std::getenv("DB_ASYNC_THREADS"))) : 2; // default 2
+        unsigned int async_threads = std::getenv("AUTH_DB_ASYNC_THREADS") ? static_cast<unsigned int>(std::stoi(std::getenv("AUTH_DB_ASYNC_THREADS"))) : 2; // default 2
         unsigned int network_threads = 2;
 
         // read env NETWORK_THREADS
-        if (std::getenv("NETWORK_THREADS"))
-            network_threads = static_cast<unsigned int>(std::stoi(std::getenv("NETWORK_THREADS")));
+        if (std::getenv("AUTH_NETWORK_THREADS"))
+            network_threads = static_cast<unsigned int>(std::stoi(std::getenv("AUTH_NETWORK_THREADS")));
 
         // read env AUTH_PORT
         int port = std::getenv("AUTH_PORT") ? static_cast<int>(std::stoi(std::getenv("AUTH_PORT"))) : 3724;

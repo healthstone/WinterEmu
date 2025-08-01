@@ -22,6 +22,7 @@
 
 The server automatically reads database connection settings from **environment variables**, with safe defaults if not set:
 
+for both:
 ```cpp
 std::string db_host = std::getenv("DB_URL") ? std::getenv("DB_URL") : "127.0.0.1";
 std::string db_port = std::getenv("DB_PORT") ? std::getenv("DB_PORT") : "5432";
@@ -30,9 +31,21 @@ std::string db_password = std::getenv("DB_PASSWORD") ? std::getenv("DB_PASSWORD"
 std::string db_name = std::getenv("DB_NAME") ? std::getenv("DB_NAME") : "postgres";
 
 std::string auth_schema = std::getenv("AUTH_SCHEMA") ?: "auth_server";
+```
 
+for AuthServer:
+```cpp
+unsigned int async_threads = std::getenv("AUTH_DB_ASYNC_THREADS")
 int port = std::getenv("AUTH_PORT") ? static_cast<int>(std::stoi(std::getenv("AUTH_PORT"))) : 3724;
-unsigned int network_threads = std::getenv("NETWORK_THREADS") ?: default: max threads - async db threads - 1 ( for example if 8 max: 2 async and 5 network  and 1 for system and logs );
+unsigned int network_threads = std::getenv("AUTH_NETWORK_THREADS") ?: 2
+```
+
+also for WorldServer:
+
+```cpp
+unsigned int async_threads = std::getenv("WORLD_DB_ASYNC_THREADS")
+int port = std::getenv("WORLD_PORT") ? static_cast<int>(std::stoi(std::getenv("WORLD_PORT"))) : 8085;
+unsigned int network_threads = std::getenv("WORLD_NETWORK_THREADS") ?: default: max threads - async db threads - 1 ( for example if 8 max: 2 async and 5 network  and 1 for system and logs );
 ```
 
 ---

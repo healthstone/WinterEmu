@@ -15,7 +15,7 @@ int main() {
         unsigned int max_threads = std::thread::hardware_concurrency();
 
         // read env DB_ASYNC_THREADS
-        unsigned int async_threads = std::getenv("DB_ASYNC_THREADS") ? static_cast<unsigned int>(std::stoi(std::getenv("DB_ASYNC_THREADS"))) : 2; // default 2
+        unsigned int async_threads = std::getenv("WORLD_DB_ASYNC_THREADS") ? static_cast<unsigned int>(std::stoi(std::getenv("WORLD_DB_ASYNC_THREADS"))) : 2; // default 2
 
         // set default network_threads (max - async threads)
         unsigned int network_threads = max_threads - async_threads;
@@ -23,8 +23,8 @@ int main() {
         else if (network_threads == 0) network_threads = 1;
 
         // read env NETWORK_THREADS
-        if (std::getenv("NETWORK_THREADS"))
-            network_threads = static_cast<unsigned int>(std::stoi(std::getenv("NETWORK_THREADS")));
+        if (std::getenv("WORLD_NETWORK_THREADS"))
+            network_threads = static_cast<unsigned int>(std::stoi(std::getenv("WORLD_NETWORK_THREADS")));
 
         // read env AUTH_PORT
         int port = std::getenv("WORLD_PORT") ? static_cast<int>(std::stoi(std::getenv("WORLD_PORT"))) : 8085;
