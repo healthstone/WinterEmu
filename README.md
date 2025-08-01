@@ -51,13 +51,6 @@ unsigned int network_threads = std::getenv("WORLD_NETWORK_THREADS") ?: default: 
 ---
 
 ### ⚙️ Variables:
-- **DB_URL** — PostgreSQL host address (default `127.0.0.1`)
-- **DB_PORT** — PostgreSQL port (default `5432`)
-- **DB_USER** — database user (default `postgres`)
-- **DB_PASSWORD** — database password (default `postgres`)
-- **DB_NAME** — database name (default `postgres`)
-- **LOG_FORMAT_JSON** — log formatter in JSON type (actually for k8s deployment and usage elastic+kibana). MDC support. (default `null`)
-- **AUTH_SCHEMA** — database auth schema name (default `auth_server`)
 
 If an environment variable is not set, a safe fallback will be used. The log output shows exactly which values are applied.
 
