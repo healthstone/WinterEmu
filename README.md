@@ -1,6 +1,6 @@
 # ❄️ WinterEmu — World of Warcraft Server Emulator
 
-**WinterEmu** is a modern World of Warcraft **server emulator** (inspired by TrinityCore) written in **C++**, using an asynchronous networking model with **Boost.Asio** and a **PostgreSQL** backend. This component handles account authentication, client build verification, and realmlist delivery.
+**WinterEmu** is a modern World of Warcraft **server emulator** written in **C++**, using an asynchronous networking model with **Boost.Asio** and a **PostgreSQL** backend. This component handles account authentication, client build verification, and realmlist delivery.
 
 ---
 
