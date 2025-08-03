@@ -6,15 +6,15 @@
 #include <deque>
 #include <atomic>
 
-#include "src/worldserver/WorldServer.hpp"
+#include "src/relayserver/RelayServer.hpp"
 #include "packet/MessageBuffer.hpp"
 #include "WoWPacket.hpp"
 
-class WorldServer; // forward declaration
+class RelayServer; // forward declaration
 
-class WorldSession : public std::enable_shared_from_this<WorldSession> {
+class GameSession : public std::enable_shared_from_this<GameSession> {
 public:
-    WorldSession(boost::asio::ip::tcp::socket socket, std::shared_ptr<WorldServer> server);
+    GameSession(boost::asio::ip::tcp::socket socket, std::shared_ptr<RelayServer> server);
 
     void start();
 
@@ -26,7 +26,7 @@ public:
 
     boost::asio::ip::tcp::socket &socket() { return socket_; }
 
-    std::shared_ptr<WorldServer> server() const { return server_; }
+    std::shared_ptr<RelayServer> server() const { return server_; }
 
     MessageBuffer &read_buffer() {
         return read_buffer_;
@@ -54,7 +54,7 @@ private:
     void do_send_packet(const Packet &packet);
 
     boost::asio::ip::tcp::socket socket_;
-    std::shared_ptr<WorldServer> server_;
+    std::shared_ptr<RelayServer> server_;
 
     MessageBuffer read_buffer_;
 

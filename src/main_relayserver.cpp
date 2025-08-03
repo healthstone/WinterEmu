@@ -1,4 +1,4 @@
-#include "worldserver/WorldServer.hpp"
+#include "relayserver/RelayServer.hpp"
 #include "Database.hpp"
 #include "Logger.hpp"
 
@@ -15,7 +15,7 @@ int main() {
         unsigned int max_threads = std::thread::hardware_concurrency();
 
         // read env DB_ASYNC_THREADS
-        unsigned int async_threads = std::getenv("WORLD_DB_ASYNC_THREADS") ? static_cast<unsigned int>(std::stoi(std::getenv("WORLD_DB_ASYNC_THREADS"))) : 2; // default 2
+        unsigned int async_threads = std::getenv("RELAY_DB_ASYNC_THREADS") ? static_cast<unsigned int>(std::stoi(std::getenv("RELAY_DB_ASYNC_THREADS"))) : 2; // default 2
 
         // set default network_threads (max - async threads)
         unsigned int network_threads = max_threads - async_threads;
@@ -23,11 +23,11 @@ int main() {
         else if (network_threads == 0) network_threads = 1;
 
         // read env NETWORK_THREADS
-        if (std::getenv("WORLD_NETWORK_THREADS"))
-            network_threads = static_cast<unsigned int>(std::stoi(std::getenv("WORLD_NETWORK_THREADS")));
+        if (std::getenv("RELAY_NETWORK_THREADS"))
+            network_threads = static_cast<unsigned int>(std::stoi(std::getenv("RELAY_NETWORK_THREADS")));
 
         // read env AUTH_PORT
-        int port = std::getenv("WORLD_PORT") ? static_cast<int>(std::stoi(std::getenv("WORLD_PORT"))) : 8085;
+        int port = std::getenv("RELAY_PORT") ? static_cast<int>(std::stoi(std::getenv("RELAY_PORT"))) : 8085;
 
         // 🟢 Используем только io_context
         boost::asio::io_context io_context;
@@ -44,14 +44,14 @@ int main() {
                 async_threads      // Для асинхронных запросов должен быть выделен минимум 1 поток
         );
 
-        auto server = std::make_shared<WorldServer>(io_context, db, port);
+        auto server = std::make_shared<RelayServer>(io_context, db, port);
         server->init();
         server->start_accept();
-        log->info("[WorldServer] Running on port {} with {} network threads", port, network_threads);
+        log->info("[RelayServer] Running on port {} with {} network threads", port, network_threads);
 
         boost::asio::signal_set signals(io_context, SIGINT, SIGTERM);
         signals.async_wait([&](const boost::system::error_code &, int signal_number) {
-            log->info("[WorldServer] Signal {} received, shutting down...", signal_number);
+            log->info("[RelayServer] Signal {} received, shutting down...", signal_number);
             server->stop();
             db->shutdown();
         });
@@ -65,9 +65,9 @@ int main() {
 
         for (auto &t : threads) t.join();
 
-        log->info("[WorldServer] Gracefully shut down.");
+        log->info("[RelayServer] Gracefully shut down.");
     } catch (const std::exception &e) {
-        log->error("[WorldServer] Exception: {}", e.what());
+        log->error("[RelayServer] Exception: {}", e.what());
     }
 
     spdlog::shutdown();

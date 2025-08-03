@@ -1,17 +1,17 @@
-#include "WorldServer.hpp"
-#include "WorldSession/WorldSession.hpp"
+#include "RelayServer.hpp"
+#include "GameSession/GameSession.hpp"
 #include "Logger.hpp"
 
 using boost::asio::ip::tcp;
 
-WorldServer::WorldServer(boost::asio::io_context &io_context,
-                       std::shared_ptr<Database> db,
-                       int port)
+RelayServer::RelayServer(boost::asio::io_context &io_context,
+                         std::shared_ptr<Database> db,
+                         int port)
         : io_context_(io_context), acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
           db_(std::move(db)) {
 }
 
-void WorldServer::start_accept() {
+void RelayServer::start_accept() {
     if (!acceptor_.is_open()) return;
 
     acceptor_.async_accept(
@@ -20,17 +20,17 @@ void WorldServer::start_accept() {
                 if (ec) {
                     if (ec != boost::asio::error::operation_aborted &&
                         ec != boost::asio::error::eof) {
-                        log->error("[WorldServer] Accept failed: {}", ec.message());
+                        log->error("[RelayServer] Accept failed: {}", ec.message());
                     }
                     return;
                 }
 
-                auto session = std::make_shared<WorldSession>(std::move(socket), self);
+                auto session = std::make_shared<GameSession>(std::move(socket), self);
 
                 {
                     std::lock_guard<std::mutex> lock(self->sessions_mutex_);
                     self->sessions_.insert(session);
-                    log->info("[WorldServer] New client connected.");
+                    log->info("[RelayServer] New client connected.");
                     self->log_session_count();
                 }
 
@@ -40,23 +40,23 @@ void WorldServer::start_accept() {
     );
 }
 
-void WorldServer::stop() {
+void RelayServer::stop() {
     auto log = Logger::get();
 
     boost::system::error_code ec;
     acceptor_.cancel(ec);
     if (ec && ec != boost::asio::error::operation_aborted && ec != boost::asio::error::eof) {
-        log->error("[WorldServer] Failed to cancel acceptor: {}", ec.message());
+        log->error("[RelayServer] Failed to cancel acceptor: {}", ec.message());
     }
 
     acceptor_.close(ec);
     if (ec && ec != boost::asio::error::operation_aborted && ec != boost::asio::error::eof) {
-        log->error("[WorldServer] Failed to close acceptor: {}", ec.message());
+        log->error("[RelayServer] Failed to close acceptor: {}", ec.message());
     }
 
     // Для избежания dead lock'a, нужно делать копию списка, закрыть открытые сокеты (где тоже мьютекс)
     {
-        std::unordered_set<std::shared_ptr<WorldSession>> sessions_copy;
+        std::unordered_set<std::shared_ptr<GameSession>> sessions_copy;
         {
             std::lock_guard<std::mutex> lock(sessions_mutex_);
             sessions_copy = sessions_;
@@ -81,16 +81,16 @@ void WorldServer::stop() {
     log_session_count();
 }
 
-void WorldServer::remove_session(std::shared_ptr<WorldSession> session) {
+void RelayServer::remove_session(std::shared_ptr<GameSession> session) {
     std::lock_guard<std::mutex> lock(sessions_mutex_);
     sessions_.erase(session);
     log_session_count();
 }
 
-void WorldServer::log_session_count() {
-    Logger::get()->info("[WorldServer] Active sessions: {}", sessions_.size());
+void RelayServer::log_session_count() {
+    Logger::get()->info("[RelayServer] Active sessions: {}", sessions_.size());
 }
 
-void WorldServer::init() {
+void RelayServer::init() {
     // Загружаем различные данные
 }

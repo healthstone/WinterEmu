@@ -1,22 +1,22 @@
-#include "WorldSession.hpp"
+#include "GameSession.hpp"
 #include "Logger.hpp"
 #include "WoWPacket.hpp"
-#include "src/worldserver/handlers/Handlers.hpp"
+#include "src/relayserver/handlers/Handlers.hpp"
 #include <iostream>
 
 using boost::asio::ip::tcp;
 
-WorldSession::WorldSession(tcp::socket socket, std::shared_ptr<WorldServer> server)
+GameSession::GameSession(tcp::socket socket, std::shared_ptr<RelayServer> server)
         : socket_(std::move(socket)), server_(std::move(server)), read_buffer_(4096) {}
 
-void WorldSession::start() {
+void GameSession::start() {
     auto ep = socket_.remote_endpoint();
-    Logger::get()->debug("[world_session][start] New connection from {}:{}",
+    Logger::get()->debug("[relay_session][start] New connection from {}:{}",
                          ep.address().to_string(), ep.port());
     do_read();
 }
 
-void WorldSession::close() {
+void GameSession::close() {
     if (closed_.exchange(true)) return;
 
     auto log = Logger::get();
@@ -24,18 +24,18 @@ void WorldSession::close() {
     boost::system::error_code ec;
     socket_.cancel(ec);
     if (ec && ec != boost::asio::error::operation_aborted && ec != boost::asio::error::eof) {
-        log->error("[world_session][close] Failed to cancel socket: {}", ec.message());
+        log->error("[relay_session][close] Failed to cancel socket: {}", ec.message());
     }
 
     socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
     if (ec && ec != boost::asio::error::operation_aborted &&
         ec != boost::asio::error::eof &&
         ec != boost::asio::error::not_connected) {
-        log->error("[world_session][close] Failed to shutdown socket: {}", ec.message());
+        log->error("[relay_session][close] Failed to shutdown socket: {}", ec.message());
     }
     socket_.close(ec);
     if (ec && ec != boost::asio::error::operation_aborted && ec != boost::asio::error::eof) {
-        log->error("[world_session][close] Failed to close socket: {}", ec.message());
+        log->error("[relay_session][close] Failed to close socket: {}", ec.message());
     }
 
     read_buffer_.clear();
@@ -46,7 +46,7 @@ void WorldSession::close() {
     }
 }
 
-void WorldSession::do_read() {
+void GameSession::do_read() {
     auto self = shared_from_this();
 
     read_buffer_.ensure_free_space(512);
@@ -61,7 +61,7 @@ void WorldSession::do_read() {
                         ec == boost::asio::error::connection_reset) {
                         //log->debug("[client_session][do_read] Client disconnected: {}", ec.message());
                     } else {
-                        log->error("[world_session][do_read] Read error: {}", ec.message());
+                        log->error("[relay_session][do_read] Read error: {}", ec.message());
                     }
                     close();
                     return;
@@ -75,7 +75,7 @@ void WorldSession::do_read() {
     );
 }
 
-void WorldSession::process_read_buffer() {
+void GameSession::process_read_buffer() {
     auto log = Logger::get();
     MessageBuffer &buffer = read_buffer();
 
@@ -112,7 +112,7 @@ void WorldSession::process_read_buffer() {
         Handlers::dispatch(shared_from_this(), packet);
 
     } catch (const std::exception &ex) {
-        log->error("[ReaderSession] WoWPacket processing failed: {}", ex.what());
+        log->error("[GameSession][process_read_buffer] WoWPacket processing failed: {}", ex.what());
         close();
     }
 }
@@ -120,9 +120,9 @@ void WorldSession::process_read_buffer() {
 /**
  * Обертка для безопасной отправки пакета из любого потока и корутины
  */
-void WorldSession::send_packet(const std::shared_ptr<const Packet>& packet) {
+void GameSession::send_packet(const std::shared_ptr<const Packet>& packet) {
     if (closed_) {
-        Logger::get()->debug("[world_session][send_packet] called. closed_={}", closed_.load());
+        Logger::get()->debug("[relay_session][send_packet] called. closed_={}", closed_.load());
         return;
     }
 
@@ -137,7 +137,7 @@ void WorldSession::send_packet(const std::shared_ptr<const Packet>& packet) {
 /**
  * Отправка пакета клиенту
  */
-void WorldSession::do_send_packet(const Packet &packet) {
+void GameSession::do_send_packet(const Packet &packet) {
     std::vector<uint8_t> full_packet = packet.build_packet();
     write_queue_.push_back(std::move(full_packet));
 
@@ -146,7 +146,7 @@ void WorldSession::do_send_packet(const Packet &packet) {
     }
 }
 
-void WorldSession::do_write() {
+void GameSession::do_write() {
     if (write_queue_.empty()) {
         writing_ = false;
         return;
@@ -163,7 +163,7 @@ void WorldSession::do_write() {
 
                 if (ec) {
                     if (ec != boost::asio::error::operation_aborted && ec != boost::asio::error::eof) {
-                        log->error("[world_session] Write failed: {}", ec.message());
+                        log->error("[relay_session] Write failed: {}", ec.message());
                     }
                     close();
                     return;

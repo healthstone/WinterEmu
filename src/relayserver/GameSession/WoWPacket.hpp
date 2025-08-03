@@ -1,7 +1,7 @@
 #pragma once
 
 #include "packet/Packet.hpp"
-#include "src/worldserver/enums/WoWOpcodes.hpp"
+#include "src/relayserver/enums/WoWOpcodes.hpp"
 
 class WoWPacket : public Packet {
 private:
