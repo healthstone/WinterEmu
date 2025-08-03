@@ -6,24 +6,22 @@
 #include <mutex>
 
 #include "Database.hpp"
-#include "src/relayserver/Entity/NodeManager/NodeManager.hpp"
 
-class GameSession;
+class NodeSession;
 
-class RelayServer : public std::enable_shared_from_this<RelayServer> {
+class NodeServer : public std::enable_shared_from_this<NodeServer> {
 public:
-    RelayServer(boost::asio::io_context &io_context,
+    NodeServer(boost::asio::io_context &io_context,
                 std::shared_ptr<Database> db,
                 int port);
 
     void start_accept();
     void stop();
-    void remove_session(std::shared_ptr<GameSession> session);
+    void remove_session(std::shared_ptr<NodeSession> session);
     void log_session_count();
 
     void init();
 
-    NodeManager* get_node_manager() const { return node_manager_.get(); }
     std::shared_ptr<Database> db() { return db_; }
 
 private:
@@ -31,7 +29,6 @@ private:
     boost::asio::ip::tcp::acceptor acceptor_;
     const std::shared_ptr<Database> db_;
 
-    std::unique_ptr<NodeManager> node_manager_;
-    std::unordered_set<std::shared_ptr<GameSession>> sessions_;
+    std::unordered_set<std::shared_ptr<NodeSession>> sessions_;
     std::mutex sessions_mutex_;
 };

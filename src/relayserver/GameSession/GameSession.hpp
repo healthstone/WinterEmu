@@ -8,7 +8,7 @@
 
 #include "src/relayserver/RelayServer.hpp"
 #include "packet/MessageBuffer.hpp"
-#include "WoWPacket.hpp"
+#include "packet/WoWPacket.hpp"
 
 class RelayServer; // forward declaration
 

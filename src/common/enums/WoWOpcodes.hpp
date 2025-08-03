@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-enum WoWOpcodes : uint16_t
+enum class WoWOpcodes : uint16_t
 {
     NULL_PACKET                                     = 0x000,
     CMSG_BOOTME                                     = 0x001,

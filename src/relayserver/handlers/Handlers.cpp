@@ -1,6 +1,6 @@
 #include "Handlers.hpp"
 #include "src/relayserver/handlers/heartbeat/HeartBeatHandlers.hpp"
-#include "src/relayserver/enums/WoWOpcodes.hpp"
+#include "enums/WoWOpcodes.hpp"
 
 using namespace Handlers;
 

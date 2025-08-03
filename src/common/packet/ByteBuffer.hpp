@@ -293,6 +293,10 @@ public:
 
     // ==================== UTILITY METHODS ====================
 
+    size_t remaining() const {
+        return buffer_.size() - read_pos_;
+    }
+
     void skip(size_t bytes) {
         check_read(bytes, ReadSource::SKIP);
         read_pos_ += bytes;

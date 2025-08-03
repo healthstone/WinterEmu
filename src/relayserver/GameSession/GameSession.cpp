@@ -1,6 +1,5 @@
 #include "GameSession.hpp"
 #include "Logger.hpp"
-#include "WoWPacket.hpp"
 #include "src/relayserver/handlers/Handlers.hpp"
 #include <iostream>
 

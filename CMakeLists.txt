@@ -20,6 +20,7 @@ add_subdirectory(${SPDLOG_DIR})
 file(GLOB_RECURSE COMMON_SOURCES CONFIGURE_DEPENDS src/common/*.cpp)
 file(GLOB_RECURSE AUTH_SERVER_SOURCES CONFIGURE_DEPENDS src/authserver/*.cpp)
 file(GLOB_RECURSE RELAY_SERVER_SOURCES CONFIGURE_DEPENDS src/relayserver/*.cpp)
+file(GLOB_RECURSE NODE_SERVER_SOURCES CONFIGURE_DEPENDS src/nodeserver/*.cpp)
 file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS tests/*.cpp)
 
 set(COMMON_INCLUDE_DIRS
@@ -50,7 +51,7 @@ target_include_directories(authserver PRIVATE
         ${PQXX_INCLUDE_DIRS}
 )
 
-# === auth Сервер ===
+# === relay Сервер ===
 add_executable(relayserver
         src/main_relayserver.cpp
         ${RELAY_SERVER_SOURCES}
@@ -66,6 +67,29 @@ target_link_libraries(relayserver PRIVATE
 )
 
 target_include_directories(relayserver PRIVATE
+        ${COMMON_INCLUDE_DIRS}
+        ${CMAKE_SOURCE_DIR}
+        ${Boost_INCLUDE_DIRS}
+        ${PostgreSQL_INCLUDE_DIRS}
+        ${PQXX_INCLUDE_DIRS}
+)
+
+# === node Сервер ===
+add_executable(nodeserver
+        src/main_nodeserver.cpp
+        ${NODE_SERVER_SOURCES}
+        ${COMMON_SOURCES}
+)
+
+target_link_libraries(nodeserver PRIVATE
+        Boost::boost Boost::system
+        ${PostgreSQL_LIBRARIES}
+        ${PQXX_LIBRARIES}
+        spdlog::spdlog
+        OpenSSL::Crypto
+)
+
+target_include_directories(nodeserver PRIVATE
         ${COMMON_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}
         ${Boost_INCLUDE_DIRS}
