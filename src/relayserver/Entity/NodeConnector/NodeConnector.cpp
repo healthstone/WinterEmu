@@ -149,9 +149,6 @@ void NodeConnector::read_header() {
 
                                 uint16_t opcode = (static_cast<uint16_t>((*header)[0]) << 8) | (*header)[1];
                                 uint16_t length = (static_cast<uint16_t>((*header)[2]) << 8) | (*header)[3];
-
-                                log->debug("[NodeConnector] Header read: opcode={} length={}", opcode, length);
-
                                 self->read_payload(length, *header);
                             });
 }
