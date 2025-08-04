@@ -46,7 +46,15 @@ unsigned int network_threads = std::getenv("AUTH_NETWORK_THREADS") ?: 2;
 ```cpp
 unsigned int async_threads = std::getenv("RELAY_DB_ASYNC_THREADS");
 int port = std::getenv("RELAY_PORT") ? std::stoi(std::getenv("RELAY_PORT")) : 8085;
-unsigned int network_threads = std::getenv("RELAY_NETWORK_THREADS") ?: default: max threads - async db threads - 1;
+unsigned int network_threads = std::getenv("NODE_NETWORK_THREADS") ?: default: max threads - async db threads - 1;
+```
+
+**NodeServer:**
+
+```cpp
+unsigned int async_threads = std::getenv("NODE_DB_ASYNC_THREADS");
+int port = std::getenv("RELAY_PORT") ? std::stoi(std::getenv("RELAY_PORT")) : 8086;
+unsigned int network_threads = std::getenv("NODE_NETWORK_THREADS") ?: default: max threads - async db threads - 1;
 ```
 
 The RelayServer uses `NodeManager` to open **multiple connections** to each NodeServer, matching the NodeServer's `network_threads`. This ensures parallel handling and load balancing.

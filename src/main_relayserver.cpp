@@ -23,8 +23,8 @@ int main() {
         else if (network_threads == 0) network_threads = 1;
 
         // read env NETWORK_THREADS
-        if (std::getenv("RELAY_NETWORK_THREADS"))
-            network_threads = static_cast<unsigned int>(std::stoi(std::getenv("RELAY_NETWORK_THREADS")));
+        if (std::getenv("NODE_NETWORK_THREADS"))
+            network_threads = static_cast<unsigned int>(std::stoi(std::getenv("NODE_NETWORK_THREADS")));
 
         // read env AUTH_PORT
         int port = std::getenv("RELAY_PORT") ? static_cast<int>(std::stoi(std::getenv("RELAY_PORT"))) : 8085;
