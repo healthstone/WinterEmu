@@ -21,7 +21,7 @@ public:
     void remove_session(std::shared_ptr<GameSession> session);
     void log_session_count();
 
-    void init();
+    void init(unsigned int network_threads);
 
     NodeManager* get_node_manager() const { return node_manager_.get(); }
     std::shared_ptr<Database> db() { return db_; }

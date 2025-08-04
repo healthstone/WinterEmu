@@ -43,6 +43,10 @@ void RelayServer::start_accept() {
 void RelayServer::stop() {
     auto log = Logger::get();
 
+    if (node_manager_) {
+        node_manager_->stop_all();
+    }
+
     boost::system::error_code ec;
     acceptor_.cancel(ec);
     if (ec && ec != boost::asio::error::operation_aborted && ec != boost::asio::error::eof) {
@@ -91,9 +95,9 @@ void RelayServer::log_session_count() {
     Logger::get()->info("[RelayServer] Active sessions: {}", sessions_.size());
 }
 
-void RelayServer::init() {
+void RelayServer::init(unsigned int network_threads) {
     // Загружаем различные данные
     node_manager_ = std::make_unique<NodeManager>(io_context_);
-    node_manager_->add_connector(1, "127.0.0.1", 8086);
+    node_manager_->add_connectors(1, "127.0.0.1", 8086, network_threads);
     node_manager_->start_all();
 }

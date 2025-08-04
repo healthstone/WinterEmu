@@ -45,7 +45,7 @@ int main() {
         );
 
         auto server = std::make_shared<RelayServer>(io_context, db, port);
-        server->init();
+        server->init(network_threads);
         server->start_accept();
         log->info("[RelayServer] Running on port {} with {} network threads", port, network_threads);
 
