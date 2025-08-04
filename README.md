@@ -1,163 +1,150 @@
+
 # ❄️ WinterEmu — World of Warcraft Server Emulator
 
-**WinterEmu** is a modern World of Warcraft **server emulator** written in **C++**, using an asynchronous networking model with **Boost.Asio** and a **PostgreSQL** backend. This component handles account authentication, client build verification, and realmlist delivery.
+**WinterEmu** is a modern World of Warcraft **server emulator** written in **C++**, using an asynchronous networking model with **Boost.Asio** and a **PostgreSQL** backend. This emulator handles account authentication, realm management, client build checks and routes traffic via a multi-threaded RelayServer with Node connections.
 
 ---
 
 ## 📌 Features
 
-✅ Fully asynchronous `AuthServer` using `Boost.Asio`  
-✅ Clean architecture: `ClientSession`, `RealmList`, `AccountCache`  
-✅ Account and realm storage in **PostgreSQL**  
-✅ SRP6 authentication protocol implemented  
-✅ Full packet hex logging with `Packet::log_raw_payload`  
-✅ Automatic duplicate session kick on multiple logins  
-✅ Account caching with SRP6 verifier, salt, and SessionKey  
-✅ Supports multiple WoW client builds up to **3.3.5a**  
-✅ Unit tests are included
+✅ Fully asynchronous `AuthServer` and `RelayServer` with `Boost.Asio`  
+✅ Multi-connection `NodeConnector` pool for horizontal scaling  
+✅ Clean layered architecture: `ClientSession`, `GameSession`, `NodeManager`, `NodeConnector`  
+✅ Fast PostgreSQL backend with prepared statements  
+✅ SRP6 authentication for secure login  
+✅ Hex dump logging for all packets with `Packet::log_raw_payload`  
+✅ Account and realm caching to reduce DB pressure  
+✅ Supports multiple WoW builds (up to 3.3.5a)  
+✅ Unit tests included
 
 ---
 
-### 📦 Configuration via Environment Variables
+## ⚙️ Configuration
 
-The server automatically reads database connection settings from **environment variables**, with safe defaults if not set:
+All main settings are configured via environment variables.
 
-for both:
+**Database settings:**
+
 ```cpp
 std::string db_host = std::getenv("DB_URL") ? std::getenv("DB_URL") : "127.0.0.1";
 std::string db_port = std::getenv("DB_PORT") ? std::getenv("DB_PORT") : "5432";
 std::string db_user = std::getenv("DB_USER") ? std::getenv("DB_USER") : "postgres";
 std::string db_password = std::getenv("DB_PASSWORD") ? std::getenv("DB_PASSWORD") : "postgres";
 std::string db_name = std::getenv("DB_NAME") ? std::getenv("DB_NAME") : "postgres";
-
-std::string auth_schema = std::getenv("AUTH_SCHEMA") ?: "auth_server";
 ```
 
-for AuthServer:
-```cpp
-unsigned int async_threads = std::getenv("AUTH_DB_ASYNC_THREADS")
-int port = std::getenv("AUTH_PORT") ? static_cast<int>(std::stoi(std::getenv("AUTH_PORT"))) : 3724;
-unsigned int network_threads = std::getenv("AUTH_NETWORK_THREADS") ?: 2
-```
-
-also for WorldServer:
+**AuthServer:**
 
 ```cpp
-unsigned int async_threads = std::getenv("WORLD_DB_ASYNC_THREADS")
-int port = std::getenv("WORLD_PORT") ? static_cast<int>(std::stoi(std::getenv("WORLD_PORT"))) : 8085;
-unsigned int network_threads = std::getenv("WORLD_NETWORK_THREADS") ?: default: max threads - async db threads - 1 ( for example if 8 max: 2 async and 5 network  and 1 for system and logs );
+unsigned int async_threads = std::getenv("AUTH_DB_ASYNC_THREADS");
+int port = std::getenv("AUTH_PORT") ? std::stoi(std::getenv("AUTH_PORT")) : 3724;
+unsigned int network_threads = std::getenv("AUTH_NETWORK_THREADS") ?: 2;
 ```
 
----
+**RelayServer:**
 
-### ⚙️ Variables:
+```cpp
+unsigned int async_threads = std::getenv("RELAY_DB_ASYNC_THREADS");
+int port = std::getenv("RELAY_PORT") ? std::stoi(std::getenv("RELAY_PORT")) : 8085;
+unsigned int network_threads = std::getenv("RELAY_NETWORK_THREADS") ?: default: max threads - async db threads - 1;
+```
 
-If an environment variable is not set, a safe fallback will be used. The log output shows exactly which values are applied.
+The RelayServer uses `NodeManager` to open **multiple connections** to each NodeServer, matching the NodeServer's `network_threads`. This ensures parallel handling and load balancing.
 
-Example for Linux:
+Example to set up:
 ```bash
 export DB_URL=192.168.1.100
 export DB_USER=myuser
 export DB_PASSWORD=mypass
-./authserver
+export RELAY_NETWORK_THREADS=5
+export RELAY_DB_ASYNC_THREADS=2
+./relayserver
 ```
 
-This makes it easy to configure the server without changing the source code! ✅
+---
+
+## 🗂️ Structure
+
+- **AuthServer** — handles login, SRP6 handshake, proof validation
+- **RelayServer** — bridges clients to world logic, handles sessions
+- **NodeManager** — manages pools of `NodeConnector` connections
+- **NodeConnector** — async TCP connection to NodeServer
+- **GameSession** — a connected game client session
+- **Packet**, **NodePacket**, **WoWPacket**, **NodeData** — binary abstractions
+- **Logger** — spdlog-based async logging with hex dumps
 
 ---
 
-## ⚙️ Structure
+## 🧩 Database
 
-- `AuthServer` — the main server entry point, handles connections and sessions.
-- `ClientSession` — represents a connected client, tracks SRP6 states, SessionKey, Proofs, and manages the WoW protocol.
-- `RealmList` — keeps the current realm list from the database, resolves IP for the client.
-- `AccountCache` — fast in-memory cache for account SRP6 data and SessionKeys.
-- `Packet` / `RawPacket` — binary packet abstraction for WoW login protocol.
+Tables:
+- `accounts` (login, salt, verifier, session_key)
+- `realmlist` (realms & build versions)
+- `build_info` (patch info)
+- `build_executable_hash` (executable checksums)
 
----
-
-## 🗄️ Database
-
-- Uses **PostgreSQL**.
-- Example tables:
-  - `accounts` — stores login, salt, verifier, session_key.
-  - `realmlist` — stores realm IPs, build version, flags.
-  - `build_info` — stores build info data.
-  - `build_executable_hash` — stores build exe hash data.
-- Uses prepared statements for queries.
-
-## 🔑 How Authentication Works
-
-1. The client sends `AUTH_LOGON_CHALLENGE` or `AUTH_RECONNECT_CHALLENGE`.
-2. The server parses the packet, validates UTF-8, verifies account.
-3. If the account is cached — SRP6 B, salt, and SessionKey are sent immediately.
-4. Otherwise, salt/verifier are loaded from the database and cached.
-5. The server responds with proof challenge, and validates proof.
-6. On success, the `SessionKey` is saved back into the cache.
+All queries are prepared for performance.
 
 ---
 
-## 🧩 Dependencies
+## 🔑 Authentication
 
-- `C++20`
-- `Boost.Asio`
-- `PostgreSQL client library`
-- `spdlog` (for logging)
-- `Catch2` or any other unit testing framework
+1. Client sends `AUTH_LOGON_CHALLENGE`
+2. Server verifies, loads SRP6 data
+3. Salt/verifier returned or fetched from DB
+4. Proof exchange and `SessionKey` generation
+5. SessionKey is cached
 
 ---
 
-### Requirements
+## 🔁 NodeConnector Pool Example
 
+RelayServer uses `NodeManager` to open multiple connections:
+
+```cpp
+node_manager->add_connectors(1, "127.0.0.1", 8086, 5);
 ```
-sudo apt install \
-libssl-dev \
-libboost-all-dev \
-libpq-dev \
-libpqxx-dev \
-pkg-config \
-catch2
+
+When sending a `NodePacket`:
+
+```cpp
+auto connector = node_manager->get_first_connector(1); // picks random
+connector->send_packet(packet);
 ```
+
+---
+
+## 🧪 Unit Tests
+
+Unit tests included for SRP6, DB, packet parsing.
+
+---
+
+## 🛠️ Dependencies
+
+- C++20
+- Boost.Asio
+- spdlog
+- libpq / libpqxx
+- Catch2
+
+Install:
+```bash
+sudo apt install libssl-dev libboost-all-dev libpq-dev libpqxx-dev pkg-config catch2
+```
+
+---
 
 ## 🚀 Getting Started
 
 ```bash
-mkdir build
-cd build
+mkdir build && cd build
 cmake ..
 make
 ./authserver
+./relayserver
 ```
 
-- Make sure **PostgreSQL** is running and schema is created.
-- Adjust database connection strings in your config files.
-
 ---
 
-## 📜 Example Logs
-
-```
-[client_session][start] New connection from 127.0.0.1:33044
-[Packet] DUMP opcode ID: REQUEST AUTH_LOGON_CHALLENGE ...
-[Packet] DUMP opcode ID: RESPONSE AUTH_LOGON_CHALLENGE ...
-```
-
-Every raw packet is hex-dumped for debugging.
-
----
-
-## ✅ Unit Testing
-
-The project includes unit tests for critical parts such as SRP6, packet parsing, and database logic.
-
-Framework: Catch2
-
----
-
-## 🤝 Contributing
-
-PRs and issues are welcome!
-
----
-
-**WinterEmu** — Blizzard may freeze, but you control the realms. ❄️
+**WinterEmu** — control your realm. ❄️
