@@ -1,7 +1,7 @@
 #include "NodeConnector.hpp"
 #include "src/relayserver/Entity/NodeConnector/nodehandlers/NodeHandlers.hpp"
 
-NodeConnector::NodeConnector(boost::asio::io_context& io, const std::string& host, int port, uint8_t node_id)
+NodeConnector::NodeConnector(boost::asio::io_context &io, const std::string &host, int port, uint8_t node_id)
         : io_(io),
           socket_(io),
           host_(host),
@@ -43,15 +43,16 @@ void NodeConnector::connect() {
     auto endpoints = resolver.resolve(host_, std::to_string(port_));
 
     boost::asio::async_connect(socket_, endpoints,
-                               [self = shared_from_this()](boost::system::error_code ec, const tcp::endpoint&) {
+                               [self = shared_from_this()](boost::system::error_code ec, const tcp::endpoint &) {
+                                   auto log = Logger::get();
                                    if (!ec) {
                                        self->connected_ = true;
-                                       Logger::get()->info("[NodeConnector] Connected to NodeServer");
+                                       log->info("[NodeConnector] Connected to Node: {}", self->node_id_);
                                        self->flush_queue();
                                        self->start_receive_loop();
                                        self->start_heartbeat();
                                    } else {
-                                       Logger::get()->error("[NodeConnector] Connect failed: {}", ec.message());
+                                       log->error("[NodeConnector] Connect failed: {}", ec.message());
                                        self->schedule_reconnect();
                                    }
                                });
@@ -62,7 +63,7 @@ void NodeConnector::schedule_reconnect() {
     boost::system::error_code ec;
     socket_.close(ec);
     reconnect_timer_.expires_after(std::chrono::seconds(5));
-    reconnect_timer_.async_wait([self = shared_from_this()](const boost::system::error_code& ec) {
+    reconnect_timer_.async_wait([self = shared_from_this()](const boost::system::error_code &ec) {
         if (!ec) {
             Logger::get()->info("[NodeConnector] Reconnecting...");
             self->connect();
@@ -70,14 +71,14 @@ void NodeConnector::schedule_reconnect() {
     });
 }
 
-void NodeConnector::send_packet(const NodePacket& packet) {
+void NodeConnector::send_packet(const NodePacket &packet) {
     auto self = shared_from_this();
     boost::asio::post(io_, [self, packet]() {
         self->do_send_packet(packet);
     });
 }
 
-void NodeConnector::do_send_packet(const NodePacket& packet) {
+void NodeConnector::do_send_packet(const NodePacket &packet) {
     if (!connected_) {
         Logger::get()->info("[NodeConnector] Not connected. Packet queued.");
     }
@@ -125,7 +126,8 @@ void NodeConnector::start_receive_loop() {
 void NodeConnector::read_header() {
     auto header = std::make_shared<std::vector<uint8_t>>(4); // opcode(2) + length(2)
     boost::asio::async_read(socket_, boost::asio::buffer(*header),
-                            [self = shared_from_this(), header](boost::system::error_code ec, std::size_t bytes_transferred) {
+                            [self = shared_from_this(), header](boost::system::error_code ec,
+                                                                std::size_t bytes_transferred) {
                                 auto log = Logger::get();
                                 if (ec) {
                                     if (ec == boost::asio::error::operation_aborted ||
@@ -154,7 +156,7 @@ void NodeConnector::read_header() {
                             });
 }
 
-void NodeConnector::read_payload(std::size_t length, const std::vector<uint8_t>& header) {
+void NodeConnector::read_payload(std::size_t length, const std::vector<uint8_t> &header) {
     if (length > 2048) {
         Logger::get()->error("[NodeConnector] Payload size too large: {}", length);
         connected_ = false;
@@ -164,7 +166,8 @@ void NodeConnector::read_payload(std::size_t length, const std::vector<uint8_t>&
 
     auto payload = std::make_shared<std::vector<uint8_t>>(length);
     boost::asio::async_read(socket_, boost::asio::buffer(*payload),
-                            [self = shared_from_this(), payload, header](boost::system::error_code ec, std::size_t bytes_transferred) {
+                            [self = shared_from_this(), payload, header](boost::system::error_code ec,
+                                                                         std::size_t bytes_transferred) {
                                 auto log = Logger::get();
                                 if (ec) {
                                     if (ec == boost::asio::error::operation_aborted ||
@@ -178,7 +181,8 @@ void NodeConnector::read_payload(std::size_t length, const std::vector<uint8_t>&
                                     return;
                                 }
                                 if (bytes_transferred != payload->size()) {
-                                    log->error("[NodeConnector] Incomplete payload read: {} bytes, expected {}", bytes_transferred, payload->size());
+                                    log->error("[NodeConnector] Incomplete payload read: {} bytes, expected {}",
+                                               bytes_transferred, payload->size());
                                     self->connected_ = false;
                                     self->schedule_reconnect();
                                     return;
@@ -196,7 +200,7 @@ void NodeConnector::read_payload(std::size_t length, const std::vector<uint8_t>&
                                 try {
                                     packet->deserialize(raw_packet);
                                     NodeHandlers::dispatch(self, packet);
-                                } catch (const std::exception& ex) {
+                                } catch (const std::exception &ex) {
                                     log->error("[NodeConnector] Packet deserialize failed: {}", ex.what());
                                 }
 
@@ -206,7 +210,7 @@ void NodeConnector::read_payload(std::size_t length, const std::vector<uint8_t>&
 
 void NodeConnector::start_heartbeat() {
     heartbeat_timer_.expires_after(std::chrono::seconds(30));
-    heartbeat_timer_.async_wait([self = shared_from_this()](const boost::system::error_code& ec) {
+    heartbeat_timer_.async_wait([self = shared_from_this()](const boost::system::error_code &ec) {
         if (!ec && self->connected_) {
             self->send_ping();
             self->start_heartbeat();
@@ -221,7 +225,7 @@ void NodeConnector::send_ping() {
     NodePacket ping_packet(NodeOpcodes::REL_TO_NODE_PING, nodeData);
 
     send_packet(ping_packet);
-    Logger::get()->debug("[NodeConnector] Sent REL_TO_NODE_PING");
+    Logger::get()->trace("[NodeConnector] Sent REL_TO_NODE_PING");
 
     awaiting_pong_ = true;
     schedule_pong_timeout();
@@ -229,7 +233,7 @@ void NodeConnector::send_ping() {
 
 void NodeConnector::schedule_pong_timeout() {
     pong_timeout_timer_.expires_after(std::chrono::seconds(10));
-    pong_timeout_timer_.async_wait([self = shared_from_this()](const boost::system::error_code& ec) {
+    pong_timeout_timer_.async_wait([self = shared_from_this()](const boost::system::error_code &ec) {
         if (!ec) {
             if (self->awaiting_pong_) {
                 Logger::get()->warn("[NodeConnector] PONG timeout - disconnecting and reconnecting");

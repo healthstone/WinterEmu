@@ -36,6 +36,8 @@ private:
     void send_ping();
     void schedule_pong_timeout();
 
+    uint8_t node_id_;
+
 private:
     boost::asio::io_context& io_;
     tcp::socket socket_;
@@ -49,8 +51,6 @@ private:
     boost::asio::steady_timer reconnect_timer_;
     boost::asio::steady_timer heartbeat_timer_;
     boost::asio::steady_timer pong_timeout_timer_;
-
-    uint8_t node_id_;
 
     std::deque<std::vector<uint8_t>> write_queue_;
 };
