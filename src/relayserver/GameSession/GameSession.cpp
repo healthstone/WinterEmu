@@ -88,46 +88,58 @@ void GameSession::do_read() {
 
 void GameSession::process_read_buffer() {
     auto log = Logger::get();
-    MessageBuffer &buffer = read_buffer();
+    MessageBuffer& buffer = read_buffer();
 
-    while (true) {
-        if (buffer.get_active_size() < 4)
-            return;
+    while (buffer.get_active_size() >= 4) {  // Минимальный размер заголовка
+        const uint8_t* data = buffer.read_ptr();
 
-        const uint8_t *data = buffer.read_ptr();
+        // Чтение размера (big-endian) и opcode (little-endian)
+        uint16_t size = (static_cast<uint16_t>(data[0]) << 8) | data[1];
+        uint16_t opcode = (static_cast<uint16_t>(data[3]) << 8) | data[2];
 
-        // Чтение длины и opcode в LITTLE ENDIAN
-        uint16_t size   = static_cast<uint16_t>(data[1]) << 8 | static_cast<uint16_t>(data[0]);
-        uint16_t opcode = static_cast<uint16_t>(data[3]) << 8 | static_cast<uint16_t>(data[2]);
-
-        log->debug("[process_read_buffer] Buffer size: {}, Packet length: {}, Opcode: 0x{:04X}", buffer.get_active_size(), size, opcode);
-
-        if (buffer.get_active_size() < 2 + size) {
-            log->debug("[process_read_buffer] Not enough data yet to read full packet");
-            return;
-        }
-
+        // Проверка максимального размера
         if (size > 2048) {
-            log->error("WoWPacket payload too big: {}", size);
+            log->error("Packet size too big: {}", size);
             close();
             return;
         }
 
-        std::vector<uint8_t> full_packet(data, data + 2 + size);
-        buffer.read_completed(2 + size);
+        // Проверка наличия полного пакета (size включает opcode)
+        if (buffer.get_active_size() < size + 2) {
+            log->debug("Waiting for more data (need {} bytes, have {})",
+                       size + 2, buffer.get_active_size());
+            return;
+        }
 
-        auto packet = std::make_shared<WoWPacket>();
+        // Для CMSG_AUTH_SESSION делаем особую проверку
+//        if (static_cast<WoWOpcodes>(opcode) == WoWOpcodes::CMSG_AUTH_SESSION && size < 30) {
+//            log->error("Invalid CMSG_AUTH_SESSION size: {}", size);
+//            close();
+//            return;
+//        }
+
         try {
+            // Выделяем полный пакет (2 байта size + size байт данных)
+            std::vector<uint8_t> full_packet(data, data + size + 2);
+            buffer.read_completed(size + 2);
+
+            auto packet = std::make_shared<WoWPacket>();
             packet->deserialize(full_packet);
+
+            // Особый лог для CMSG_AUTH_SESSION
+//            if (opcode == CMSG_AUTH_SESSION) {
+//                log->debug("Processing CMSG_AUTH_SESSION ({} bytes)", full_packet.size());
+//            }
+
             Handlers::dispatch(shared_from_this(), packet);
-        } catch (const std::exception &ex) {
-            log->error("[GameSession][process_read_buffer] WoWPacket processing failed: {}", ex.what());
+        }
+        catch (const std::exception& ex) {
+            log->error("Packet processing failed: {}", ex.what());
             close();
             return;
         }
     }
 }
-
 
 /**
  * Обертка для безопасной отправки пакета из любого потока и корутины
@@ -200,7 +212,7 @@ void GameSession::send_auth_challenge() {
     };
 
     WoWPacket challenge_pkt(WoWOpcodes::SMSG_AUTH_CHALLENGE);
-    challenge_pkt.write_uint32_le(12340);
+    challenge_pkt.write_uint32_le(1);
     challenge_pkt.write_bytes(_authSeed.data(), 4);
     challenge_pkt.write_bytes(fixed_random.data(), fixed_random.size());
 
