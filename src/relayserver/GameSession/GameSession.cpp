@@ -1,6 +1,7 @@
 #include "GameSession.hpp"
 #include "Logger.hpp"
 #include "src/relayserver/handlers/Handlers.hpp"
+#include "srp6/CryptoRandom.hpp"
 #include <iostream>
 
 using boost::asio::ip::tcp;
@@ -13,6 +14,15 @@ void GameSession::start() {
     Logger::get()->debug("[relay_session][start] New connection from {}:{}",
                          ep.address().to_string(), ep.port());
     do_read();
+
+    // Задержка отправки auth_challenge
+    auto self = shared_from_this();
+    auto timer = std::make_shared<boost::asio::steady_timer>(socket_.get_executor());
+    timer->expires_after(std::chrono::milliseconds(100));
+    timer->async_wait([this, self, timer](const boost::system::error_code& ec) {
+        if (!ec)
+            send_auth_challenge();
+    });
 }
 
 void GameSession::close() {
@@ -58,7 +68,7 @@ void GameSession::do_read() {
                     if (ec == boost::asio::error::operation_aborted ||
                         ec == boost::asio::error::eof ||
                         ec == boost::asio::error::connection_reset) {
-                        //log->debug("[client_session][do_read] Client disconnected: {}", ec.message());
+                        log->debug("[client_session][do_read] Client disconnected: {}", ec.message());
                     } else {
                         log->error("[relay_session][do_read] Read error: {}", ec.message());
                     }
@@ -68,6 +78,8 @@ void GameSession::do_read() {
 
                 if (!isOpened()) return;
                 read_buffer_.write_completed(bytes_transferred);
+
+                log->debug("[do_read] Received {} bytes", bytes_transferred);
                 process_read_buffer();
                 if (isOpened()) do_read();
             }
@@ -78,48 +90,49 @@ void GameSession::process_read_buffer() {
     auto log = Logger::get();
     MessageBuffer &buffer = read_buffer();
 
-    // Нужно минимум 4 байта: [Length(2)] + [Opcode(2)]
-    if (buffer.get_active_size() < 4)
-        return;
+    while (true) {
+        if (buffer.get_active_size() < 4)
+            return;
 
-    const uint8_t *data = buffer.read_ptr();
+        const uint8_t *data = buffer.read_ptr();
 
-    // Читаем Length (Big Endian)
-    uint16_t size = static_cast<uint16_t>(data[0]) << 8 | static_cast<uint16_t>(data[1]);
-    // Читаем Opcode (Big Endian)
-    uint16_t opcode = static_cast<uint16_t>(data[2]) << 8 | static_cast<uint16_t>(data[3]);
+        // Чтение длины и opcode в LITTLE ENDIAN
+        uint16_t size   = static_cast<uint16_t>(data[1]) << 8 | static_cast<uint16_t>(data[0]);
+        uint16_t opcode = static_cast<uint16_t>(data[3]) << 8 | static_cast<uint16_t>(data[2]);
 
-    // Проверяем, что весь пакет в буфере
-    if (buffer.get_active_size() < 4 + size - 2 /* минус 2 байта за opcode */)
-        return;
+        log->debug("[process_read_buffer] Buffer size: {}, Packet length: {}, Opcode: 0x{:04X}", buffer.get_active_size(), size, opcode);
 
-    if (size > 2048) {
-        log->error("WoWPacket payload too big: {}", size);
-        close();
-        return;
-    }
+        if (buffer.get_active_size() < 2 + size) {
+            log->debug("[process_read_buffer] Not enough data yet to read full packet");
+            return;
+        }
 
-    // Копируем полный пакет [Length][Opcode][Payload]
-    std::vector<uint8_t> full_packet(data, data + 2 + size); // 2 байта Length + size
+        if (size > 2048) {
+            log->error("WoWPacket payload too big: {}", size);
+            close();
+            return;
+        }
 
-    // Сдвигаем read_ptr
-    buffer.read_completed(2 + size);
-    auto packet = std::make_shared<WoWPacket>();
+        std::vector<uint8_t> full_packet(data, data + 2 + size);
+        buffer.read_completed(2 + size);
 
-    try {
-        packet->deserialize(full_packet);
-        Handlers::dispatch(shared_from_this(), packet);
-
-    } catch (const std::exception &ex) {
-        log->error("[GameSession][process_read_buffer] WoWPacket processing failed: {}", ex.what());
-        close();
+        auto packet = std::make_shared<WoWPacket>();
+        try {
+            packet->deserialize(full_packet);
+            Handlers::dispatch(shared_from_this(), packet);
+        } catch (const std::exception &ex) {
+            log->error("[GameSession][process_read_buffer] WoWPacket processing failed: {}", ex.what());
+            close();
+            return;
+        }
     }
 }
+
 
 /**
  * Обертка для безопасной отправки пакета из любого потока и корутины
  */
-void GameSession::send_packet(const std::shared_ptr<const Packet>& packet) {
+void GameSession::send_packet(const std::shared_ptr<const WoWPacket>& packet) {
     if (closed_) {
         Logger::get()->debug("[relay_session][send_packet] called. closed_={}", closed_.load());
         return;
@@ -136,7 +149,7 @@ void GameSession::send_packet(const std::shared_ptr<const Packet>& packet) {
 /**
  * Отправка пакета клиенту
  */
-void GameSession::do_send_packet(const Packet &packet) {
+void GameSession::do_send_packet(const WoWPacket &packet) {
     std::vector<uint8_t> full_packet = packet.build_packet();
     write_queue_.push_back(std::move(full_packet));
 
@@ -153,7 +166,7 @@ void GameSession::do_write() {
 
     writing_ = true;
     auto self = shared_from_this();
-
+    Packet::log_raw_payload("do_write::SMSG_AUTH_CHALLENGE", write_queue_.front());
     boost::asio::async_write(
             socket_,
             boost::asio::buffer(write_queue_.front()),
@@ -172,4 +185,26 @@ void GameSession::do_write() {
                 do_write();
             }
     );
+}
+
+void GameSession::send_auth_challenge() {
+    //Crypto::GetRandomBytes(_authSeed);
+    //auto random_bytes = Crypto::GetRandomBytes<32>();
+
+    _authSeed = {0x01, 0x00, 0x00, 0x00};
+    std::array<uint8_t, 32> fixed_random = {
+            0x84, 0xDA, 0x14, 0xC7, 0x68, 0x95, 0x57, 0xC0,
+            0xEE, 0xDB, 0xED, 0x2F, 0x21, 0xD4, 0xA9, 0xBD,
+            0xB9, 0x66, 0xBF, 0x68, 0x66, 0x15, 0x39, 0x57,
+            0xB5, 0xB5, 0x0A, 0xD0, 0x6D, 0x04, 0x2C, 0xF5
+    };
+
+    WoWPacket challenge_pkt(WoWOpcodes::SMSG_AUTH_CHALLENGE);
+    challenge_pkt.write_uint32_le(12340);
+    challenge_pkt.write_bytes(_authSeed.data(), 4);
+    challenge_pkt.write_bytes(fixed_random.data(), fixed_random.size());
+
+    Packet::log_raw_payload("send_auth_challenge::SMSG_AUTH_CHALLENGE", challenge_pkt.serialize());
+
+    send_packet(std::make_shared<WoWPacket>(challenge_pkt));
 }

@@ -22,7 +22,7 @@ public:
 
     bool isOpened() const { return !closed_; }
 
-    void send_packet(const std::shared_ptr<const Packet>& packet);
+    void send_packet(const std::shared_ptr<const WoWPacket>& packet);
 
     boost::asio::ip::tcp::socket &socket() { return socket_; }
 
@@ -45,13 +45,15 @@ public:
     }
 
 private:
+    void send_auth_challenge();
+
     void do_read();
 
     void process_read_buffer();
 
     void do_write();
 
-    void do_send_packet(const Packet &packet);
+    void do_send_packet(const WoWPacket &packet);
 
     boost::asio::ip::tcp::socket socket_;
     std::shared_ptr<RelayServer> server_;
@@ -61,4 +63,6 @@ private:
     std::deque<std::vector<uint8_t>> write_queue_;
     bool writing_ = false;
     std::atomic<bool> closed_{false};
+
+    std::array<uint8_t, 4> _authSeed;
 };

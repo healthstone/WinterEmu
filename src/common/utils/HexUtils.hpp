@@ -61,4 +61,10 @@ namespace HexUtils {
         return arr;
     }
 
+    // Новый метод для std::array<uint8_t, 20>
+    template <size_t Size>
+    std::string byte_array_to_hex(const std::array<uint8_t, Size>& arr) {
+        return bytes_to_hex(arr.data(), arr.size());
+    }
+
 } // namespace HexUtils

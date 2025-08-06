@@ -124,6 +124,13 @@ public:
     // LE null-terminated string (реверс)
     std::string read_string_nt_le() { return buffer_.read_string_nt_le(); }
 
+    template <size_t N>
+    std::array<uint8_t, N> read_bytes_as_array() {
+        return buffer_.read_bytes_as_array<N>();
+    }
+
+    size_t remaining() const { return buffer_.remaining(); }
+
     // ==================== UTILITY METHODS ====================
     void skip(size_t bytes) { buffer_.skip(bytes); }
     size_t read_pos() const { return buffer_.read_pos(); }
