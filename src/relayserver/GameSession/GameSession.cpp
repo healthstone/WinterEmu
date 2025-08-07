@@ -90,46 +90,40 @@ void GameSession::process_read_buffer() {
     auto log = Logger::get();
     MessageBuffer& buffer = read_buffer();
 
-    while (buffer.get_active_size() >= 4) {  // Минимальный размер заголовка
+    while (buffer.get_active_size() >= 4) {
         const uint8_t* data = buffer.read_ptr();
 
-        // Чтение размера (big-endian) и opcode (little-endian)
-        uint16_t size = (static_cast<uint16_t>(data[0]) << 8) | data[1];
+        // Чтение длины пакета (BE) — включает OPCODE + PAYLOAD
+        uint16_t total_length = (data[0] << 8) | data[1];
+
+        // Для дебага — считываем OPCODE тоже (LE)
         uint16_t opcode = (static_cast<uint16_t>(data[3]) << 8) | data[2];
 
-        // Проверка максимального размера
-        if (size > 2048) {
-            log->error("Packet size too big: {}", size);
+        log->debug("[process_read_buffer] Buffer size: {}, Total length: {}, Opcode: 0x{:04X}",
+                   buffer.get_active_size(), total_length, opcode);
+
+        // Безопасность: ограничение по длине
+        if (total_length > 2048) {
+            log->error("Packet size too big: {}", total_length);
             close();
             return;
         }
 
-        // Проверка наличия полного пакета (size включает opcode)
-        if (buffer.get_active_size() < size + 2) {
+        // Пакет ещё не полностью получен
+        if (buffer.get_active_size() < 2 + total_length) {
             log->debug("Waiting for more data (need {} bytes, have {})",
-                       size + 2, buffer.get_active_size());
+                       2 + total_length, buffer.get_active_size());
             return;
         }
 
-        // Для CMSG_AUTH_SESSION делаем особую проверку
-//        if (static_cast<WoWOpcodes>(opcode) == WoWOpcodes::CMSG_AUTH_SESSION && size < 30) {
-//            log->error("Invalid CMSG_AUTH_SESSION size: {}", size);
-//            close();
-//            return;
-//        }
-
         try {
-            // Выделяем полный пакет (2 байта size + size байт данных)
-            std::vector<uint8_t> full_packet(data, data + size + 2);
-            buffer.read_completed(size + 2);
+            // Берём весь пакет (без 2 байт длины)
+            std::vector<uint8_t> packet_data(data + 2, data + 2 + total_length);
+            //Packet::log_raw_payload("process_read_buffer", packet_data);
+            buffer.read_completed(2 + total_length);
 
             auto packet = std::make_shared<WoWPacket>();
-            packet->deserialize(full_packet);
-
-            // Особый лог для CMSG_AUTH_SESSION
-//            if (opcode == CMSG_AUTH_SESSION) {
-//                log->debug("Processing CMSG_AUTH_SESSION ({} bytes)", full_packet.size());
-//            }
+            packet->deserialize(packet_data);
 
             Handlers::dispatch(shared_from_this(), packet);
         }

@@ -33,9 +33,11 @@ void AuthHandlers::handleAuthPacket(const std::shared_ptr<GameSession>& session,
 }
 
 std::optional<AuthSessionData> AuthHandlers::ReadPacketFields(const std::shared_ptr<WoWPacket>& p) {
+    Packet::log_raw_payload("CMSG_AUTH_SESSION", p->serialize());
     auto log = Logger::get();
     try {
         AuthSessionData asd;
+        p->skip(2);
         asd.client_build = p->read_uint32_le();
         asd.login_server_id = p->read_uint32_le();
         asd.accountName = p->read_string_nt_le();
