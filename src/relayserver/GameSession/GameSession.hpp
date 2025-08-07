@@ -44,6 +44,10 @@ public:
         return remote_ep.port();
     }
 
+    void setClientSeed(uint32_t value) { client_seed_ = value; }
+    void setNeedCrypt(bool value) { isNeedCrypt_ = value; }
+    bool isNeedCrypt() const { return isNeedCrypt_; }
+
 private:
     void send_auth_challenge();
 
@@ -64,5 +68,7 @@ private:
     bool writing_ = false;
     std::atomic<bool> closed_{false};
 
-    std::array<uint8_t, 4> _authSeed;
+    std::array<uint8_t, 4> authSeed_;
+    uint32_t client_seed_;
+    bool isNeedCrypt_ = false;
 };

@@ -14,15 +14,7 @@ void GameSession::start() {
     Logger::get()->debug("[relay_session][start] New connection from {}:{}",
                          ep.address().to_string(), ep.port());
     do_read();
-
-    // Задержка отправки auth_challenge
-    auto self = shared_from_this();
-    auto timer = std::make_shared<boost::asio::steady_timer>(socket_.get_executor());
-    timer->expires_after(std::chrono::milliseconds(100));
-    timer->async_wait([this, self, timer](const boost::system::error_code& ec) {
-        if (!ec)
-            send_auth_challenge();
-    });
+    send_auth_challenge();
 }
 
 void GameSession::close() {
@@ -194,21 +186,13 @@ void GameSession::do_write() {
 }
 
 void GameSession::send_auth_challenge() {
-    //Crypto::GetRandomBytes(_authSeed);
-    //auto random_bytes = Crypto::GetRandomBytes<32>();
-
-    _authSeed = {0x01, 0x00, 0x00, 0x00};
-    std::array<uint8_t, 32> fixed_random = {
-            0x84, 0xDA, 0x14, 0xC7, 0x68, 0x95, 0x57, 0xC0,
-            0xEE, 0xDB, 0xED, 0x2F, 0x21, 0xD4, 0xA9, 0xBD,
-            0xB9, 0x66, 0xBF, 0x68, 0x66, 0x15, 0x39, 0x57,
-            0xB5, 0xB5, 0x0A, 0xD0, 0x6D, 0x04, 0x2C, 0xF5
-    };
+    Crypto::GetRandomBytes(authSeed_);
+    auto random_bytes = Crypto::GetRandomBytes<32>();
 
     WoWPacket challenge_pkt(WoWOpcodes::SMSG_AUTH_CHALLENGE);
     challenge_pkt.write_uint32_le(1);
-    challenge_pkt.write_bytes(_authSeed.data(), 4);
-    challenge_pkt.write_bytes(fixed_random.data(), fixed_random.size());
+    challenge_pkt.write_bytes(authSeed_.data(), 4);
+    challenge_pkt.write_bytes(random_bytes.data(), random_bytes.size());
 
     Packet::log_raw_payload("send_auth_challenge::SMSG_AUTH_CHALLENGE", challenge_pkt.serialize());
 
