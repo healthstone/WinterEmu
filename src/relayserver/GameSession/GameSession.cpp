@@ -1,7 +1,7 @@
 #include "GameSession.hpp"
 #include "Logger.hpp"
 #include "src/relayserver/handlers/Handlers.hpp"
-#include "srp6/CryptoRandom.hpp"
+#include "Cryptography/CryptoRandom.hpp"
 #include <iostream>
 
 using boost::asio::ip::tcp;

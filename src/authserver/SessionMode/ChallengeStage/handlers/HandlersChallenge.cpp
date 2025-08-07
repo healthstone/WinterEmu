@@ -4,7 +4,7 @@
 #include "utils/PacketUtils.hpp"
 #include "packet/RawPacket.hpp"
 #include "src/authserver/Entity/AuthCodes/AuthCodes.hpp"
-#include "srp6/CryptoRandom.hpp"
+#include "Cryptography/CryptoRandom.hpp"
 #include "utils/UUIDUtils.hpp"
 
 using namespace HandlersChallenge;

@@ -1,5 +1,5 @@
 #include "SRP6.hpp"
-#include "CryptoRandom.hpp"
+#include "Cryptography/CryptoRandom.hpp"
 #include "utils/HexUtils.hpp"
 #include <algorithm>
 #include <functional>
@@ -7,36 +7,34 @@
 using SHA1 = Crypto::SHA1;
 using SRP6 = Crypto::SRP6;
 
-/*static*/ std::array<uint8_t, 1> const SRP6::g = { 7 };
-/*static*/ std::array<uint8_t, 32> const SRP6::N = HexUtils::hex_str_to_byte_array<32>("894B645E89E1535BBDAD5B8B290650530801B18EBFBF5E8FAB3C82872A3E9BB7", true);
+/*static*/ std::array<uint8_t, 1> const SRP6::g = {7};
+/*static*/ std::array<uint8_t, 32> const SRP6::N = HexUtils::hex_str_to_byte_array<32>(
+        "894B645E89E1535BBDAD5B8B290650530801B18EBFBF5E8FAB3C82872A3E9BB7", true);
 /*static*/ BigNumber const SRP6::_g(SRP6::g);
 /*static*/ BigNumber const SRP6::_N(N);
 
-/*static*/ std::pair<SRP6::Salt, SRP6::Verifier> SRP6::MakeRegistrationData(std::string const& username, std::string const& password)
-{
+/*static*/ std::pair<SRP6::Salt, SRP6::Verifier>
+SRP6::MakeRegistrationData(std::string const &username, std::string const &password) {
     std::pair<SRP6::Salt, SRP6::Verifier> res;
     Crypto::GetRandomBytes(res.first); // random salt
     res.second = CalculateVerifier(username, password, res.first);
     return res;
 }
 
-/*static*/ SRP6::Verifier SRP6::CalculateVerifier(std::string const& username, std::string const& password, SRP6::Salt const& salt)
-{
+/*static*/ SRP6::Verifier
+SRP6::CalculateVerifier(std::string const &username, std::string const &password, SRP6::Salt const &salt) {
     // v = g ^ H(s || H(u || ':' || p)) mod N
     return _g.ModExp(
             SHA1::GetDigestOf(
                     salt,
                     SHA1::GetDigestOf(username, ":", password)
-            )
-            ,_N).ToByteArray<32>();
+            ), _N).ToByteArray<32>();
 }
 
-/*static*/ SessionKey SRP6::SHA1Interleave(SRP6::EphemeralKey const& S)
-{
+/*static*/ SessionKey SRP6::SHA1Interleave(SRP6::EphemeralKey const &S) {
     // split S into two buffers
-    std::array<uint8_t, EPHEMERAL_KEY_LENGTH/2> buf0, buf1;
-    for (size_t i = 0; i < EPHEMERAL_KEY_LENGTH/2; ++i)
-    {
+    std::array<uint8_t, EPHEMERAL_KEY_LENGTH / 2> buf0, buf1;
+    for (size_t i = 0; i < EPHEMERAL_KEY_LENGTH / 2; ++i) {
         buf0[i] = S[2 * i + 0];
         buf1[i] = S[2 * i + 1];
     }
@@ -48,26 +46,25 @@ using SRP6 = Crypto::SRP6;
     p /= 2; // offset into buffers
 
     // hash each of the halves, starting at the first nonzero byte
-    SHA1::Digest const hash0 = SHA1::GetDigestOf(buf0.data() + p, EPHEMERAL_KEY_LENGTH/2 - p);
-    SHA1::Digest const hash1 = SHA1::GetDigestOf(buf1.data() + p, EPHEMERAL_KEY_LENGTH/2 - p);
+    SHA1::Digest const hash0 = SHA1::GetDigestOf(buf0.data() + p, EPHEMERAL_KEY_LENGTH / 2 - p);
+    SHA1::Digest const hash1 = SHA1::GetDigestOf(buf1.data() + p, EPHEMERAL_KEY_LENGTH / 2 - p);
 
     // stick the two hashes back together
     SessionKey K;
-    for (size_t i = 0; i < SHA1::DIGEST_LENGTH; ++i)
-    {
+    for (size_t i = 0; i < SHA1::DIGEST_LENGTH; ++i) {
         K[2 * i + 0] = hash0[i];
         K[2 * i + 1] = hash1[i];
     }
     return K;
 }
 
-SRP6::SRP6(std::string const& username, Salt const& salt, Verifier const& verifier)
+SRP6::SRP6(std::string const &username, Salt const &salt, Verifier const &verifier)
         : _I(SHA1::GetDigestOf(username)), _b(Crypto::GetRandomBytes<32>()), _v(verifier), s(salt), B(_B(_b, _v)) {}
 
-std::optional<SessionKey> SRP6::VerifyChallengeResponse(EphemeralKey const& A, SHA1::Digest const& clientM)
-{
+std::optional<SessionKey> SRP6::VerifyChallengeResponse(EphemeralKey const &A, SHA1::Digest const &clientM) {
     if (_used) {
-        throw std::runtime_error("SRP6::VerifyChallengeResponse: A single SRP6 object must only ever be used to verify ONCE!");
+        throw std::runtime_error(
+                "SRP6::VerifyChallengeResponse: A single SRP6 object must only ever be used to verify ONCE!");
     }
     _used = true;
 

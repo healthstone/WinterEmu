@@ -9,6 +9,7 @@
 #include "src/relayserver/RelayServer.hpp"
 #include "packet/MessageBuffer.hpp"
 #include "packet/WoWPacket.hpp"
+#include "Cryptography/AuthCrypt.hpp"
 
 class RelayServer; // forward declaration
 
@@ -69,6 +70,7 @@ private:
     std::atomic<bool> closed_{false};
 
     std::array<uint8_t, 4> authSeed_;
+    AuthCrypt _authCrypt;
     uint32_t client_seed_;
     bool isNeedCrypt_ = false;
 };

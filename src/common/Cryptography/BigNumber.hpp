@@ -1,6 +1,3 @@
-#ifndef _AUTH_BIGNUMBER_H
-#define _AUTH_BIGNUMBER_H
-
 #include <array>
 #include <memory>
 #include <string>
@@ -139,5 +136,3 @@ private:
     struct bignum_st *_bn;
 
 };
-
-#endif

@@ -1,10 +1,9 @@
 #include <catch2/catch.hpp>
 
-#include "srp6/SRP6.hpp"
-
 #include <array>
 #include <string>
 #include <iostream>
+#include "Cryptography/srp6/SRP6.hpp"
 
 using namespace Crypto;
 

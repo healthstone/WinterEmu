@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "srp6/CryptoHash.hpp"
+#include "Cryptography/CryptoHash.hpp"
 
 class AuthSessionData {
 public:

@@ -1,6 +1,5 @@
 #include <cstdint>
 #include <memory>
-#include "srp6/SRP6.hpp"
 #include "src/authserver/enums/AccountTypes.hpp"
 #include <boost/uuid/uuid.hpp>
 

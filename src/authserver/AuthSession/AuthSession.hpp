@@ -10,6 +10,7 @@
 #include "packet/MessageBuffer.hpp"
 #include "packet/Packet.hpp"
 #include "src/authserver/Entity/AccountInfo/AccountInfo.hpp"
+#include "Cryptography/srp6/SRP6.hpp"
 
 class AuthServer; // forward declaration
 

@@ -1,9 +1,6 @@
-#ifndef SRP6_H
-#define SRP6_H
-
-#include "AuthDefines.hpp"
-#include "BigNumber.hpp"
-#include "CryptoHash.hpp"
+#include "Cryptography/AuthDefines.hpp"
+#include "Cryptography/BigNumber.hpp"
+#include "Cryptography/CryptoHash.hpp"
 #include <array>
 #include <optional>
 
@@ -63,5 +60,3 @@ namespace Crypto {
         EphemeralKey const B; // B = 3v + g^b
     };
 }
-
-#endif
