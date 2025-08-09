@@ -5,17 +5,16 @@
 
 using namespace Handlers;
 
-void Handlers::dispatch(const std::shared_ptr<GameSession>& session, const std::shared_ptr<WoWPacket> &p) {
+void Handlers::dispatch(const std::shared_ptr<GameSession>& session, const std::shared_ptr<WoWPacket>& p) {
     WoWOpcodes opcode = p->get_opcode();
     switch (opcode) {
         case WoWOpcodes::CMSG_PING: HeartBeatHandlers::handlePing(session, p); break;
         case WoWOpcodes::CMSG_AUTH_SESSION: {
-//            boost::asio::co_spawn(
-//                    session->socket().get_executor(),
-//                    AuthHandlers::handleAuthPacket(session, p),
-//                    boost::asio::detached
-//            );
-            AuthHandlers::handleAuthPacket(session, p);
+            boost::asio::co_spawn(
+                    session->socket().get_executor(),
+                    AuthHandlers::handleAuthPacket(session, p),
+                    boost::asio::detached
+            );
             break;
         }
         default:

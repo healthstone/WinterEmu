@@ -4,20 +4,42 @@
 
 using namespace AuthHandlers;
 
-void AuthHandlers::handleAuthPacket(const std::shared_ptr<GameSession>& session, const std::shared_ptr<WoWPacket>& p) {
+boost::asio::awaitable<void>
+AuthHandlers::handleAuthPacket(const std::shared_ptr<GameSession> &session, const std::shared_ptr<WoWPacket> &p) {
     auto log = Logger::get();
     log->debug("handleAuthPacket called");
-    auto AuthSessionData = ReadPacketFields(p);
-    if (!AuthSessionData) {
+    auto authSessionData = ReadPacketFields(p);
+    if (!authSessionData) {
         sendAuthResponse(session, ResponseCodes::AUTH_UNKNOWN_ACCOUNT);
-        return;
+        co_return;
     }
 
-    session->setClientSeed(AuthSessionData->client_seed);
+    auto account = co_await fetchFromDB(authSessionData.value(), session);
+    if (!account) {
+        sendAuthResponse(session, ResponseCodes::AUTH_UNKNOWN_ACCOUNT);
+        co_return;
+    }
+
+    session->setClientSeed(authSessionData->client_seed);
     session->setNeedCrypt(true);
+    co_return;
 }
 
-std::optional<AuthSessionData> AuthHandlers::ReadPacketFields(const std::shared_ptr<WoWPacket>& p) {
+boost::asio::awaitable<std::optional<AccountsRow>>
+AuthHandlers::fetchFromDB(AuthSessionData asd, std::shared_ptr<GameSession> session) {
+    try {
+        PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
+        stmt.set_param(0, asd.accountName);
+        auto user = co_await session->server()->db()->execute_async_one<AccountsRow>(stmt);
+        Logger::get()->debug("fetchFromDB called");
+        co_return user;
+    } catch (const std::exception &ex) {
+        Logger::get()->error("[fetchFromDB] DB exception: {}", ex.what());
+        co_return std::nullopt;
+    }
+}
+
+std::optional<AuthSessionData> AuthHandlers::ReadPacketFields(const std::shared_ptr<WoWPacket> &p) {
     Packet::log_raw_payload("CMSG_AUTH_SESSION", p->serialize());
     auto log = Logger::get();
     try {
@@ -69,7 +91,7 @@ std::optional<AuthSessionData> AuthHandlers::ReadPacketFields(const std::shared_
     }
 }
 
-void AuthHandlers::sendAuthResponse(const std::shared_ptr<GameSession>& session, ResponseCodes code) {
+void AuthHandlers::sendAuthResponse(const std::shared_ptr<GameSession> &session, ResponseCodes code) {
     WoWPacket pkt(WoWOpcodes::SMSG_AUTH_RESPONSE);
     pkt.write_uint8(static_cast<uint8_t>(code));
     PacketUtils::send_packet_as<WoWPacket>(session, pkt);
