@@ -76,7 +76,7 @@ std::optional<AuthSessionData> AuthHandlers::ReadPacketFields(const std::shared_
         asd.region_id = p->read_uint32_le();
         asd.battleground_id = p->read_uint32_le();
         asd.realm_id = p->read_uint32_le();
-        asd.dos_response = p->read_uint32_le();
+        asd.dos_response = p->read_uint64_le();
         asd.digest = p->read_bytes_as_array<20>();
         if (p->remaining() > 0) {
             asd.addonData = p->read_bytes(p->remaining());
