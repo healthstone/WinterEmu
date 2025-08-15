@@ -26,24 +26,21 @@ AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared
         co_return;
     }
 
+    // Ключевое изменение: инициализация шифрования ДО проверки дайджеста
+    session->initCrypt(account->sessionkey.value());
+
+    // Проверка дайджеста
     if (!verifyClientDigest(authSessionData.value(), account.value(), serverSeed)) {
         log->error("Digest verification failed for account '{}'", authSessionData->accountName);
         sendAuthResponse(session, ResponseCodes::AUTH_FAILED);
         co_return;
     }
 
-    session->initCrypt(account->sessionkey.value());
-    session->setClientSeed(authSessionData->client_seed);
     session->setAuthed(true);
     log->info("Client '{}' authenticated successfully", authSessionData->accountName);
 
-    // Отправка ответа с указанием уровня расширения
-    sendAuthResponse(session,
-                     ResponseCodes::AUTH_OK,
-                     2,  // Уровень расширения из БД
-                     0); // Позиция в очереди (0)
-
-    // Дополнительные пакеты (аналогично TrinityCore)
+    // Отправка ответа
+    sendAuthResponse(session, ResponseCodes::AUTH_OK, 2, 0);
     sendAddonsInfo(session, authSessionData->addonData);
     sendClientCacheVersion(session);
     sendTutorialsData(session);
@@ -75,7 +72,7 @@ std::optional<AuthSessionData> AuthHandlers::ReadPacketFields(const std::shared_
         asd.login_server_id = p->read_uint32_le();
         asd.accountName = p->read_string_nt_le();
         asd.login_server_type = p->read_uint32_le();
-        asd.client_seed = p->read_uint32_le();
+        asd.LocalChallenge = p->read_bytes_as_array<4>();
         asd.region_id = p->read_uint32_le();
         asd.battleground_id = p->read_uint32_le();
         asd.realm_id = p->read_uint32_le();
@@ -85,6 +82,7 @@ std::optional<AuthSessionData> AuthHandlers::ReadPacketFields(const std::shared_
             asd.addonData = p->read_bytes(p->remaining());
         }
 
+        std::string localChallenge_str = HexUtils::byte_array_to_hex(asd.LocalChallenge);
         std::string digest_str = HexUtils::byte_array_to_hex(asd.digest);
         log->debug("[AuthHandlers][ReadPacketFields] Parsed AuthSessionData:\n"
                    "  client_build: {}\n"
@@ -102,7 +100,7 @@ std::optional<AuthSessionData> AuthHandlers::ReadPacketFields(const std::shared_
                    asd.login_server_id,
                    asd.accountName,
                    asd.login_server_type,
-                   asd.client_seed,
+                   localChallenge_str,
                    asd.region_id,
                    asd.battleground_id,
                    asd.realm_id,
@@ -161,25 +159,16 @@ bool AuthHandlers::verifyClientDigest(const AuthSessionData &asd,
     // Подготовка данных
     std::array<uint8_t, 4> zero = {0, 0, 0, 0};
 
-    // Ручное преобразование в little-endian
-    std::array<uint8_t, 4> clientSeedBytes = {
-            static_cast<uint8_t>(asd.client_seed >> 0),
-            static_cast<uint8_t>(asd.client_seed >> 8),
-            static_cast<uint8_t>(asd.client_seed >> 16),
-            static_cast<uint8_t>(asd.client_seed >> 24)
-    };
+    // Ключевое изменение: используем исходное имя аккаунта (без преобразования в верхний регистр)
+    const std::string& accountName = asd.accountName;
 
-    // Преобразование имени в верхний регистр
-    std::string accountUpper = asd.accountName;
-    std::transform(accountUpper.begin(), accountUpper.end(), accountUpper.begin(), ::toupper);
-
-    // 3. Вычисление хеша
+    // 3. Вычисление хеша (точная последовательность как в TrinityCore)
     SHA1 sha;
-    sha.UpdateData(accountUpper);
-    sha.UpdateData(zero);
-    sha.UpdateData(clientSeedBytes);
-    sha.UpdateData(authSeed);
-    sha.UpdateData(account.sessionkey.value());
+    sha.UpdateData(accountName);           // Имя аккаунта как есть
+    sha.UpdateData(zero);                  // 4 нулевых байта
+    sha.UpdateData(asd.LocalChallenge);    // Клиентский seed (4 байта)
+    sha.UpdateData(authSeed);              // Серверный seed (4 байта)
+    sha.UpdateData(account.sessionkey.value());  // Сессионный ключ из БД
 
     sha.Finalize();
     SHA1::Digest computedDigest = sha.GetDigest();
@@ -187,9 +176,7 @@ bool AuthHandlers::verifyClientDigest(const AuthSessionData &asd,
     // 4. Логирование для отладки
     log->debug("VerifyClientDigest details:");
     log->debug("  Account: {}", asd.accountName);
-    log->debug("  AccountUpper: {}", accountUpper);
-    log->debug("  ClientSeedBytes: {:02X}{:02X}{:02X}{:02X}",
-               clientSeedBytes[0], clientSeedBytes[1], clientSeedBytes[2], clientSeedBytes[3]);
+    log->debug("  LocalChallenge: {}", HexUtils::byte_array_to_hex(asd.LocalChallenge));
     log->debug("  ServerSeed: {}", HexUtils::byte_array_to_hex(authSeed));
     log->debug("  SessionKey: {}", HexUtils::byte_array_to_hex(account.sessionkey.value()));
     log->debug("  Computed: {}", HexUtils::byte_array_to_hex(computedDigest));

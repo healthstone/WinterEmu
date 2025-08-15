@@ -9,7 +9,7 @@ public:
     uint32_t login_server_id;
     std::string accountName;            // Null-terminated string
     uint32_t login_server_type;
-    uint32_t client_seed;
+    std::array<uint8_t, 4> LocalChallenge;
     uint32_t region_id;
     uint32_t battleground_id;
     uint32_t realm_id;

@@ -57,8 +57,8 @@ public:
         authSeed_ = seed;
     }
 
-    void setClientSeed(uint32_t seed) { clientSeed_ = seed; }
-    uint32_t clientSeed() const { return clientSeed_; }
+    void setClientSeed(std::array<uint8_t, 4> seed) { clientSeed_ = seed; }
+    std::array<uint8_t, 4> clientSeed() const { return clientSeed_; }
 
 private:
     void send_auth_challenge();
@@ -83,5 +83,5 @@ private:
     AuthCrypt authCrypt_;
     bool authed_ = false;
     std::array<uint8_t, 4> authSeed_;
-    uint32_t clientSeed_ = 0;
+    std::array<uint8_t, 4> clientSeed_;
 };
