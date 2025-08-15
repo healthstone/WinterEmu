@@ -10,19 +10,19 @@
 /** AUTH_LOGON_CHALLENGE and AUTH_RECONNECT_CHALLENGE **/
 namespace HandlersChallenge
 {
-    boost::asio::awaitable<void> HandleLogonChallenge(std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>>& payload);
+    boost::asio::awaitable<void> HandleLogonChallenge(std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>> payload);
 
-    boost::asio::awaitable<void> HandleReconnectChallenge(std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>> &payload);
+    boost::asio::awaitable<void> HandleReconnectChallenge(std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>> payload);
 
     std::optional<LogonChallenge> ReadPacketFields(const std::string &opcode_name, std::shared_ptr<std::vector<uint8_t>> &payload);
 
-    bool isPassedCommonLogic(AuthCmd cmd, const std::shared_ptr<AuthSession>& session, std::shared_ptr<std::vector<uint8_t>> &payload);
+    bool isPassedCommonLogic(AuthCmd cmd, std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>> &payload);
     bool isPassedCache(AuthCmd cmd, const std::string &account_name, std::shared_ptr<AuthSession> session);
 
     boost::asio::awaitable<std::optional<AccountsRow>> fetchFromDB(AuthCmd cmd, std::shared_ptr<AuthSession> session);
 
     boost::asio::awaitable<void> LogonChallengeLogic(std::shared_ptr<AuthSession> session);
-    boost::asio::awaitable<void> ReconnectChallengeLogic(const std::shared_ptr<AuthSession>& session);
+    boost::asio::awaitable<void> ReconnectChallengeLogic(std::shared_ptr<AuthSession> session);
 
     void send_auth_result(AuthCmd cmd, AuthResult result, std::shared_ptr<AuthSession> session);
 }

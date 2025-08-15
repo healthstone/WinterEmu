@@ -16,7 +16,7 @@ uint8_t VersionChallenge[16] = {
 
 boost::asio::awaitable<void>
 HandlersChallenge::HandleLogonChallenge(std::shared_ptr<AuthSession> session,
-                                        std::shared_ptr<std::vector<uint8_t>> &payload) {
+                                        std::shared_ptr<std::vector<uint8_t>> payload) {
     // 1 - Проверяем общими проверками
     if (!isPassedCommonLogic(AuthCmd::AUTH_LOGON_CHALLENGE, session, payload))
         co_return;
@@ -32,7 +32,7 @@ HandlersChallenge::HandleLogonChallenge(std::shared_ptr<AuthSession> session,
 
 boost::asio::awaitable<void>
 HandlersChallenge::HandleReconnectChallenge(std::shared_ptr<AuthSession> session,
-                                            std::shared_ptr<std::vector<uint8_t>> &payload) {
+                                            std::shared_ptr<std::vector<uint8_t>> payload) {
     // 1 - Проверяем общими проверками
     if (!isPassedCommonLogic(AuthCmd::AUTH_RECONNECT_CHALLENGE, session, payload))
         co_return;
@@ -46,7 +46,7 @@ HandlersChallenge::HandleReconnectChallenge(std::shared_ptr<AuthSession> session
     co_return;
 }
 
-bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, const std::shared_ptr<AuthSession>& session,
+bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, std::shared_ptr<AuthSession> session,
                                             std::shared_ptr<std::vector<uint8_t>> &payload) {
     auto log = Logger::get();
     ByteBuffer buffer(*payload);
@@ -289,7 +289,7 @@ boost::asio::awaitable<void> HandlersChallenge::LogonChallengeLogic(std::shared_
     co_return;
 }
 
-boost::asio::awaitable<void> HandlersChallenge::ReconnectChallengeLogic(const std::shared_ptr<AuthSession>& session) {
+boost::asio::awaitable<void> HandlersChallenge::ReconnectChallengeLogic(std::shared_ptr<AuthSession> session) {
     RawPacket pkt;
     pkt.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_RECONNECT_CHALLENGE));  // opcode ID
 
@@ -297,7 +297,7 @@ boost::asio::awaitable<void> HandlersChallenge::ReconnectChallengeLogic(const st
     if (!user || !user->sessionkey) {
         Logger::get()->error("[ReconnectChallengeLogic] no found user or sessionkey");
         pkt.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_UNKNOWN_ACCOUNT));
-        PacketUtils::send_packet_as<RawPacket>(session, pkt);
+        PacketUtils::send_packet_as<RawPacket>(std::move(session), pkt);
         co_return;  // Завершаем корутину здесь, так как ошибка
     }
 
@@ -308,7 +308,7 @@ boost::asio::awaitable<void> HandlersChallenge::ReconnectChallengeLogic(const st
     pkt.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS));  // WOW_SUCCESS
     pkt.write_bytes(session->_reconnectProof.data(), session->_reconnectProof.size());
     pkt.write_bytes(VersionChallenge, 16);
-    PacketUtils::send_packet_as<RawPacket>(session, pkt);
+    PacketUtils::send_packet_as<RawPacket>(std::move(session), pkt);
 
     co_return;
 }

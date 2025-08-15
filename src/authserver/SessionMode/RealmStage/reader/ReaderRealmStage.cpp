@@ -7,7 +7,7 @@ using namespace ReaderRealmStage;
 #define REALM_LIST_PACKET_SIZE 5
 
 /** REALM_LIST **/
-void ReaderRealmStage::process_read_buffer(const std::shared_ptr<AuthSession>& session)
+void ReaderRealmStage::process_read_buffer(std::shared_ptr<AuthSession> session)
 {
     auto& buffer = session->read_buffer();
 
@@ -27,9 +27,12 @@ void ReaderRealmStage::process_read_buffer(const std::shared_ptr<AuthSession>& s
     auto payload = std::make_shared<std::vector<uint8_t>>(data, data + packet_size);
     buffer.read_completed(packet_size);
 
+    auto ex = boost::asio::make_strand(session->socket().get_executor());
     boost::asio::co_spawn(
-            session->socket().get_executor(),
-            HandlersRealmStage::HandleRealmList(session, payload),
+            ex,
+            [session, payload]() -> boost::asio::awaitable<void> {
+                co_await HandlersRealmStage::HandleRealmList(session, payload);
+            },
             boost::asio::detached
     );
 }

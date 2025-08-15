@@ -4,7 +4,7 @@
 
 using namespace ReaderChallengeStage;
 
-void ReaderChallengeStage::process_read_buffer(const std::shared_ptr<AuthSession>& session) {
+void ReaderChallengeStage::process_read_buffer(std::shared_ptr<AuthSession> session) {
     auto log = Logger::get();
     auto& buffer = session->read_buffer();
 
@@ -24,17 +24,23 @@ void ReaderChallengeStage::process_read_buffer(const std::shared_ptr<AuthSession
 
     switch (static_cast<AuthCmd>(cmd)) {
         case AuthCmd::AUTH_LOGON_CHALLENGE: {
+            auto ex = boost::asio::make_strand(session->socket().get_executor());
             boost::asio::co_spawn(
-                    session->socket().get_executor(),
-                    HandlersChallenge::HandleLogonChallenge(session, payload),
+                    ex,
+                    [session, payload]() -> boost::asio::awaitable<void> {
+                        co_await HandlersChallenge::HandleLogonChallenge(session, payload);
+                    },
                     boost::asio::detached
             );
             break;
         }
         case AuthCmd::AUTH_RECONNECT_CHALLENGE: {
+            auto ex = boost::asio::make_strand(session->socket().get_executor());
             boost::asio::co_spawn(
-                    session->socket().get_executor(),
-                    HandlersChallenge::HandleReconnectChallenge(session, payload),
+                    ex,
+                    [session, payload]() -> boost::asio::awaitable<void> {
+                        co_await HandlersChallenge::HandleReconnectChallenge(session, payload);
+                    },
                     boost::asio::detached
             );
             break;

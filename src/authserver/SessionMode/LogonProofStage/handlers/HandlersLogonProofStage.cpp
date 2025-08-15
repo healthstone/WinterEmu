@@ -9,7 +9,7 @@
 using namespace HandlersLogonProofStage;
 
 boost::asio::awaitable<void>
-HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>>& payload) {
+HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>> payload) {
     auto log = Logger::get();
     ByteBuffer buffer(*payload);
     session->set_session_mode(SessionMode::STATUS_CLOSED);
@@ -24,7 +24,7 @@ HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<AuthSession> session, 
             failReply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_PROOF));
             failReply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_DISCONNECTED));
             failReply.write_uint16_le(0);
-            PacketUtils::send_packet_as<RawPacket>(session, failReply);
+            PacketUtils::send_packet_as<RawPacket>(std::move(session), failReply);
             co_return;
         }
         Crypto::SRP6 &srp = *session->_srp6;
@@ -52,7 +52,7 @@ HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<AuthSession> session, 
             failReply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_PROOF));
             failReply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_UNKNOWN_ACCOUNT));
             failReply.write_uint16_le(0); // LoginFlags
-            PacketUtils::send_packet_as<RawPacket>(session, failReply);
+            PacketUtils::send_packet_as<RawPacket>(std::move(session), failReply);
             co_return;
         }
 
@@ -84,7 +84,7 @@ HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<AuthSession> session, 
             failReply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_PROOF));
             failReply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_DB_BUSY));
             failReply.write_uint16_le(0); // LoginFlags
-            PacketUtils::send_packet_as<RawPacket>(session, failReply);
+            PacketUtils::send_packet_as<RawPacket>(std::move(session), failReply);
             co_return;
         }
 
@@ -106,7 +106,7 @@ HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<AuthSession> session, 
 
         session->set_session_mode(SessionMode::STATUS_WAITING_FOR_REALM_LIST);
         Packet::log_raw_payload("RESPONSE AUTH_LOGON_PROOF", packet.serialize());
-        PacketUtils::send_packet_as<RawPacket>(session, packet);
+        PacketUtils::send_packet_as<RawPacket>(std::move(session), packet);
         co_return;
     }
     catch (const std::exception &ex) {
@@ -115,7 +115,7 @@ HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<AuthSession> session, 
         failReply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_PROOF));
         failReply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_DISCONNECTED));
         failReply.write_uint16_le(0);
-        PacketUtils::send_packet_as<RawPacket>(session, failReply);
+        PacketUtils::send_packet_as<RawPacket>(std::move(session), failReply);
         co_return;
     }
 }

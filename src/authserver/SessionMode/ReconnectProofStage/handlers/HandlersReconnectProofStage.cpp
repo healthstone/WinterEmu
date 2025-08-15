@@ -8,8 +8,8 @@
 using namespace HandlersReconnectProofStage;
 
 /** AUTH_RECONNECT_PROOF **/
-void HandlersReconnectProofStage::HandleReconnectProof(const std::shared_ptr<AuthSession>& session,
-                                                       std::shared_ptr<std::vector<uint8_t>>& payload) {
+void HandlersReconnectProofStage::HandleReconnectProof(std::shared_ptr<AuthSession> session,
+                                                       const std::shared_ptr<std::vector<uint8_t>>& payload) {
     auto log = Logger::get();
     ByteBuffer buffer(*payload);
     session->set_session_mode(SessionMode::STATUS_CLOSED);
@@ -40,7 +40,7 @@ void HandlersReconnectProofStage::HandleReconnectProof(const std::shared_ptr<Aut
                 RawPacket packet;
                 packet.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_RECONNECT_PROOF));
                 packet.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_VERSION_INVALID));
-                PacketUtils::send_packet_as<RawPacket>(session, packet);
+                PacketUtils::send_packet_as<RawPacket>(std::move(session), packet);
                 return;
             }
 
@@ -54,7 +54,7 @@ void HandlersReconnectProofStage::HandleReconnectProof(const std::shared_ptr<Aut
             Packet::log_raw_payload("REQUEST  AUTH_RECONNECT_PROOF", *payload);
             Packet::log_raw_payload("RESPONSE AUTH_RECONNECT_PROOF", packet.serialize());
 
-            PacketUtils::send_packet_as<RawPacket>(session, packet);
+            PacketUtils::send_packet_as<RawPacket>(std::move(session), packet);
             return;
         } else {
             log->error("[HandleReconnectProof] '{}:{}' [ERROR] user {} tried to login, but session is invalid",
@@ -67,7 +67,7 @@ void HandlersReconnectProofStage::HandleReconnectProof(const std::shared_ptr<Aut
     }
 }
 
-bool HandlersReconnectProofStage::VerifyVersion(const std::shared_ptr<AuthSession>& session,
+bool HandlersReconnectProofStage::VerifyVersion(std::shared_ptr<AuthSession> session,
                                                 uint8_t const *a, int32_t aLength,
                                                 Crypto::SHA1::Digest const &versionProof, bool isReconnect) {
 //    if (!sConfigMgr->GetBoolDefault("StrictVersionCheck", false))

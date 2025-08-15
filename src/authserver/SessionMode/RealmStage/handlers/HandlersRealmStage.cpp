@@ -9,7 +9,7 @@ using namespace HandlersRealmStage;
 
 boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
         std::shared_ptr<AuthSession> session,
-        std::shared_ptr<std::vector<uint8_t>>& payload) {
+        std::shared_ptr<std::vector<uint8_t>> payload) {
     try {
         std::map<uint32_t, uint8_t> characterCounts;
 
@@ -114,7 +114,7 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
 
         //session->set_session_mode(SessionMode::STATUS_AUTHED);
         Packet::log_raw_payload("RESPONSE REALM_LIST", hdr.serialize());
-        PacketUtils::send_packet_as<RawPacket>(session, hdr);
+        PacketUtils::send_packet_as<RawPacket>(std::move(session), hdr);
         co_return;
 
     } catch (const std::exception &ex) {
@@ -124,7 +124,7 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
 }
 
 boost::asio::awaitable<void>
-HandlersRealmStage::fillInitialRealmCharacters(const std::shared_ptr<AuthSession> &session) {
+HandlersRealmStage::fillInitialRealmCharacters(std::shared_ptr<AuthSession> session) {
     try {
         const auto &realmsMap = session->server()->realm_list()->getRealmsMap();
         for (const auto &[id, realm]: realmsMap) {

@@ -4,7 +4,7 @@
 
 using namespace ReaderLogonProofStage;
 
-void ReaderLogonProofStage::process_read_buffer(const std::shared_ptr<AuthSession>& session) {
+void ReaderLogonProofStage::process_read_buffer(std::shared_ptr<AuthSession> session) {
     auto& buffer = session->read_buffer();
 
     constexpr size_t packet_size = sizeof(uint8_t)    // cmd
@@ -30,9 +30,12 @@ void ReaderLogonProofStage::process_read_buffer(const std::shared_ptr<AuthSessio
     auto payload = std::make_shared<std::vector<uint8_t>>(data, data + packet_size);
     buffer.read_completed(packet_size);
 
+    auto ex = boost::asio::make_strand(session->socket().get_executor());
     boost::asio::co_spawn(
-            session->socket().get_executor(),
-            HandlersLogonProofStage::HandleLogonProof(session, payload),
+            ex,
+            [session, payload]() -> boost::asio::awaitable<void> {
+                co_await HandlersLogonProofStage::HandleLogonProof(session, payload);
+            },
             boost::asio::detached
     );
 }
