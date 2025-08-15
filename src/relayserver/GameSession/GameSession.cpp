@@ -60,7 +60,7 @@ void GameSession::do_read() {
                     if (ec == boost::asio::error::operation_aborted ||
                         ec == boost::asio::error::eof ||
                         ec == boost::asio::error::connection_reset) {
-                        log->debug("[client_session][do_read] Client disconnected: {}", ec.message());
+                        //log->debug("[client_session][do_read] Client disconnected: {}", ec.message());
                     } else {
                         log->error("[relay_session][do_read] Read error: {}", ec.message());
                     }
@@ -209,7 +209,6 @@ void GameSession::do_write() {
 
     writing_ = true;
     auto self = shared_from_this();
-    Packet::log_raw_payload("do_write::SMSG_AUTH_CHALLENGE", write_queue_.front());
     boost::asio::async_write(
             socket_,
             boost::asio::buffer(write_queue_.front()),
@@ -242,8 +241,6 @@ void GameSession::send_auth_challenge() {
     challenge_pkt.write_uint32_le(1);
     challenge_pkt.write_bytes(seed.data(), 4);
     challenge_pkt.write_bytes(random_bytes.data(), random_bytes.size());
-
-    Packet::log_raw_payload("send_auth_challenge::SMSG_AUTH_CHALLENGE", challenge_pkt.serialize());
 
     send_packet(std::make_shared<WoWPacket>(challenge_pkt));
 }

@@ -23,6 +23,9 @@ void Handlers::dispatch(std::shared_ptr<GameSession> session, std::shared_ptr<Wo
             );
             break;
         }
+        case WoWOpcodes::CMSG_READY_FOR_ACCOUNT_DATA_TIMES: Logger::get()->info("CMSG_READY_FOR_ACCOUNT_DATA_TIMES called"); break;
+        case WoWOpcodes::CMSG_CHAR_ENUM: Logger::get()->info("CMSG_CHAR_ENUM called"); break;
+        case WoWOpcodes::CMSG_REALM_SPLIT: Logger::get()->info("CMSG_REALM_SPLIT called"); break;
         default:
             Logger::get()->warn("[Handlers] Unknown opcode: {}", static_cast<uint16_t>(opcode));
             break;
