@@ -69,6 +69,15 @@ void GameSession::do_read() {
                 }
 
                 if (!isOpened()) return;
+
+                // Расшифровываем полученные данные, если сессия аутентифицирована и требуется шифрование
+                if (isAuthed()) {
+                    authCrypt_.DecryptRecv(
+                            reinterpret_cast<uint8_t*>(read_buffer_.write_ptr()),
+                            bytes_transferred
+                    );
+                }
+
                 read_buffer_.write_completed(bytes_transferred);
 
                 log->debug("[do_read] Received {} bytes", bytes_transferred);
@@ -149,26 +158,44 @@ void GameSession::send_packet(const std::shared_ptr<const WoWPacket>& packet) {
  * Отправка пакета клиенту
  */
 void GameSession::do_send_packet(const WoWPacket &packet) {
-    std::vector<uint8_t> base_packet = packet.build_packet();
+    // Финализируем пакет в бинарный формат
+    auto base_packet = packet.build_packet();
+    std::vector<uint8_t> final_packet;
 
-    // Для больших пакетов (> 0x7FFF) используем расширенный заголовок
-    if (base_packet.size() > 0x7FFF) {
+    // Проверяем размер пакета
+    if (base_packet.size() > 0x7FFF) { // 32,767 bytes
+        // Формируем расширенный заголовок для больших пакетов
         ByteBuffer temp;
-        uint16_t base_size = static_cast<uint16_t>(base_packet.size());
 
-        // Формат большого пакета: [0x80 | (size >> 16)] [size >> 8] [size] [opcode] [payload]
-        temp.write_uint8(0x80 | (0xFF & (base_size >> 16)));
-        temp.write_uint8(0xFF & (base_size >> 8));
-        temp.write_uint8(0xFF & base_size);
+        // Размер пакета (2 байта длины + payload)
+        uint16_t total_size = static_cast<uint16_t>(base_packet.size());
 
-        // Копируем opcode и payload из базового пакета
+        // Формат большого заголовка:
+        // [0x80 | (size >> 16)] [size >> 8] [size] [opcode] [payload]
+        temp.write_uint8(0x80 | (0xFF & (total_size >> 16)));
+        temp.write_uint8(0xFF & (total_size >> 8));
+        temp.write_uint8(0xFF & total_size);
+
+        // Копируем opcode (2 байта) и payload из базового пакета
+        // Пропускаем первые 2 байта (обычный заголовок)
         temp.write_bytes(base_packet.data() + 2, base_packet.size() - 2);
 
-        write_queue_.push_back(temp.data());
+        final_packet = temp.data();
     } else {
-        write_queue_.push_back(base_packet);
+        // Для обычных пакетов используем как есть
+        final_packet = std::move(base_packet);
     }
 
+    // Шифруем заголовок если требуется
+    if (isAuthed() && final_packet.size() >= 4) {
+        // Шифруем только первые 4 байта (заголовок)
+        authCrypt_.EncryptSend(final_packet.data(), 4);
+    }
+
+    // Добавляем в очередь на отправку
+    write_queue_.push_back(std::move(final_packet));
+
+    // Запускаем процесс отправки если не активен
     if (!writing_) {
         do_write();
     }
@@ -204,15 +231,28 @@ void GameSession::do_write() {
 }
 
 void GameSession::send_auth_challenge() {
-    Crypto::GetRandomBytes(authSeed_);
+    // Генерация seed ДОЛЖНА происходить здесь
+    std::array<uint8_t, 4> seed;
+    Crypto::GetRandomBytes(seed);
+    setAuthSeed(seed);
+
     auto random_bytes = Crypto::GetRandomBytes<32>();
 
     WoWPacket challenge_pkt(WoWOpcodes::SMSG_AUTH_CHALLENGE);
     challenge_pkt.write_uint32_le(1);
-    challenge_pkt.write_bytes(authSeed_.data(), 4);
+    challenge_pkt.write_bytes(seed.data(), 4);
     challenge_pkt.write_bytes(random_bytes.data(), random_bytes.size());
 
     Packet::log_raw_payload("send_auth_challenge::SMSG_AUTH_CHALLENGE", challenge_pkt.serialize());
 
     send_packet(std::make_shared<WoWPacket>(challenge_pkt));
+}
+
+void GameSession::initCrypt(const std::array<uint8_t, 40>& key) {
+    // Преобразуем 40-байтный ключ в формат SessionKey
+    SessionKey sessionKey;
+    std::copy(key.begin(), key.end(), sessionKey.begin());
+
+    // Инициализируем шифрование
+    authCrypt_.Init(sessionKey);
 }

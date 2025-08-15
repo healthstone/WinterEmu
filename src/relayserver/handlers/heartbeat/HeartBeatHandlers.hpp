@@ -3,5 +3,5 @@
 #include "packet/WoWPacket.hpp"
 
 namespace HeartBeatHandlers {
-    void handlePing(const std::shared_ptr<GameSession>& session, const std::shared_ptr<WoWPacket> &p);
+    void handlePing(std::shared_ptr<GameSession> session, const std::shared_ptr<WoWPacket>& p);
 }

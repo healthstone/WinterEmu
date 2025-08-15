@@ -5,5 +5,5 @@
 #include "packet/WoWPacket.hpp"
 
 namespace Handlers {
-    void dispatch(const std::shared_ptr<GameSession>& session, const std::shared_ptr<WoWPacket>& p);
+    void dispatch(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p);
 }

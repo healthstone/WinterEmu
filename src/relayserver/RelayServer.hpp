@@ -26,6 +26,10 @@ public:
     NodeManager* get_node_manager() const { return node_manager_.get(); }
     std::shared_ptr<Database> db() { return db_; }
 
+    uint32_t clientCacheVersion() const {
+        return clientCacheVersion_;
+    }
+
 private:
     boost::asio::io_context &io_context_;
     boost::asio::ip::tcp::acceptor acceptor_;
@@ -34,4 +38,6 @@ private:
     std::unique_ptr<NodeManager> node_manager_;
     std::unordered_set<std::shared_ptr<GameSession>> sessions_;
     std::mutex sessions_mutex_;
+
+    uint32_t clientCacheVersion_ = 12340; // Значение по умолчанию
 };

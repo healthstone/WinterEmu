@@ -45,9 +45,20 @@ public:
         return remote_ep.port();
     }
 
-    void setClientSeed(uint32_t value) { client_seed_ = value; }
-    void setNeedCrypt(bool value) { isNeedCrypt_ = value; }
-    bool isNeedCrypt() const { return isNeedCrypt_; }
+    void initCrypt(const std::array<uint8_t, 40>& key);
+    void setAuthed(bool authed) { authed_ = authed; }
+    bool isAuthed() const { return authed_; }
+
+    const std::array<uint8_t, 4>& authSeed() const {
+        return authSeed_;
+    }
+
+    void setAuthSeed(const std::array<uint8_t, 4>& seed) {
+        authSeed_ = seed;
+    }
+
+    void setClientSeed(uint32_t seed) { clientSeed_ = seed; }
+    uint32_t clientSeed() const { return clientSeed_; }
 
 private:
     void send_auth_challenge();
@@ -69,8 +80,8 @@ private:
     bool writing_ = false;
     std::atomic<bool> closed_{false};
 
+    AuthCrypt authCrypt_;
+    bool authed_ = false;
     std::array<uint8_t, 4> authSeed_;
-    AuthCrypt _authCrypt;
-    uint32_t client_seed_;
-    bool isNeedCrypt_ = false;
+    uint32_t clientSeed_ = 0;
 };
