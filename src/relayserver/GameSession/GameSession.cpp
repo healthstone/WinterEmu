@@ -82,41 +82,42 @@ void GameSession::process_read_buffer() {
     auto log = Logger::get();
     MessageBuffer& buffer = read_buffer();
 
-    while (buffer.get_active_size() >= 4) {
+    while (buffer.get_active_size() >= 6) { // Минимум 6 байт: size(2) + cmd(4)
         const uint8_t* data = buffer.read_ptr();
 
-        // Чтение длины пакета (BE) — включает OPCODE + PAYLOAD
+        // Чтение длины пакета (BE)
         uint16_t total_length = (data[0] << 8) | data[1];
 
-        // Для дебага — считываем OPCODE тоже (LE)
-        uint16_t opcode = (static_cast<uint16_t>(data[3]) << 8) | data[2];
+        // Чтение opcode (uint32 LE)
+        uint32_t full_opcode = data[2] | (data[3] << 8) | (data[4] << 16) | (data[5] << 24);
+        uint16_t opcode = full_opcode & 0xFFFF; // Берем только младшие 2 байта
 
-        log->debug("[process_read_buffer] Buffer size: {}, Total length: {}, Opcode: 0x{:04X}",
-                   buffer.get_active_size(), total_length, opcode);
+        log->debug("[process_read_buffer] Total length: {}, Full opcode: 0x{:08X}, Opcode: 0x{:04X}",
+                   total_length, full_opcode, opcode);
 
-        // Безопасность: ограничение по длине
-        if (total_length > 2048) {
+        // Проверка размера пакета
+        if (total_length > 10240) { // 0x2800 = 10240
             log->error("Packet size too big: {}", total_length);
             close();
             return;
         }
 
-        // Пакет ещё не полностью получен
-        if (buffer.get_active_size() < 2 + total_length) {
+        // Полный размер пакета = 2 (длина) + total_length
+        size_t full_packet_size = 2 + total_length;
+
+        if (buffer.get_active_size() < full_packet_size) {
             log->debug("Waiting for more data (need {} bytes, have {})",
-                       2 + total_length, buffer.get_active_size());
+                       full_packet_size, buffer.get_active_size());
             return;
         }
 
         try {
-            // Берём весь пакет (без 2 байт длины)
-            std::vector<uint8_t> packet_data(data + 2, data + 2 + total_length);
-            //Packet::log_raw_payload("process_read_buffer", packet_data);
-            buffer.read_completed(2 + total_length);
+            // Копируем весь пакет (включая заголовок)
+            std::vector<uint8_t> packet_data(data, data + full_packet_size);
+            buffer.read_completed(full_packet_size);
 
             auto packet = std::make_shared<WoWPacket>();
             packet->deserialize(packet_data);
-
             Handlers::dispatch(shared_from_this(), packet);
         }
         catch (const std::exception& ex) {
@@ -148,8 +149,25 @@ void GameSession::send_packet(const std::shared_ptr<const WoWPacket>& packet) {
  * Отправка пакета клиенту
  */
 void GameSession::do_send_packet(const WoWPacket &packet) {
-    std::vector<uint8_t> full_packet = packet.build_packet();
-    write_queue_.push_back(std::move(full_packet));
+    std::vector<uint8_t> base_packet = packet.build_packet();
+
+    // Для больших пакетов (> 0x7FFF) используем расширенный заголовок
+    if (base_packet.size() > 0x7FFF) {
+        ByteBuffer temp;
+        uint16_t base_size = static_cast<uint16_t>(base_packet.size());
+
+        // Формат большого пакета: [0x80 | (size >> 16)] [size >> 8] [size] [opcode] [payload]
+        temp.write_uint8(0x80 | (0xFF & (base_size >> 16)));
+        temp.write_uint8(0xFF & (base_size >> 8));
+        temp.write_uint8(0xFF & base_size);
+
+        // Копируем opcode и payload из базового пакета
+        temp.write_bytes(base_packet.data() + 2, base_packet.size() - 2);
+
+        write_queue_.push_back(temp.data());
+    } else {
+        write_queue_.push_back(base_packet);
+    }
 
     if (!writing_) {
         do_write();
