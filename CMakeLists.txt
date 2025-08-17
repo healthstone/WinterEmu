@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenSSL REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system locale)
 find_package(PostgreSQL REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(PQXX REQUIRED libpqxx)
@@ -36,7 +36,7 @@ add_executable(authserver
 )
 
 target_link_libraries(authserver PRIVATE
-        Boost::boost Boost::system
+        Boost::boost Boost::system Boost::locale
         ${PostgreSQL_LIBRARIES}
         ${PQXX_LIBRARIES}
         spdlog::spdlog
@@ -59,7 +59,7 @@ add_executable(relayserver
 )
 
 target_link_libraries(relayserver PRIVATE
-        Boost::boost Boost::system
+        Boost::boost Boost::system Boost::locale
         ${PostgreSQL_LIBRARIES}
         ${PQXX_LIBRARIES}
         spdlog::spdlog
@@ -82,7 +82,7 @@ add_executable(nodeserver
 )
 
 target_link_libraries(nodeserver PRIVATE
-        Boost::boost Boost::system
+        Boost::boost Boost::system Boost::locale
         ${PostgreSQL_LIBRARIES}
         ${PQXX_LIBRARIES}
         spdlog::spdlog
@@ -105,7 +105,7 @@ add_executable(tests
 )
 
 target_link_libraries(tests PRIVATE
-        Boost::boost Boost::system
+        Boost::boost Boost::system Boost::locale
         Catch2::Catch2WithMain
         OpenSSL::Crypto
         spdlog::spdlog

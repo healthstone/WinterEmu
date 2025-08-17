@@ -2,6 +2,7 @@
 #include "Logger.hpp"
 #include "src/relayserver/handlers/Handlers.hpp"
 #include "Cryptography/CryptoRandom.hpp"
+#include "Time/GameTime.hpp"
 #include <iostream>
 
 using boost::asio::ip::tcp;
@@ -252,4 +253,17 @@ void GameSession::initCrypt(const std::array<uint8_t, 40>& key) {
 
     // Инициализируем шифрование
     authCrypt_.Init(sessionKey);
+}
+
+void GameSession::SendAccountDataTimes(uint32_t mask) {
+    WoWPacket pkt(WoWOpcodes::SMSG_ACCOUNT_DATA_TIMES);
+    pkt.write_uint32_le(GameTime::GetGameTime());    // Server time
+    pkt.write_uint8(1);
+    pkt.write_uint32_le(mask);                       // type mask
+    for (uint32_t i = 0; i < NUM_ACCOUNT_DATA_TYPES; ++i)
+        if (mask & (1 << i))
+            pkt.write_uint32_le(GetAccountData(AccountDataType(i))->Time); // also unix time
+
+    Packet::log_raw_payload("SMSG_ACCOUNT_DATA_TIMES", pkt.serialize());
+    send_packet(std::make_shared<WoWPacket>(pkt));
 }
