@@ -64,7 +64,7 @@ HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<AuthSession> session, 
 
         // 7. TODO Проверка версии клиента (логика ValidateVersion)
         log->trace("[HandleLogonProof] User '{}' successfully authenticated", accountName);
-        Packet::log_raw_payload("REQUEST  AUTH_LOGON_PROOF", *payload);
+        //Packet::log_raw_payload("REQUEST  AUTH_LOGON_PROOF", *payload);
 
         // 8. Обновление записи в базе
         try {
@@ -105,7 +105,7 @@ HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<AuthSession> session, 
         }
 
         session->set_session_mode(SessionMode::STATUS_WAITING_FOR_REALM_LIST);
-        Packet::log_raw_payload("RESPONSE AUTH_LOGON_PROOF", packet.serialize());
+        //Packet::log_raw_payload("RESPONSE AUTH_LOGON_PROOF", packet.serialize());
         PacketUtils::send_packet_as<RawPacket>(std::move(session), packet);
         co_return;
     }

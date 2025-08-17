@@ -36,15 +36,14 @@ AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared
         co_return;
     }
 
+    sendAuthResponse(session, ResponseCodes::AUTH_OK, 2, 0);
     session->setAuthed(true);
     log->info("Client '{}' authenticated successfully", authSessionData->accountName);
 
     // Отправка ответа
-    sendAuthResponse(session, ResponseCodes::AUTH_OK, 2, 0);
     sendAddonsInfo(session, authSessionData->addonData);
     sendClientCacheVersion(session);
     sendTutorialsData(session);
-
     co_return;
 }
 
@@ -141,6 +140,7 @@ void AuthHandlers::sendAuthResponse(
         pkt.write_uint8(0);                            // Флаг миграции персонажей
     }
 
+    Packet::log_raw_payload("SMSG_AUTH_RESPONSE", pkt.serialize());
     PacketUtils::send_packet_as<WoWPacket>(std::move(session), pkt);
 }
 
@@ -193,12 +193,15 @@ void AuthHandlers::sendAddonsInfo(std::shared_ptr<GameSession> session,
     // Простейшая реализация - без поддержки аддонов
     pkt.write_uint8(0); // Количество аддонов = 0
 
+    Packet::log_raw_payload("SMSG_ADDON_INFO", pkt.serialize());
     PacketUtils::send_packet_as<WoWPacket>(std::move(session), pkt);
 }
 
 void AuthHandlers::sendClientCacheVersion(std::shared_ptr<GameSession> session) {
     WoWPacket pkt(WoWOpcodes::SMSG_CLIENTCACHE_VERSION);
     pkt.write_uint32_le(session->server()->clientCacheVersion());
+
+    Packet::log_raw_payload("SMSG_CLIENTCACHE_VERSION", pkt.serialize());
     PacketUtils::send_packet_as<WoWPacket>(std::move(session), pkt);
 }
 
@@ -208,5 +211,7 @@ void AuthHandlers::sendTutorialsData(std::shared_ptr<GameSession> session) {
     for (int i = 0; i < 8; ++i) {
         pkt.write_uint64_le(0);
     }
+
+    Packet::log_raw_payload("SMSG_TUTORIAL_FLAGS", pkt.serialize());
     PacketUtils::send_packet_as<WoWPacket>(std::move(session), pkt);
 }

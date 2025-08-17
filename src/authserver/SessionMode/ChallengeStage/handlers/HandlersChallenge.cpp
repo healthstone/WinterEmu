@@ -92,7 +92,7 @@ bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, std::shared_ptr<AuthSes
     session->_localizationName = logonChallenge->country;
     session->_os = logonChallenge->os;
 
-    Packet::log_raw_payload("REQUEST  " + opcode_name, *payload);
+    //Packet::log_raw_payload("REQUEST  " + opcode_name, *payload);
     return true;
 }
 
@@ -205,7 +205,7 @@ bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_na
                 return true;
         }
 
-        Packet::log_raw_payload("CACHE RESPONSE " + opcode_name, pkt.serialize());
+        //Packet::log_raw_payload("CACHE RESPONSE " + opcode_name, pkt.serialize());
         PacketUtils::send_packet_as<RawPacket>(std::move(session), pkt);
         return false;
     } else
@@ -284,7 +284,7 @@ boost::asio::awaitable<void> HandlersChallenge::LogonChallengeLogic(std::shared_
         reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_VERSION_INVALID));
     }
 
-    Packet::log_raw_payload("RESPONSE AUTH_LOGON_CHALLENGE", reply.serialize());
+    //Packet::log_raw_payload("RESPONSE AUTH_LOGON_CHALLENGE", reply.serialize());
     PacketUtils::send_packet_as<RawPacket>(std::move(session), reply);
     co_return;
 }

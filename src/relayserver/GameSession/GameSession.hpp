@@ -10,20 +10,11 @@
 #include "packet/MessageBuffer.hpp"
 #include "packet/WoWPacket.hpp"
 #include "Cryptography/AuthCrypt.hpp"
+#include "utils/Duration.hpp"
+#include "src/relayserver/enums/AccountDataType.hpp"
 
 class RelayServer; // forward declaration
 
-enum AccountDataType
-{
-    GLOBAL_CONFIG_CACHE             = 0,                    // 0x01 g
-    PER_CHARACTER_CONFIG_CACHE      = 1,                    // 0x02 p
-    GLOBAL_BINDINGS_CACHE           = 2,                    // 0x04 g
-    PER_CHARACTER_BINDINGS_CACHE    = 3,                    // 0x08 p
-    GLOBAL_MACROS_CACHE             = 4,                    // 0x10 g
-    PER_CHARACTER_MACROS_CACHE      = 5,                    // 0x20 p
-    PER_CHARACTER_LAYOUT_CACHE      = 6,                    // 0x40 p
-    PER_CHARACTER_CHAT_CACHE        = 7                     // 0x80 p
-};
 #define NUM_ACCOUNT_DATA_TYPES        8
 
 #define GLOBAL_CACHE_MASK           0x15
@@ -83,10 +74,15 @@ public:
     std::array<uint8_t, 4> clientSeed() const { return clientSeed_; }
 
     // GameSection
+    // ping section
+    uint32_t getLatency() const { return m_latency; }
+    void setLatency(uint32_t latency) { m_latency = latency; }
+    bool handlePing(const std::shared_ptr<WoWPacket>& p);
+
     // Account Data
-    AccountData* GetAccountData(AccountDataType type) { return &m_accountData[type]; }
-    void SendAccountDataTimes(uint32_t mask);
-    //void SetAccountData(AccountDataType type, time_t tm, std::string const& data);
+    AccountData* getAccountData(AccountDataType type) { return &m_accountData[type]; }
+    void sendAccountDataTimes(uint32_t mask);
+    void setAccountData(AccountDataType type, time_t tm, std::string const& data);
     //void LoadAccountData(PreparedQueryResult result, uint32 mask);
 
 private:
@@ -113,6 +109,11 @@ private:
     bool authed_ = false;
     std::array<uint8_t, 4> authSeed_;
     std::array<uint8_t, 4> clientSeed_;
+
+    // GameSection
+    TimePoint lastPingTime_;
+    uint32_t overSpeedPings_;
+    uint32_t m_latency;
 
     AccountData m_accountData[NUM_ACCOUNT_DATA_TYPES];
 };

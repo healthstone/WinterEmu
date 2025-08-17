@@ -51,8 +51,8 @@ void HandlersReconnectProofStage::HandleReconnectProof(std::shared_ptr<AuthSessi
             packet.write_uint16_le(0);  // LoginFlags, 1 has account message
 
             session->set_session_mode(SessionMode::STATUS_WAITING_FOR_REALM_LIST);
-            Packet::log_raw_payload("REQUEST  AUTH_RECONNECT_PROOF", *payload);
-            Packet::log_raw_payload("RESPONSE AUTH_RECONNECT_PROOF", packet.serialize());
+            //Packet::log_raw_payload("REQUEST  AUTH_RECONNECT_PROOF", *payload);
+            //Packet::log_raw_payload("RESPONSE AUTH_RECONNECT_PROOF", packet.serialize());
 
             PacketUtils::send_packet_as<RawPacket>(std::move(session), packet);
             return;

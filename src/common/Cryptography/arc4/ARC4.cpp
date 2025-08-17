@@ -40,8 +40,8 @@ void Crypto::ARC4::UpdateData(uint8_t *data, size_t len) {
     if (result1 != 1) {
         throw std::runtime_error("ARC4::UpdateData: result1 != 1");
     }
-    int result2 = EVP_EncryptFinal_ex(_ctx, data, &outlen);
-    if (result2 != 1) {
-        throw std::runtime_error("ARC4::UpdateData: result2 != 1");
+    // Убрана EVP_EncryptFinal_ex - критичное изменение!
+    if (static_cast<size_t>(outlen) != len) {
+        throw std::runtime_error("ARC4::UpdateData: outlen != len");
     }
 }

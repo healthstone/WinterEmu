@@ -4,6 +4,7 @@ project(WinterEmu)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(ZLIB REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system locale)
 find_package(PostgreSQL REQUIRED)
@@ -64,6 +65,7 @@ target_link_libraries(relayserver PRIVATE
         ${PQXX_LIBRARIES}
         spdlog::spdlog
         OpenSSL::Crypto
+        ZLIB::ZLIB
 )
 
 target_include_directories(relayserver PRIVATE

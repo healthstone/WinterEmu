@@ -71,18 +71,9 @@ void GameSession::do_read() {
 
                 if (!isOpened()) return;
 
-                // Расшифровываем полученные данные, если сессия аутентифицирована и требуется шифрование
-                if (isAuthed()) {
-                    authCrypt_.DecryptRecv(
-                            reinterpret_cast<uint8_t*>(read_buffer_.write_ptr()),
-                            bytes_transferred
-                    );
-                }
-
                 read_buffer_.write_completed(bytes_transferred);
-
                 log->debug("[do_read] Received {} bytes", bytes_transferred);
-                process_read_buffer();
+                process_read_buffer(); // Дешифровка выполняется здесь
                 if (isOpened()) do_read();
             }
     );
@@ -94,19 +85,29 @@ void GameSession::process_read_buffer() {
 
     while (buffer.get_active_size() >= 6) { // Минимум 6 байт: size(2) + cmd(4)
         const uint8_t* data = buffer.read_ptr();
+        uint8_t header_buffer[6];
+        std::memcpy(header_buffer, data, 6); // Копируем заголовок для дешифровки
 
-        // Чтение длины пакета (BE)
-        uint16_t total_length = (data[0] << 8) | data[1];
+        // Дешифруем только заголовок (6 байт)
+        if (isAuthed()) {
+            authCrypt_.DecryptRecv(header_buffer, 6);
+        }
 
-        // Чтение opcode (uint32 LE)
-        uint32_t full_opcode = data[2] | (data[3] << 8) | (data[4] << 16) | (data[5] << 24);
-        uint16_t opcode = full_opcode & 0xFFFF; // Берем только младшие 2 байта
+        // Чтение длины пакета (BE) из расшифрованного заголовка
+        uint16_t total_length = (header_buffer[0] << 8) | header_buffer[1];
+
+        // Чтение opcode (uint32 LE) из расшифрованного заголовка
+        uint32_t full_opcode = header_buffer[2] |
+                               (header_buffer[3] << 8) |
+                               (header_buffer[4] << 16) |
+                               (header_buffer[5] << 24);
+        uint16_t opcode = full_opcode & 0xFFFF;
 
         log->debug("[process_read_buffer] Total length: {}, Full opcode: 0x{:08X}, Opcode: 0x{:04X}",
                    total_length, full_opcode, opcode);
 
         // Проверка размера пакета
-        if (total_length > 10240) { // 0x2800 = 10240
+        if (total_length > 10240) {
             log->error("Packet size too big: {}", total_length);
             close();
             return;
@@ -122,8 +123,12 @@ void GameSession::process_read_buffer() {
         }
 
         try {
-            // Копируем весь пакет (включая заголовок)
+            // Копируем весь пакет
             std::vector<uint8_t> packet_data(data, data + full_packet_size);
+
+            // Заменяем заголовок на расшифрованную версию
+            std::memcpy(packet_data.data(), header_buffer, 6);
+
             buffer.read_completed(full_packet_size);
 
             auto packet = std::make_shared<WoWPacket>();
@@ -159,44 +164,31 @@ void GameSession::send_packet(const std::shared_ptr<const WoWPacket>& packet) {
  * Отправка пакета клиенту
  */
 void GameSession::do_send_packet(const WoWPacket &packet) {
-    // Финализируем пакет в бинарный формат
     auto base_packet = packet.build_packet();
     std::vector<uint8_t> final_packet;
 
-    // Проверяем размер пакета
-    if (base_packet.size() > 0x7FFF) { // 32,767 bytes
-        // Формируем расширенный заголовок для больших пакетов
+    if (base_packet.size() > 0x7FFF) {
         ByteBuffer temp;
-
-        // Размер пакета (2 байта длины + payload)
         uint16_t total_size = static_cast<uint16_t>(base_packet.size());
 
-        // Формат большого заголовка:
-        // [0x80 | (size >> 16)] [size >> 8] [size] [opcode] [payload]
         temp.write_uint8(0x80 | (0xFF & (total_size >> 16)));
         temp.write_uint8(0xFF & (total_size >> 8));
         temp.write_uint8(0xFF & total_size);
-
-        // Копируем opcode (2 байта) и payload из базового пакета
-        // Пропускаем первые 2 байта (обычный заголовок)
         temp.write_bytes(base_packet.data() + 2, base_packet.size() - 2);
-
         final_packet = temp.data();
     } else {
-        // Для обычных пакетов используем как есть
         final_packet = std::move(base_packet);
     }
 
-    // Шифруем заголовок если требуется
+    // Шифруем только первые 4 байта для исходящих пакетов
     if (isAuthed() && final_packet.size() >= 4) {
-        // Шифруем только первые 4 байта (заголовок)
-        authCrypt_.EncryptSend(final_packet.data(), 4);
+        uint8_t header_buffer[4];
+        std::memcpy(header_buffer, final_packet.data(), 4);
+        authCrypt_.EncryptSend(header_buffer, 4);
+        std::memcpy(final_packet.data(), header_buffer, 4);
     }
 
-    // Добавляем в очередь на отправку
     write_queue_.push_back(std::move(final_packet));
-
-    // Запускаем процесс отправки если не активен
     if (!writing_) {
         do_write();
     }
@@ -255,15 +247,83 @@ void GameSession::initCrypt(const std::array<uint8_t, 40>& key) {
     authCrypt_.Init(sessionKey);
 }
 
-void GameSession::SendAccountDataTimes(uint32_t mask) {
+bool GameSession::handlePing(const std::shared_ptr<WoWPacket>& p) {
+    uint32_t ping = p->read_uint32_le();
+    uint32_t latency = p->read_uint32_le();
+    using namespace std::chrono;
+
+    if (lastPingTime_ == steady_clock::time_point())
+    {
+        lastPingTime_ = steady_clock::now();
+    }
+    else
+    {
+        steady_clock::time_point now = steady_clock::now();
+
+        steady_clock::duration diff = now - lastPingTime_;
+
+        lastPingTime_ = now;
+
+        if (diff < seconds(27))
+        {
+            ++overSpeedPings_;
+
+            //std::getenv("CONFIG_MAX_OVERSPEED_PINGS") = 2
+            uint32_t maxAllowed = 2;
+
+            if (maxAllowed && overSpeedPings_ > maxAllowed)
+                return false;
+        }
+        else
+            overSpeedPings_ = 0;
+    }
+    setLatency(latency);
+
+    WoWPacket reply(WoWOpcodes::SMSG_PONG);
+    reply.write_uint32_le(ping);
+    send_packet(std::make_shared<WoWPacket>(reply));
+    return true;
+}
+
+void GameSession::sendAccountDataTimes(uint32_t mask) {
     WoWPacket pkt(WoWOpcodes::SMSG_ACCOUNT_DATA_TIMES);
     pkt.write_uint32_le(GameTime::GetGameTime());    // Server time
     pkt.write_uint8(1);
     pkt.write_uint32_le(mask);                       // type mask
     for (uint32_t i = 0; i < NUM_ACCOUNT_DATA_TYPES; ++i)
         if (mask & (1 << i))
-            pkt.write_uint32_le(GetAccountData(AccountDataType(i))->Time); // also unix time
+            pkt.write_uint32_le(getAccountData(AccountDataType(i))->Time); // also unix time
 
     Packet::log_raw_payload("SMSG_ACCOUNT_DATA_TIMES", pkt.serialize());
     send_packet(std::make_shared<WoWPacket>(pkt));
+}
+
+void GameSession::setAccountData(AccountDataType type, time_t tm, std::string const& data)
+{
+//    uint32_t id = 0;
+//    CharacterDatabaseStatements index;
+//    if ((1 << type) & GLOBAL_CACHE_MASK)
+//    {
+//        id = GetAccountId();
+//        index = CHAR_REP_ACCOUNT_DATA;
+//    }
+//    else
+//    {
+//        // _player can be NULL and packet received after logout but m_GUID still store correct guid
+//        if (!m_GUIDLow)
+//            return;
+//
+//        id = m_GUIDLow;
+//        index = CHAR_REP_PLAYER_ACCOUNT_DATA;
+//    }
+//
+//    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(index);
+//    stmt->setUInt32(0, id);
+//    stmt->setUInt8 (1, type);
+//    stmt->setUInt32(2, uint32(tm));
+//    stmt->setString(3, data);
+//    CharacterDatabase.Execute(stmt);
+
+    m_accountData[type].Time = tm;
+    m_accountData[type].Data = data;
 }
