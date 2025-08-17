@@ -74,15 +74,25 @@ public:
     std::array<uint8_t, 4> clientSeed() const { return clientSeed_; }
 
     // GameSection
-    // ping section
     uint32_t getLatency() const { return m_latency; }
     void setLatency(uint32_t latency) { m_latency = latency; }
     bool handlePing(const std::shared_ptr<WoWPacket>& p);
 
+
+    boost::uuids::uuid const& getAccountId() const { return accountId_; }
+    void setAccountId(boost::uuids::uuid const &value) { accountId_ = value; }
+    std::string const& getAccountName() const { return accountName_; }
+    void setAccountName(std::string const &value) { accountName_= value; }
+
+    boost::uuids::uuid const& getCharacterId() const { return characterId_; }
+    //void setCharacterId(boost::uuids::uuid const &value) { characterId_ = value; }
+    std::string const& getCharacterName() const { return characterName_; }
+    void setCharacterName(std::string const &value) { characterName_= value; }
+
     // Account Data
     AccountData* getAccountData(AccountDataType type) { return &m_accountData[type]; }
     void sendAccountDataTimes(uint32_t mask);
-    void setAccountData(AccountDataType type, time_t tm, std::string const& data);
+    boost::asio::awaitable<void> setAccountData(AccountDataType type, time_t tm, std::string const& data);
     //void LoadAccountData(PreparedQueryResult result, uint32 mask);
 
 private:
@@ -111,6 +121,12 @@ private:
     std::array<uint8_t, 4> clientSeed_;
 
     // GameSection
+    boost::uuids::uuid accountId_;
+    std::string accountName_;
+
+    boost::uuids::uuid characterId_;
+    std::string characterName_;
+
     TimePoint lastPingTime_;
     uint32_t overSpeedPings_;
     uint32_t m_latency;

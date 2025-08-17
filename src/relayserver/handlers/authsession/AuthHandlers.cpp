@@ -20,11 +20,15 @@ AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared
         co_return;
     }
 
+    session->setAccountName(authSessionData->accountName);
+
     auto account = co_await fetchFromDB(authSessionData.value(), session);
     if (!account) {
         sendAuthResponse(session, ResponseCodes::AUTH_UNKNOWN_ACCOUNT);
         co_return;
     }
+
+    session->setAccountId(account->id);
 
     // Ключевое изменение: инициализация шифрования ДО проверки дайджеста
     session->initCrypt(account->sessionkey.value());

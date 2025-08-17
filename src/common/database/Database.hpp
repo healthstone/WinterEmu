@@ -348,6 +348,7 @@ private:
     void prepare_all(pqxx::connection &conn) {
         pqxx::work txn(conn);
         std::string auth_schema = std::getenv("AUTH_SCHEMA") ? std::string(std::getenv("AUTH_SCHEMA")) : "auth_server";
+        std::string relay_schema = std::getenv("RELAY_SCHEMA") ? std::string(std::getenv("RELAY_SCHEMA")) : "relay_server";
 
         conn.prepare("SELECT_ACCOUNT_BY_USERNAME",
                      fmt::format("SELECT id, username, salt, verifier, session_key_auth, email, created_at FROM {}.accounts WHERE username = $1", auth_schema));
@@ -363,6 +364,22 @@ private:
                      fmt::format("UPDATE {}.accounts SET session_key_auth = decode($1, 'hex'), last_ip = $2, last_login = NOW() WHERE username = $3", auth_schema));
         conn.prepare("INSERT_REALM_CHARACTERS",
                      fmt::format("INSERT INTO {}.realmcharacters (realmid, acctid, numchars) VALUES ($1, $2, $3)", auth_schema));
+
+
+        conn.prepare("REPLACE_ACCOUNT_DATA",
+                     fmt::format("INSERT INTO {}.account_data (account_id, type, time, data) "
+                                 "VALUES ($1, $2, $3, $4) "
+                                 "ON CONFLICT (account_id, type) DO UPDATE SET "
+                                 "time = EXCLUDED.time, data = EXCLUDED.data",
+                                 relay_schema));
+
+        conn.prepare("REPLACE_CHARACTER_ACCOUNT_DATA",
+                     fmt::format("INSERT INTO {}.character_account_data (guid, type, time, data) "
+                                 "VALUES ($1, $2, $3, $4) "
+                                 "ON CONFLICT (guid, type) DO UPDATE SET "
+                                 "time = EXCLUDED.time, data = EXCLUDED.data",
+                                 relay_schema));
+
         txn.commit();
     }
 

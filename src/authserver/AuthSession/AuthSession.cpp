@@ -12,9 +12,8 @@ AuthSession::AuthSession(tcp::socket socket, std::shared_ptr<AuthServer> server)
         : socket_(std::move(socket)), server_(std::move(server)), read_buffer_(4096) {}
 
 void AuthSession::start() {
-    auto ep = socket_.remote_endpoint();
-    Logger::get()->debug("[client_session][start] New connection from {}:{}",
-                         ep.address().to_string(), ep.port());
+    //auto ep = socket_.remote_endpoint();
+    //Logger::get()->debug("[client_session][start] New connection from {}:{}", ep.address().to_string(), ep.port());
 
     set_session_mode(SessionMode::STATUS_CHALLENGE);  // Начинаем с STATUS_CHALLENGE
     do_read();

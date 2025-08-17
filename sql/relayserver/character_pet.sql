@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS relay_server.characters;
+DROP TABLE IF EXISTS relay_server.character_pet;
 
 CREATE TABLE relay_server.character_pet
 (

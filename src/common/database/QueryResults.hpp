@@ -12,6 +12,20 @@
 
 // === Структуры ===
 
+struct CharacterAccountDataRow {
+    boost::uuids::uuid guid;
+    uint8_t type;
+    uint32_t time;
+    std::vector<uint8_t> data;
+};
+
+struct AccountDataRow {
+    boost::uuids::uuid account_id;
+    uint8_t type;
+    uint32_t time;
+    std::vector<uint8_t> data;
+};
+
 struct AccountsRow {
     boost::uuids::uuid id;
     std::optional<std::string> name;
@@ -63,6 +77,65 @@ struct NothingRow {};
 template<typename T>
 struct PgRowMapper;
 
+template<>
+struct PgRowMapper<CharacterAccountDataRow> {
+    static CharacterAccountDataRow map(const pqxx::row& r) {
+        CharacterAccountDataRow row;
+
+        // Парсинг UUID guid
+        std::string guid_str = r["guid"].as<std::string>();
+        try {
+            boost::uuids::string_generator gen;
+            row.guid = gen(guid_str);
+        } catch (const std::exception& e) {
+            throw std::runtime_error("PgRowMapper: invalid UUID string in 'guid' field: " + guid_str);
+        }
+
+        // Тип данных (0-7)
+        row.type = static_cast<uint8_t>(r["type"].as<int>());
+
+        // Временная метка
+        row.time = r["time"].as<uint32_t>();
+
+        // Бинарные данные
+        if (!r["data"].is_null()) {
+            pqxx::binarystring data_bin(r["data"]);
+            row.data = std::vector<uint8_t>(data_bin.data(), data_bin.data() + data_bin.size());
+        }
+
+        return row;
+    }
+};
+
+template<>
+struct PgRowMapper<AccountDataRow> {
+    static AccountDataRow map(const pqxx::row& r) {
+        AccountDataRow row;
+
+        // Парсинг UUID
+        std::string account_id_str = r["account_id"].as<std::string>();
+        try {
+            boost::uuids::string_generator gen;
+            row.account_id = gen(account_id_str);
+        } catch (const std::exception& e) {
+            throw std::runtime_error("PgRowMapper: invalid UUID string in 'account_id' field: " + account_id_str);
+        }
+
+        // Тип данных (0-7)
+        row.type = static_cast<uint8_t>(r["type"].as<int>());
+
+        // Временная метка
+        row.time = r["time"].as<uint32_t>();
+
+        // Бинарные данные
+        if (!r["data"].is_null()) {
+            pqxx::binarystring data_bin(r["data"]);
+            row.data = std::vector<uint8_t>(data_bin.data(), data_bin.data() + data_bin.size());
+        }
+
+        return row;
+    }
+};
 
 template<>
 struct PgRowMapper<RealmCharactersRow> {

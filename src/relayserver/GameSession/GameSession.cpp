@@ -298,32 +298,32 @@ void GameSession::sendAccountDataTimes(uint32_t mask) {
     send_packet(std::make_shared<WoWPacket>(pkt));
 }
 
-void GameSession::setAccountData(AccountDataType type, time_t tm, std::string const& data)
+boost::asio::awaitable<void> GameSession::setAccountData(AccountDataType type, time_t tm, std::string const& data)
 {
-//    uint32_t id = 0;
-//    CharacterDatabaseStatements index;
-//    if ((1 << type) & GLOBAL_CACHE_MASK)
-//    {
-//        id = GetAccountId();
-//        index = CHAR_REP_ACCOUNT_DATA;
-//    }
-//    else
-//    {
-//        // _player can be NULL and packet received after logout but m_GUID still store correct guid
-//        if (!m_GUIDLow)
-//            return;
-//
-//        id = m_GUIDLow;
-//        index = CHAR_REP_PLAYER_ACCOUNT_DATA;
-//    }
-//
-//    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(index);
-//    stmt->setUInt32(0, id);
-//    stmt->setUInt8 (1, type);
-//    stmt->setUInt32(2, uint32(tm));
-//    stmt->setString(3, data);
-//    CharacterDatabase.Execute(stmt);
+    try {
+        if ((1 << type) & GLOBAL_CACHE_MASK) {
+            PreparedStatement stmt("REPLACE_ACCOUNT_DATA");
+            stmt.set_param(0, getAccountId());
+            stmt.set_param(1, type);
+            stmt.set_param(2, uint32_t(tm));
+            stmt.set_param(3, data);
+            co_await server()->db()->execute_async_one<NothingRow>(stmt);
+        } else {
+            if (!getCharacterId().is_nil()) {
+                PreparedStatement stmt("REPLACE_CHARACTER_ACCOUNT_DATA");
+                stmt.set_param(0, getCharacterId());
+                stmt.set_param(1, type);
+                stmt.set_param(2, uint32_t(tm));
+                stmt.set_param(3, data);
+                co_await server()->db()->execute_async_one<NothingRow>(stmt);
+            }
+        }
 
-    m_accountData[type].Time = tm;
-    m_accountData[type].Data = data;
+        m_accountData[type].Time = tm;
+        m_accountData[type].Data = data;
+        co_return;
+    } catch (const std::exception &ex) {
+        Logger::get()->error("[GameSession]::setAccountData DB exception: {}", ex.what());
+        co_return;
+    }
 }

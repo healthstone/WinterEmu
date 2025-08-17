@@ -7,13 +7,14 @@
 namespace Handlers {
     void dispatch(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p);
 
-    void handleClientPingCommand(const std::shared_ptr<GameSession>& session, std::shared_ptr<WoWPacket> p);
+    void handleClientPingCommand(const std::shared_ptr<GameSession> &session, std::shared_ptr<WoWPacket> p);
 
-    void handleReadyForAccountDataTimes(const std::shared_ptr<GameSession>& session);
+    void handleReadyForAccountDataTimes(const std::shared_ptr<GameSession> &session);
 
-    void HandleUpdateAccountData(const std::shared_ptr<GameSession>& session, std::shared_ptr<WoWPacket> p);
+    boost::asio::awaitable<void>
+    handleUpdateAccountData(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p);
 
-    void handleCharacterEnum(const std::shared_ptr<GameSession>& session);
+    void handleCharacterEnum(const std::shared_ptr<GameSession> &session);
 
-    void HandleRealmSplitOpcode(const std::shared_ptr<GameSession>& session, std::shared_ptr<WoWPacket> p);
+    void handleRealmSplitOpcode(const std::shared_ptr<GameSession> &session, std::shared_ptr<WoWPacket> p);
 }
