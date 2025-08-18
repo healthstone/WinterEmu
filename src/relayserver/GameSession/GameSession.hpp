@@ -73,10 +73,12 @@ public:
     std::array<uint8_t, 4> clientSeed() const { return clientSeed_; }
 
     // GameSection
+    TimePoint getLastPingTime() const { return m_lastPingTime; }
+    void setLastPingTime(TimePoint value) { m_lastPingTime = value; }
+    uint32_t getOverSpeedPings() const { return m_overSpeedPings; }
+    void setOverSpeedPings(uint32_t overSpeedPings) { m_overSpeedPings = overSpeedPings; }
     uint32_t getLatency() const { return m_latency; }
     void setLatency(uint32_t latency) { m_latency = latency; }
-    bool handlePing(const std::shared_ptr<WoWPacket>& p);
-
 
     boost::uuids::uuid const& getAccountId() const { return accountId_; }
     void setAccountId(boost::uuids::uuid const &value) { accountId_ = value; }
@@ -138,12 +140,11 @@ private:
     // GameSection
     boost::uuids::uuid accountId_;
     std::string accountName_;
-
     boost::uuids::uuid characterId_;
     std::string characterName_;
 
-    TimePoint lastPingTime_;
-    uint32_t overSpeedPings_;
+    TimePoint m_lastPingTime;
+    uint32_t m_overSpeedPings;
     uint32_t m_latency;
 
     AccountData m_accountData[NUM_ACCOUNT_DATA_TYPES];

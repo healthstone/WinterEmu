@@ -1,7 +1,5 @@
 #include "AuthHandlers.hpp"
 
-#include <utility>
-#include "utils/PacketUtils.hpp"
 #include "utils/HexUtils.hpp"
 
 using namespace AuthHandlers;
@@ -9,7 +7,7 @@ using namespace AuthHandlers;
 boost::asio::awaitable<void>
 AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p) {
     auto log = Logger::get();
-    log->debug("AuthHandlers::handleAuthPacket called");
+    log->debug("AuthHandlers::handleAuthPacket - CMSG_AUTH_SESSION");
 
     auto serverSeed = session->authSeed();
     log->trace("  ServerSeed: {}", HexUtils::byte_array_to_hex(serverSeed));
@@ -70,11 +68,9 @@ AuthHandlers::fetchFromDB(AuthSessionData asd, std::shared_ptr<GameSession> sess
 }
 
 std::optional<AuthSessionData> AuthHandlers::ReadPacketFields(const std::shared_ptr<WoWPacket> &p) {
-    //Packet::log_raw_payload("CMSG_AUTH_SESSION", p->serialize());
     auto log = Logger::get();
     try {
         AuthSessionData asd;
-        //p->skip(2);
         asd.client_build = p->read_uint32_le();
         asd.login_server_id = p->read_uint32_le();
         asd.accountName = p->read_string_nt_le();
@@ -125,7 +121,7 @@ std::optional<AuthSessionData> AuthHandlers::ReadPacketFields(const std::shared_
 void AuthHandlers::sendAuthResponse(std::shared_ptr<GameSession> session, ResponseCodes code) {
     WoWPacket pkt(WoWOpcodes::SMSG_AUTH_RESPONSE);
     pkt.write_uint8(static_cast<uint8_t>(code));
-    PacketUtils::send_packet_as<WoWPacket>(std::move(session), pkt);
+    session->send_packet(std::make_shared<WoWPacket>(pkt));
 }
 
 void AuthHandlers::sendAuthResponse(
@@ -148,8 +144,7 @@ void AuthHandlers::sendAuthResponse(
         pkt.write_uint8(0);                            // Флаг миграции персонажей
     }
 
-    //Packet::log_raw_payload("SMSG_AUTH_RESPONSE", pkt.serialize());
-    PacketUtils::send_packet_as<WoWPacket>(std::move(session), pkt);
+    session->send_packet(std::make_shared<WoWPacket>(pkt));
 }
 
 bool AuthHandlers::verifyClientDigest(const AuthSessionData &asd,

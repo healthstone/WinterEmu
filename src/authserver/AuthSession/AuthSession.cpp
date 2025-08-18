@@ -12,8 +12,8 @@ AuthSession::AuthSession(tcp::socket socket, std::shared_ptr<AuthServer> server)
         : socket_(std::move(socket)), server_(std::move(server)), read_buffer_(4096) {}
 
 void AuthSession::start() {
-    //auto ep = socket_.remote_endpoint();
-    //Logger::get()->debug("[client_session][start] New connection from {}:{}", ep.address().to_string(), ep.port());
+    auto ep = socket_.remote_endpoint();
+    Logger::get()->debug("[auth_session][start] New connection from {}:{}", ep.address().to_string(), ep.port());
 
     set_session_mode(SessionMode::STATUS_CHALLENGE);  // Начинаем с STATUS_CHALLENGE
     do_read();
@@ -30,18 +30,18 @@ void AuthSession::close() {
     boost::system::error_code ec;
     socket_.cancel(ec);
     if (ec && ec != boost::asio::error::operation_aborted && ec != boost::asio::error::eof) {
-        log->error("[client_session][close] Failed to cancel socket: {}", ec.message());
+        log->error("[auth_session][close] Failed to cancel socket: {}", ec.message());
     }
 
     socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
     if (ec && ec != boost::asio::error::operation_aborted &&
         ec != boost::asio::error::eof &&
         ec != boost::asio::error::not_connected) {
-        log->error("[client_session][close] Failed to shutdown socket: {}", ec.message());
+        log->error("[auth_session][close] Failed to shutdown socket: {}", ec.message());
     }
     socket_.close(ec);
     if (ec && ec != boost::asio::error::operation_aborted && ec != boost::asio::error::eof) {
-        log->error("[client_session][close] Failed to close socket: {}", ec.message());
+        log->error("[auth_session][close] Failed to close socket: {}", ec.message());
     }
 
     read_buffer_.clear();
@@ -65,9 +65,9 @@ void AuthSession::do_read() {
                     if (ec == boost::asio::error::operation_aborted ||
                         ec == boost::asio::error::eof ||
                         ec == boost::asio::error::connection_reset) {
-                        //log->debug("[client_session][do_read] Client disconnected: {}", ec.message());
+                        log->debug("[auth_session][do_read] Client disconnected: {}", ec.message());
                     } else {
-                        log->error("[client_session][do_read] Read error: {}", ec.message());
+                        log->error("[auth_session][do_read] Read error: {}", ec.message());
                     }
                     close();
                     return;
@@ -96,14 +96,14 @@ void AuthSession::process_read_buffer() {
             ReaderRealmStage::process_read_buffer(shared_from_this());
             break;
         case SessionMode::STATUS_CLOSED:
-            Logger::get()->warn("[client_session][process_read_buffer] client[{}] sending data from STATUS_CLOSED, drop him!", getAccountInfo()->Login);
+            Logger::get()->warn("[auth_session][process_read_buffer] client[{}] sending data from STATUS_CLOSED, drop him!", getAccountInfo()->Login);
             close();
             break;
         default:
             const uint8_t* data = read_buffer_.read_ptr();
             std::vector<uint8_t> payload(data, data + read_buffer_.get_active_size());
             Packet::log_raw_payload("UNEXPECTED", payload);
-            Logger::get()->error("[client_session][process_read_buffer] Unknown session mode!");
+            Logger::get()->error("[auth_session][process_read_buffer] Unknown session mode!");
             break;
     }
 }
@@ -113,7 +113,7 @@ void AuthSession::process_read_buffer() {
  */
 void AuthSession::send_packet(const std::shared_ptr<const Packet>& packet) {
     if (closed_) {
-        Logger::get()->debug("[client_session][send_packet] called. closed_={}", closed_.load());
+        Logger::get()->debug("[auth_session][send_packet] called. closed_={}", closed_.load());
         return;
     }
 
@@ -154,7 +154,7 @@ void AuthSession::do_write() {
 
                 if (ec) {
                     if (ec != boost::asio::error::operation_aborted && ec != boost::asio::error::eof) {
-                        log->error("[client_session] Write failed: {}", ec.message());
+                        log->error("[auth_session] Write failed: {}", ec.message());
                     }
                     close();
                     return;
