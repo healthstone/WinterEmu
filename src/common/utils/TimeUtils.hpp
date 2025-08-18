@@ -37,4 +37,10 @@ namespace TimeUtils {
         }
     }
 
+    inline uint32_t to_unix_time(const std::chrono::system_clock::time_point& tp) {
+        return static_cast<uint32_t>(
+                std::chrono::duration_cast<std::chrono::seconds>(
+                        tp.time_since_epoch()).count());
+    }
+
 } // namespace TimeUtils

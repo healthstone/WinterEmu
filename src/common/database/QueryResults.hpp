@@ -12,6 +12,18 @@
 
 // === Структуры ===
 
+struct AddonRow {
+    std::string name;
+    uint32_t crc;
+};
+
+struct BannedAddonRow {
+    uint32_t id;
+    std::string name;
+    std::string version;
+    uint32_t timestamp; // UNIX timestamp в секундах
+};
+
 struct AccountTutorialRow {
     boost::uuids::uuid account_id;
     uint32_t tut0;
@@ -88,6 +100,35 @@ struct NothingRow {};
 
 template<typename T>
 struct PgRowMapper;
+
+template<>
+struct PgRowMapper<AddonRow> {
+    static AddonRow map(const pqxx::row& r) {
+        AddonRow row;
+        row.name = r["name"].as<std::string>();
+        row.crc = r["crc"].as<uint32_t>();
+        return row;
+    }
+};
+
+template<>
+struct PgRowMapper<BannedAddonRow> {
+    static BannedAddonRow map(const pqxx::row& r) {
+        BannedAddonRow row;
+        row.id = r["id"].as<uint32_t>();
+        row.name = r["name"].as<std::string>();
+        row.version = r["version"].as<std::string>();
+
+        // Обработка временной метки
+        if (r["timestamp"].is_null()) {
+            row.timestamp = 0;
+        } else {
+            auto tp = TimeUtils::parse_pg_timestamp(r["timestamp"].as<std::string>());
+            row.timestamp = TimeUtils::to_unix_time(tp);
+        }
+        return row;
+    }
+};
 
 template<>
 struct PgRowMapper<AccountTutorialRow> {

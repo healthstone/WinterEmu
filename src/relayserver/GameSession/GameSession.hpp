@@ -11,6 +11,7 @@
 #include "packet/WoWPacket.hpp"
 #include "Cryptography/AuthCrypt.hpp"
 #include "utils/Duration.hpp"
+#include "src/relayserver/Entity/Addons/Addons.hpp"
 #include "src/relayserver/enums/AccountDataType.hpp"
 #include "src/relayserver/enums/TutorialsFlag.hpp"
 
@@ -109,7 +110,8 @@ public:
         }
     }
 
-    void sendAddonsInfo(const std::vector<uint8_t> &addonData);
+    void readAddonsInfo(const std::vector<uint8_t>& data);
+    void sendAddonsInfo();
     void sendClientCacheVersion();
 
 private:
@@ -150,4 +152,6 @@ private:
     AccountData m_accountData[NUM_ACCOUNT_DATA_TYPES];
     uint32_t m_Tutorials[MAX_ACCOUNT_TUTORIAL_VALUES];
     uint8_t  m_TutorialsChanged;
+
+    Addons _addons;
 };

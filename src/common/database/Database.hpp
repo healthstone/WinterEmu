@@ -374,6 +374,12 @@ private:
                                  relay_schema));
         conn.prepare("SELECT_ACCOUNT_DATA",
                      fmt::format("SELECT account_id, type, time, data FROM {}.account_data WHERE account_id = $1", relay_schema));
+
+        conn.prepare("SELECT_ADDONS",
+                     fmt::format("SELECT name, crc FROM {}.addons", relay_schema));
+        conn.prepare("SELECT_BANNED_ADDONS",
+                     fmt::format("SELECT id, name, version, timestamp FROM {}.banned_addons ORDER BY timestamp", relay_schema));
+
         conn.prepare("REPLACE_CHARACTER_ACCOUNT_DATA",
                      fmt::format("INSERT INTO {}.character_account_data (guid, type, time, data) "
                                  "VALUES ($1, $2, $3, $4) "

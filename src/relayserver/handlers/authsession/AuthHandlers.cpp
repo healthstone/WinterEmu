@@ -47,8 +47,9 @@ AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared
     session->setAuthed(true);
     log->trace("Client '{}' authenticated successfully", authSessionData->accountName);
 
+    session->readAddonsInfo(authSessionData->addonData);
     // Отправка ответа
-    session->sendAddonsInfo(authSessionData->addonData);
+    session->sendAddonsInfo();
     session->sendClientCacheVersion();
     session->sendTutorialsData();
     co_return;
