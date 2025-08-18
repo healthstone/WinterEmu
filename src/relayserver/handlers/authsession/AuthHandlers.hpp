@@ -21,10 +21,4 @@ namespace AuthHandlers {
     bool verifyClientDigest(const AuthSessionData &asd,
                             const AccountsRow &account,
                             const std::array<uint8_t, 4> &authSeed);
-
-    void sendAddonsInfo(std::shared_ptr<GameSession> session, const std::vector<uint8_t> &addonData);
-
-    void sendClientCacheVersion(std::shared_ptr<GameSession> session);
-
-    void sendTutorialsData(std::shared_ptr<GameSession> session);
 }

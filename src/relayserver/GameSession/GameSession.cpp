@@ -327,3 +327,101 @@ boost::asio::awaitable<void> GameSession::setAccountData(AccountDataType type, t
         co_return;
     }
 }
+
+boost::asio::awaitable<void> GameSession::loadAccountData(uint32_t mask) {
+    auto log = Logger::get();
+    log->debug("GameSession::loadAccountData called");
+    try {
+        for (uint32_t i = 0; i < NUM_ACCOUNT_DATA_TYPES; ++i)
+            if (mask & (1 << i))
+                m_accountData[i] = AccountData();
+
+        PreparedStatement stmt("SELECT_ACCOUNT_DATA");
+        stmt.set_param(0, getAccountId());
+        auto rows = co_await server()->db()->execute_async_many<AccountDataRow>(stmt);
+        if (!rows.empty()) {
+            for (const auto &row: rows) {
+                if (row.type >= NUM_ACCOUNT_DATA_TYPES)
+                {
+                    log->error("Table `{}` have invalid account data type ({}), ignore.",
+                               mask == GLOBAL_CACHE_MASK ? "account_data" : "character_account_data", row.type);
+                    continue;
+                }
+
+                if ((mask & (1 << row.type)) == 0)
+                {
+                    log->error("Table `{}` have non appropriate for table account data type ({}), ignore.",
+                                 mask == GLOBAL_CACHE_MASK ? "account_data" : "character_account_data", row.type);
+                    continue;
+                }
+
+                m_accountData[row.type].Time = time_t(row.time);
+                std::string data(reinterpret_cast<const char*>(row.data.data()), row.data.size());
+                m_accountData[row.type].Data = data;
+            }
+        }
+        co_return;
+
+    } catch (const std::exception &ex) {
+        Logger::get()->error("[GameSession]::loadAccountData DB exception: {}", ex.what());
+        co_return;
+    }
+}
+
+boost::asio::awaitable<void> GameSession::loadTutorialsData() {
+    auto log = Logger::get();
+    log->debug("GameSession::loadTutorialsData called");
+
+    try {
+        memset(m_Tutorials, 0, sizeof(uint32_t) * MAX_ACCOUNT_TUTORIAL_VALUES);
+
+        PreparedStatement stmt("SELECT_ACCOUNT_TUTORIALS");
+        stmt.set_param(0, getAccountId());
+        auto row = co_await server()->db()->execute_async_one<AccountTutorialRow>(stmt);
+        if (row) {
+            m_Tutorials[0] = row->tut0;
+            m_Tutorials[1] = row->tut1;
+            m_Tutorials[2] = row->tut2;
+            m_Tutorials[3] = row->tut3;
+            m_Tutorials[4] = row->tut4;
+            m_Tutorials[5] = row->tut5;
+            m_Tutorials[6] = row->tut6;
+            m_Tutorials[7] = row->tut7;
+            m_TutorialsChanged |= TUTORIALS_FLAG_LOADED_FROM_DB;
+        }
+        m_TutorialsChanged &= ~TUTORIALS_FLAG_CHANGED;
+        co_return;
+
+    } catch (const std::exception &ex) {
+        Logger::get()->error("[GameSession]::loadTutorialsData DB exception: {}", ex.what());
+        co_return;
+    }
+}
+
+void GameSession::sendTutorialsData() {
+    WoWPacket pkt(WoWOpcodes::SMSG_TUTORIAL_FLAGS);
+    for (uint8_t i = 0; i < MAX_ACCOUNT_TUTORIAL_VALUES; ++i)
+        pkt.write_uint32_le(m_Tutorials[i]);
+
+    Packet::log_raw_payload("SMSG_TUTORIAL_FLAGS", pkt.serialize());
+    send_packet(std::make_shared<WoWPacket>(pkt));
+}
+
+void GameSession::sendAddonsInfo(const std::vector<uint8_t> &addonData) {
+    // Формат пакета: [uint8: count][repeated: uint32: crc, uint8: flags]
+    WoWPacket pkt(WoWOpcodes::SMSG_ADDON_INFO);
+
+    // Простейшая реализация - без поддержки аддонов
+    pkt.write_uint8(0); // Количество аддонов = 0
+
+    Packet::log_raw_payload("SMSG_ADDON_INFO", pkt.serialize());
+    send_packet(std::make_shared<WoWPacket>(pkt));
+}
+
+void GameSession::sendClientCacheVersion() {
+    WoWPacket pkt(WoWOpcodes::SMSG_CLIENTCACHE_VERSION);
+    pkt.write_uint32_le(server()->clientCacheVersion());
+
+    Packet::log_raw_payload("SMSG_CLIENTCACHE_VERSION", pkt.serialize());
+    send_packet(std::make_shared<WoWPacket>(pkt));
+}

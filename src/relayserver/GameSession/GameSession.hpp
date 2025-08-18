@@ -12,10 +12,9 @@
 #include "Cryptography/AuthCrypt.hpp"
 #include "utils/Duration.hpp"
 #include "src/relayserver/enums/AccountDataType.hpp"
+#include "src/relayserver/enums/TutorialsFlag.hpp"
 
 class RelayServer; // forward declaration
-
-#define NUM_ACCOUNT_DATA_TYPES        8
 
 #define GLOBAL_CACHE_MASK           0x15
 struct AccountData
@@ -93,7 +92,23 @@ public:
     AccountData* getAccountData(AccountDataType type) { return &m_accountData[type]; }
     void sendAccountDataTimes(uint32_t mask);
     boost::asio::awaitable<void> setAccountData(AccountDataType type, time_t tm, std::string const& data);
-    //void LoadAccountData(PreparedQueryResult result, uint32 mask);
+    boost::asio::awaitable<void> loadAccountData(uint32_t mask);
+
+    boost::asio::awaitable<void> loadTutorialsData();
+    void sendTutorialsData();
+    //void saveTutorialsData();
+    uint32_t getTutorialInt(uint8_t index) const { return m_Tutorials[index]; }
+    void setTutorialInt(uint8_t index, uint32_t value)
+    {
+        if (m_Tutorials[index] != value)
+        {
+            m_Tutorials[index] = value;
+            m_TutorialsChanged |= TUTORIALS_FLAG_CHANGED;
+        }
+    }
+
+    void sendAddonsInfo(const std::vector<uint8_t> &addonData);
+    void sendClientCacheVersion();
 
 private:
     void send_auth_challenge();
@@ -132,4 +147,6 @@ private:
     uint32_t m_latency;
 
     AccountData m_accountData[NUM_ACCOUNT_DATA_TYPES];
+    uint32_t m_Tutorials[MAX_ACCOUNT_TUTORIAL_VALUES];
+    uint8_t  m_TutorialsChanged;
 };

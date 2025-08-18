@@ -72,7 +72,7 @@ void Handlers::handleReadyForAccountDataTimes(const std::shared_ptr<GameSession>
 
 boost::asio::awaitable<void> Handlers::handleUpdateAccountData(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p) {
     auto log = Logger::get();
-    log->debug("CMSG_UPDATE_ACCOUNT_DATA");
+    log->debug("CMSG_UPDATE_ACCOUNT_DATA called");
 
     try {
         // Читаем заголовочные данные
@@ -80,7 +80,7 @@ boost::asio::awaitable<void> Handlers::handleUpdateAccountData(std::shared_ptr<G
         uint32_t timestamp = p->read_uint32_le();
         uint32_t decompressedSize = p->read_uint32_le();
 
-        log->debug("UAD: type {}, time {}, decompressedSize {}", type, timestamp, decompressedSize);
+        log->trace("UAD: type {}, time {}, decompressedSize {}", type, timestamp, decompressedSize);
 
         // Проверяем валидность типа данных
         if (type >= NUM_ACCOUNT_DATA_TYPES) {
@@ -150,7 +150,7 @@ boost::asio::awaitable<void> Handlers::handleUpdateAccountData(std::shared_ptr<G
 }
 
 void Handlers::handleCharacterEnum(const std::shared_ptr<GameSession>& session) {
-    Logger::get()->info("CMSG_CHAR_ENUM called");
+    Logger::get()->debug("CMSG_CHAR_ENUM called");
 
     WoWPacket pkt(WoWOpcodes::SMSG_CHAR_ENUM);
     pkt.write_uint8(0); // Количество персонажей (0)

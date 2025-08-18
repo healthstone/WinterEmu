@@ -9,10 +9,10 @@ using namespace AuthHandlers;
 boost::asio::awaitable<void>
 AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p) {
     auto log = Logger::get();
-    log->debug("handleAuthPacket called");
+    log->debug("AuthHandlers::handleAuthPacket called");
 
     auto serverSeed = session->authSeed();
-    log->debug("  ServerSeed: {}", HexUtils::byte_array_to_hex(serverSeed));
+    log->trace("  ServerSeed: {}", HexUtils::byte_array_to_hex(serverSeed));
 
     auto authSessionData = ReadPacketFields(p);
     if (!authSessionData) {
@@ -40,14 +40,19 @@ AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared
         co_return;
     }
 
+    co_await session->loadAccountData(GLOBAL_CACHE_MASK);
+    co_await session->loadTutorialsData();
+    //TODO
+    //LoadInstanceTimeRestrictions(realmHolder.GetPreparedResult(AccountInfoQueryHolderPerRealm::INSTANCE_TIMES));
+
     sendAuthResponse(session, ResponseCodes::AUTH_OK, 2, 0);
     session->setAuthed(true);
-    log->info("Client '{}' authenticated successfully", authSessionData->accountName);
+    log->trace("Client '{}' authenticated successfully", authSessionData->accountName);
 
     // Отправка ответа
-    sendAddonsInfo(session, authSessionData->addonData);
-    sendClientCacheVersion(session);
-    sendTutorialsData(session);
+    session->sendAddonsInfo(authSessionData->addonData);
+    session->sendClientCacheVersion();
+    session->sendTutorialsData();
     co_return;
 }
 
@@ -57,7 +62,6 @@ AuthHandlers::fetchFromDB(AuthSessionData asd, std::shared_ptr<GameSession> sess
         PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
         stmt.set_param(0, asd.accountName);
         auto user = co_await session->server()->db()->execute_async_one<AccountsRow>(stmt);
-        Logger::get()->debug("fetchFromDB called");
         co_return user;
     } catch (const std::exception &ex) {
         Logger::get()->error("[fetchFromDB] DB exception: {}", ex.what());
@@ -66,7 +70,7 @@ AuthHandlers::fetchFromDB(AuthSessionData asd, std::shared_ptr<GameSession> sess
 }
 
 std::optional<AuthSessionData> AuthHandlers::ReadPacketFields(const std::shared_ptr<WoWPacket> &p) {
-    Packet::log_raw_payload("CMSG_AUTH_SESSION", p->serialize());
+    //Packet::log_raw_payload("CMSG_AUTH_SESSION", p->serialize());
     auto log = Logger::get();
     try {
         AuthSessionData asd;
@@ -87,7 +91,7 @@ std::optional<AuthSessionData> AuthHandlers::ReadPacketFields(const std::shared_
 
         std::string localChallenge_str = HexUtils::byte_array_to_hex(asd.LocalChallenge);
         std::string digest_str = HexUtils::byte_array_to_hex(asd.digest);
-        log->debug("[AuthHandlers][ReadPacketFields] Parsed AuthSessionData:\n"
+        log->trace("[AuthHandlers][ReadPacketFields] Parsed AuthSessionData:\n"
                    "  client_build: {}\n"
                    "  login_server_id: {}\n"
                    "  accountName: '{}'\n"
@@ -144,7 +148,7 @@ void AuthHandlers::sendAuthResponse(
         pkt.write_uint8(0);                            // Флаг миграции персонажей
     }
 
-    Packet::log_raw_payload("SMSG_AUTH_RESPONSE", pkt.serialize());
+    //Packet::log_raw_payload("SMSG_AUTH_RESPONSE", pkt.serialize());
     PacketUtils::send_packet_as<WoWPacket>(std::move(session), pkt);
 }
 
@@ -178,44 +182,13 @@ bool AuthHandlers::verifyClientDigest(const AuthSessionData &asd,
     SHA1::Digest computedDigest = sha.GetDigest();
 
     // 4. Логирование для отладки
-    log->debug("VerifyClientDigest details:");
-    log->debug("  Account: {}", asd.accountName);
-    log->debug("  LocalChallenge: {}", HexUtils::byte_array_to_hex(asd.LocalChallenge));
-    log->debug("  ServerSeed: {}", HexUtils::byte_array_to_hex(authSeed));
-    log->debug("  SessionKey: {}", HexUtils::byte_array_to_hex(account.sessionkey.value()));
-    log->debug("  Computed: {}", HexUtils::byte_array_to_hex(computedDigest));
-    log->debug("  Received: {}", HexUtils::byte_array_to_hex(asd.digest));
+    log->trace("VerifyClientDigest details:");
+    log->trace("  Account: {}", asd.accountName);
+    log->trace("  LocalChallenge: {}", HexUtils::byte_array_to_hex(asd.LocalChallenge));
+    log->trace("  ServerSeed: {}", HexUtils::byte_array_to_hex(authSeed));
+    log->trace("  SessionKey: {}", HexUtils::byte_array_to_hex(account.sessionkey.value()));
+    log->trace("  Computed: {}", HexUtils::byte_array_to_hex(computedDigest));
+    log->trace("  Received: {}", HexUtils::byte_array_to_hex(asd.digest));
 
     return computedDigest == asd.digest;
-}
-
-void AuthHandlers::sendAddonsInfo(std::shared_ptr<GameSession> session,
-                                  const std::vector<uint8_t> &addonData) {
-    // Формат пакета: [uint8: count][repeated: uint32: crc, uint8: flags]
-    WoWPacket pkt(WoWOpcodes::SMSG_ADDON_INFO);
-
-    // Простейшая реализация - без поддержки аддонов
-    pkt.write_uint8(0); // Количество аддонов = 0
-
-    Packet::log_raw_payload("SMSG_ADDON_INFO", pkt.serialize());
-    PacketUtils::send_packet_as<WoWPacket>(std::move(session), pkt);
-}
-
-void AuthHandlers::sendClientCacheVersion(std::shared_ptr<GameSession> session) {
-    WoWPacket pkt(WoWOpcodes::SMSG_CLIENTCACHE_VERSION);
-    pkt.write_uint32_le(session->server()->clientCacheVersion());
-
-    Packet::log_raw_payload("SMSG_CLIENTCACHE_VERSION", pkt.serialize());
-    PacketUtils::send_packet_as<WoWPacket>(std::move(session), pkt);
-}
-
-void AuthHandlers::sendTutorialsData(std::shared_ptr<GameSession> session) {
-    WoWPacket pkt(WoWOpcodes::SMSG_TUTORIAL_FLAGS);
-    // Отправляем 8 нулевых значений (64 байта)
-    for (int i = 0; i < 8; ++i) {
-        pkt.write_uint64_le(0);
-    }
-
-    Packet::log_raw_payload("SMSG_TUTORIAL_FLAGS", pkt.serialize());
-    PacketUtils::send_packet_as<WoWPacket>(std::move(session), pkt);
 }

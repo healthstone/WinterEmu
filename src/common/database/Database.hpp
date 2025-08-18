@@ -372,13 +372,17 @@ private:
                                  "ON CONFLICT (account_id, type) DO UPDATE SET "
                                  "time = EXCLUDED.time, data = EXCLUDED.data",
                                  relay_schema));
-
+        conn.prepare("SELECT_ACCOUNT_DATA",
+                     fmt::format("SELECT account_id, type, time, data FROM {}.account_data WHERE account_id = $1", relay_schema));
         conn.prepare("REPLACE_CHARACTER_ACCOUNT_DATA",
                      fmt::format("INSERT INTO {}.character_account_data (guid, type, time, data) "
                                  "VALUES ($1, $2, $3, $4) "
                                  "ON CONFLICT (guid, type) DO UPDATE SET "
                                  "time = EXCLUDED.time, data = EXCLUDED.data",
                                  relay_schema));
+
+        conn.prepare("SELECT_ACCOUNT_TUTORIALS",
+                     fmt::format("SELECT account_id, tut0, tut1, tut2, tut3, tut4, tut5, tut6, tut7 FROM {}.account_tutorial WHERE account_id = $1", relay_schema));
 
         txn.commit();
     }
