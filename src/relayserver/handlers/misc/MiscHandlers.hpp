@@ -10,7 +10,5 @@ namespace MiscHandlers {
     boost::asio::awaitable<void>
     handleUpdateAccountData(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p);
 
-    void handleCharacterEnum(const std::shared_ptr<GameSession> &session);
-
     void handleRealmSplitOpcode(const std::shared_ptr<GameSession> &session, std::shared_ptr<WoWPacket> p);
 }

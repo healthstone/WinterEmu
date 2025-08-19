@@ -3,6 +3,7 @@
 #include "Time/GameTime.hpp"
 #include "src/relayserver/handlers/authsession/AuthHandlers.hpp"
 #include "src/relayserver/handlers/misc/MiscHandlers.hpp"
+#include "src/relayserver/handlers/character/CharHandlers.hpp"
 
 void Handlers::dispatch(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p) {
     WoWOpcodes opcode = p->get_opcode();
@@ -38,7 +39,14 @@ void Handlers::dispatch(std::shared_ptr<GameSession> session, std::shared_ptr<Wo
             break;
         }
         case WoWOpcodes::CMSG_CHAR_ENUM: {
-            MiscHandlers::handleCharacterEnum(session);
+            auto ex = boost::asio::make_strand(session->socket().get_executor());
+            boost::asio::co_spawn(
+                    ex,
+                    [session]() -> boost::asio::awaitable<void> {
+                        co_await CharHandlers::handleCharacterEnum(session);
+                    },
+                    boost::asio::detached
+            );
             break;
         }
         case WoWOpcodes::CMSG_REALM_SPLIT: {

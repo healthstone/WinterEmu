@@ -1,6 +1,7 @@
 #include "AuthHandlers.hpp"
 
 #include "utils/HexUtils.hpp"
+#include "utils/utf8utils/UTF8Utils.hpp"
 
 using namespace AuthHandlers;
 
@@ -18,9 +19,10 @@ AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared
         co_return;
     }
 
-    session->setAccountName(authSessionData->accountName);
+    std::string accountNameUpper = UTF8Utils::to_uppercase(authSessionData->accountName);
+    session->setAccountName(accountNameUpper);
 
-    auto account = co_await fetchFromDB(authSessionData.value(), session);
+    auto account = co_await fetchFromDB(session);
     if (!account) {
         sendAuthResponse(session, ResponseCodes::AUTH_UNKNOWN_ACCOUNT);
         co_return;
@@ -55,11 +57,10 @@ AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared
     co_return;
 }
 
-boost::asio::awaitable<std::optional<AccountsRow>>
-AuthHandlers::fetchFromDB(AuthSessionData asd, std::shared_ptr<GameSession> session) {
+boost::asio::awaitable<std::optional<AccountsRow>> AuthHandlers::fetchFromDB(std::shared_ptr<GameSession> session) {
     try {
         PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
-        stmt.set_param(0, asd.accountName);
+        stmt.set_param(0, session->getAccountName());
         auto user = co_await session->server()->db()->execute_async_one<AccountsRow>(stmt);
         co_return user;
     } catch (const std::exception &ex) {
@@ -164,7 +165,7 @@ bool AuthHandlers::verifyClientDigest(const AuthSessionData &asd,
     std::array<uint8_t, 4> zero = {0, 0, 0, 0};
 
     // Ключевое изменение: используем исходное имя аккаунта (без преобразования в верхний регистр)
-    const std::string& accountName = asd.accountName;
+    const std::string &accountName = asd.accountName;
 
     // 3. Вычисление хеша (точная последовательность как в TrinityCore)
     SHA1 sha;

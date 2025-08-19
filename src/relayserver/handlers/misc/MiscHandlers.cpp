@@ -130,15 +130,6 @@ MiscHandlers::handleUpdateAccountData(std::shared_ptr<GameSession> session, std:
     }
 }
 
-/** CMSG_CHAR_ENUM **/
-void MiscHandlers::handleCharacterEnum(const std::shared_ptr<GameSession> &session) {
-    Logger::get()->debug("MiscHandlers::handleCharacterEnum - CMSG_CHAR_ENUM");
-
-    WoWPacket pkt(WoWOpcodes::SMSG_CHAR_ENUM);
-    pkt.write_uint8(0); // Количество персонажей (0)
-    session->send_packet(std::make_shared<WoWPacket>(pkt));
-}
-
 /** CMSG_REALM_SPLIT **/
 void MiscHandlers::handleRealmSplitOpcode(const std::shared_ptr<GameSession> &session, std::shared_ptr<WoWPacket> p) {
     Logger::get()->debug("MiscHandlers::handleRealmSplitOpcode - CMSG_REALM_SPLIT");

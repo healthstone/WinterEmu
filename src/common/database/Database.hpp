@@ -390,6 +390,17 @@ private:
         conn.prepare("SELECT_ACCOUNT_TUTORIALS",
                      fmt::format("SELECT account_id, tut0, tut1, tut2, tut3, tut4, tut5, tut6, tut7 FROM {}.account_tutorial WHERE account_id = $1", relay_schema));
 
+        conn.prepare("SELECT_CHAR_ENUM",
+                     fmt::format("SELECT c.guid, c.name, c.race, c.class, c.gender, c.skin, c.face, c.hairStyle, c.hairColor, c.facialStyle, c.level, c.zone, c.map, c.position_x, c.position_y, c.position_z, "
+                                 "gm.guildid, c.playerFlags, c.at_login, cp.entry, cp.modelid, cp.level, c.equipmentCache, cb.guid "
+                                 "FROM {}.characters AS c "
+                                 "LEFT JOIN {}.character_pet AS cp ON c.guid = cp.owner AND cp.slot = $1 "
+                                 "LEFT JOIN {}.guild_member AS gm ON c.guid = gm.guid "
+                                 "LEFT JOIN {}.character_banned AS cb ON c.guid = cb.guid AND cb.active = 1 "
+                                 "WHERE c.account = $2 AND c.deleteInfos_Name IS NULL "
+                                 "ORDER BY c.guid",
+                                 relay_schema, relay_schema, relay_schema, relay_schema));
+
         txn.commit();
     }
 

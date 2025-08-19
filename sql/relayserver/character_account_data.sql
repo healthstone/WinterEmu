@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS relay_server.character_account_data;
 
 CREATE TABLE relay_server.character_account_data
 (
-    guid UUID     NOT NULL,
+    guid INTEGER NOT NULL,
     type SMALLINT NOT NULL,
     time INTEGER  NOT NULL,
     data BYTEA    NOT NULL,

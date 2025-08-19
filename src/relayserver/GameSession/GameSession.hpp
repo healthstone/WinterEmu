@@ -6,6 +6,7 @@
 #include <deque>
 #include <atomic>
 
+#include "ObjectGuid/ObjectGuid.hpp"
 #include "src/relayserver/RelayServer.hpp"
 #include "packet/MessageBuffer.hpp"
 #include "packet/WoWPacket.hpp"
@@ -84,10 +85,17 @@ public:
     boost::uuids::uuid const& getAccountId() const { return accountId_; }
     void setAccountId(boost::uuids::uuid const &value) { accountId_ = value; }
     std::string const& getAccountName() const { return accountName_; }
-    void setAccountName(std::string const &value) { accountName_= value; }
+    void setAccountName(std::string const &value) { accountName_= value; }  // Убедиться, что передаем сразу в верхнем регистре
 
-    boost::uuids::uuid const& getCharacterId() const { return characterId_; }
-    //void setCharacterId(boost::uuids::uuid const &value) { characterId_ = value; }
+    ObjectGuid getObjectGuid() const { return characterGUID_; }
+    bool isLegitCharacterForAccount(ObjectGuid lowGUID)
+    {
+        return _legitCharacters.find(lowGUID) != _legitCharacters.end();
+    }
+    void addLegitCharacterForAccount(ObjectGuid lowGUID) {
+        _legitCharacters.insert(lowGUID);
+    }
+    //void setCharacterId(uint32_t const &value) { characterId_ = value; }
     std::string const& getCharacterName() const { return characterName_; }
     void setCharacterName(std::string const &value) { characterName_= value; }
 
@@ -142,8 +150,10 @@ private:
     // GameSection
     boost::uuids::uuid accountId_;
     std::string accountName_;
-    boost::uuids::uuid characterId_;
+    ObjectGuid characterGUID_;
     std::string characterName_;
+    // this stores the GUIDs of the characters who can login
+    GuidSet _legitCharacters;
 
     TimePoint m_lastPingTime;
     uint32_t m_overSpeedPings;

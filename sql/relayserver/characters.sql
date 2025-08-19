@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS relay_server.characters;
 
 CREATE TABLE relay_server.characters
 (
-    guid                 UUID PRIMARY KEY  DEFAULT gen_random_uuid(), -- Global Unique Identifier
+    guid                 SERIAL PRIMARY KEY,                          -- Изменено на SERIAL (uint32)
     account              UUID     NOT NULL,                           -- Account Identifier
     name                 VARCHAR(12) COLLATE "C" UNIQUE,              -- бинарное сравнение как utf8mb4_bin
     race                 SMALLINT NOT NULL DEFAULT 0,

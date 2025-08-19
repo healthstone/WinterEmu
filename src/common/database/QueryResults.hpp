@@ -12,6 +12,33 @@
 
 // === Структуры ===
 
+struct CharacterEnumRow {
+    uint32_t guid;                    // Изменено с UUID на uint32_t
+    std::string name;
+    uint8_t race;
+    uint8_t class_;
+    uint8_t gender;
+    uint8_t skin;
+    uint8_t face;
+    uint8_t hairStyle;
+    uint8_t hairColor;
+    uint8_t facialStyle;
+    uint8_t level;
+    uint16_t zone;
+    uint16_t map;
+    float position_x;
+    float position_y;
+    float position_z;
+    std::optional<uint32_t> guildid;  // Изменено с UUID на uint32_t
+    uint32_t playerFlags;
+    uint16_t at_login;
+    std::optional<uint32_t> pet_entry;
+    std::optional<uint32_t> pet_modelid;
+    std::optional<uint16_t> pet_level;
+    std::string equipmentCache;
+    std::optional<uint32_t> banned_guid; // Изменено с UUID на uint32_t
+};
+
 struct AddonRow {
     std::string name;
     uint32_t crc;
@@ -25,7 +52,7 @@ struct BannedAddonRow {
 };
 
 struct AccountTutorialRow {
-    boost::uuids::uuid account_id;
+    boost::uuids::uuid account_id;    // Оставляем UUID (не передается в пакетах)
     uint32_t tut0;
     uint32_t tut1;
     uint32_t tut2;
@@ -37,21 +64,21 @@ struct AccountTutorialRow {
 };
 
 struct CharacterAccountDataRow {
-    boost::uuids::uuid guid;
+    uint32_t guid;                    // Изменено с UUID на uint32_t
     uint8_t type;
     uint32_t time;
     std::vector<uint8_t> data;
 };
 
 struct AccountDataRow {
-    boost::uuids::uuid account_id;
+    boost::uuids::uuid account_id;    // Оставляем UUID (не передается в пакетах)
     uint8_t type;
     uint32_t time;
     std::vector<uint8_t> data;
 };
 
 struct AccountsRow {
-    boost::uuids::uuid id;
+    boost::uuids::uuid id;            // Оставляем UUID (не передается в пакетах)
     std::optional<std::string> name;
     std::optional<std::array<uint8_t, 32>> salt;
     std::optional<std::array<uint8_t, 32>> verifier;
@@ -102,6 +129,53 @@ template<typename T>
 struct PgRowMapper;
 
 template<>
+struct PgRowMapper<CharacterEnumRow> {
+    static CharacterEnumRow map(const pqxx::row& r) {
+        CharacterEnumRow row;
+
+        // GUID персонажа (теперь uint32_t)
+        row.guid = r["guid"].as<uint32_t>();
+
+        row.name = r["name"].as<std::string>();
+        row.race = static_cast<uint8_t>(r["race"].as<int>());
+        row.class_ = static_cast<uint8_t>(r["class"].as<int>());
+        row.gender = static_cast<uint8_t>(r["gender"].as<int>());
+        row.skin = static_cast<uint8_t>(r["skin"].as<int>());
+        row.face = static_cast<uint8_t>(r["face"].as<int>());
+        row.hairStyle = static_cast<uint8_t>(r["hairStyle"].as<int>());
+        row.hairColor = static_cast<uint8_t>(r["hairColor"].as<int>());
+        row.facialStyle = static_cast<uint8_t>(r["facialStyle"].as<int>());
+        row.level = static_cast<uint8_t>(r["level"].as<int>());
+        row.zone = static_cast<uint16_t>(r["zone"].as<int>());
+        row.map = static_cast<uint16_t>(r["map"].as<int>());
+        row.position_x = r["position_x"].as<float>();
+        row.position_y = r["position_y"].as<float>();
+        row.position_z = r["position_z"].as<float>();
+
+        // GUID гильдии (теперь uint32_t)
+        if (!r["guildid"].is_null()) {
+            row.guildid = r["guildid"].as<uint32_t>();
+        }
+
+        row.playerFlags = r["playerFlags"].as<uint32_t>();
+        row.at_login = static_cast<uint16_t>(r["at_login"].as<int>());
+
+        if (!r["entry"].is_null()) row.pet_entry = r["entry"].as<uint32_t>();
+        if (!r["modelid"].is_null()) row.pet_modelid = r["modelid"].as<uint32_t>();
+        if (!r["level"].is_null()) row.pet_level = static_cast<uint16_t>(r["level"].as<int>());
+
+        row.equipmentCache = r["equipmentCache"].as<std::string>();
+
+        // GUID бана (теперь uint32_t)
+        if (!r["guid"].is_null()) {
+            row.banned_guid = r["guid"].as<uint32_t>();
+        }
+
+        return row;
+    }
+};
+
+template<>
 struct PgRowMapper<AddonRow> {
     static AddonRow map(const pqxx::row& r) {
         AddonRow row;
@@ -135,7 +209,7 @@ struct PgRowMapper<AccountTutorialRow> {
     static AccountTutorialRow map(const pqxx::row& r) {
         AccountTutorialRow row;
 
-        // Парсинг UUID account_id
+        // Парсинг UUID account_id (оставляем UUID)
         std::string account_id_str = r["account_id"].as<std::string>();
         try {
             boost::uuids::string_generator gen;
@@ -163,14 +237,8 @@ struct PgRowMapper<CharacterAccountDataRow> {
     static CharacterAccountDataRow map(const pqxx::row& r) {
         CharacterAccountDataRow row;
 
-        // Парсинг UUID guid
-        std::string guid_str = r["guid"].as<std::string>();
-        try {
-            boost::uuids::string_generator gen;
-            row.guid = gen(guid_str);
-        } catch (const std::exception& e) {
-            throw std::runtime_error("PgRowMapper: invalid UUID string in 'guid' field: " + guid_str);
-        }
+        // GUID персонажа (теперь uint32_t)
+        row.guid = r["guid"].as<uint32_t>();
 
         // Тип данных (0-7)
         row.type = static_cast<uint8_t>(r["type"].as<int>());
@@ -193,7 +261,7 @@ struct PgRowMapper<AccountDataRow> {
     static AccountDataRow map(const pqxx::row& r) {
         AccountDataRow row;
 
-        // Парсинг UUID
+        // Парсинг UUID account_id (оставляем UUID)
         std::string account_id_str = r["account_id"].as<std::string>();
         try {
             boost::uuids::string_generator gen;
@@ -284,8 +352,7 @@ struct PgRowMapper<AccountsRow> {
     static AccountsRow map(const pqxx::row &r) {
         AccountsRow row;
 
-        // Парсим UUID строку
-        // Преобразуем поле id из строки в boost::uuids::uuid
+        // Парсим UUID строку (оставляем UUID)
         std::string id_str = r["id"].as<std::string>();
         try {
             boost::uuids::string_generator gen;

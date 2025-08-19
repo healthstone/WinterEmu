@@ -2,9 +2,9 @@ DROP TABLE IF EXISTS relay_server.character_pet;
 
 CREATE TABLE relay_server.character_pet
 (
-    id             UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
-    entry          INTEGER     NOT NULL DEFAULT 0,
-    owner          UUID        NOT NULL, -- Account/Character Identifier
+    id             SERIAL PRIMARY KEY,
+    entry          INTEGER NOT NULL DEFAULT 0,
+    owner          INTEGER NOT NULL,              -- Изменено на INTEGER (ссылка на characters.guid)
 
     modelid        INTEGER              DEFAULT 0,
     CreatedBySpell INTEGER     NOT NULL DEFAULT 0,
