@@ -35,6 +35,8 @@ public:
 
     void close();
 
+    void cleanBeforeDelete();
+
     bool isOpened() const { return !closed_; }
 
     void send_packet(const std::shared_ptr<const WoWPacket>& packet);

@@ -18,6 +18,7 @@ void GameSession::start() {
 
 void GameSession::close() {
     if (closed_.exchange(true)) return;
+    cleanBeforeDelete();
 
     auto log = Logger::get();
 
@@ -44,6 +45,13 @@ void GameSession::close() {
     if (server_) {
         server_->remove_session(shared_from_this());
     }
+}
+
+void GameSession::cleanBeforeDelete() {
+    for (auto & i : m_accountData)
+        i = AccountData();
+    memset(m_Tutorials, 0, sizeof(uint32_t) * MAX_ACCOUNT_TUTORIAL_VALUES);
+    _legitCharacters.clear();
 }
 
 void GameSession::do_read() {
