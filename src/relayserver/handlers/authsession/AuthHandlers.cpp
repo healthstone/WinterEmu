@@ -89,7 +89,7 @@ std::optional<AuthSessionData> AuthHandlers::ReadPacketFields(const std::shared_
 
         std::string localChallenge_str = HexUtils::byte_array_to_hex(asd.LocalChallenge);
         std::string digest_str = HexUtils::byte_array_to_hex(asd.digest);
-        log->trace("[AuthHandlers][ReadPacketFields] Parsed AuthSessionData:\n"
+        log->debug("[AuthHandlers][ReadPacketFields] Parsed AuthSessionData:\n"
                    "  client_build: {}\n"
                    "  login_server_id: {}\n"
                    "  accountName: '{}'\n"

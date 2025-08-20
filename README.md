@@ -31,6 +31,9 @@ std::string db_port = std::getenv("DB_PORT") ? std::getenv("DB_PORT") : "5432";
 std::string db_user = std::getenv("DB_USER") ? std::getenv("DB_USER") : "postgres";
 std::string db_password = std::getenv("DB_PASSWORD") ? std::getenv("DB_PASSWORD") : "postgres";
 std::string db_name = std::getenv("DB_NAME") ? std::getenv("DB_NAME") : "postgres";
+
+std::string auth_schema = std::getenv("AUTH_SCHEMA") ? std::string(std::getenv("AUTH_SCHEMA")) : "auth_server";
+std::string relay_schema = std::getenv("RELAY_SCHEMA") ? std::string(std::getenv("RELAY_SCHEMA")) : "relay_server";
 ```
 
 **AuthServer:**
@@ -53,7 +56,7 @@ unsigned int network_threads = std::getenv("NODE_NETWORK_THREADS") ?: default: m
 
 ```cpp
 unsigned int async_threads = std::getenv("NODE_DB_ASYNC_THREADS");
-int port = std::getenv("RELAY_PORT") ? std::stoi(std::getenv("RELAY_PORT")) : 8086;
+int port = std::getenv("RELAY_PORT") ? std::stoi(std::getenv("NODE_PORT")) : 8086;
 unsigned int network_threads = std::getenv("NODE_NETWORK_THREADS") ?: default: max threads - async db threads - 1;
 ```
 
