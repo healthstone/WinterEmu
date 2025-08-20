@@ -141,9 +141,9 @@ void MiscHandlers::handleRealmSplitOpcode(const std::shared_ptr<GameSession> &se
     pkt.write_uint32_le(unk);
     pkt.write_uint32_le(0x00000000);    // realm split state
     // split states:
-    // 0x0 realm normal
-    // 0x1 realm split
-    // 0x2 realm split pending
+    // 0x0 realm NORMAL (0)	Стабильный	Создавайте персонажей и играйте без опасений.
+    // 0x1 realm SPLIT (1)	Был объединен (архивный)	Ваши персонажи уже перенесены. Выбирайте новый сервер, чтобы играть.
+    // 0x2 realm SPLIT_PENDING (2)	Запланирован к объединению	Не создавайте здесь новых персонажей. Идите на сервер-приемник.
     pkt.write_string_nt_be(split_date);
     session->send_packet(std::make_shared<WoWPacket>(pkt));
 }
