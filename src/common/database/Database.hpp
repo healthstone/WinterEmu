@@ -20,6 +20,9 @@
 #include <boost/asio/this_coro.hpp>
 
 #include "QueryResults.hpp"
+#include "AuthQueryResults.hpp"
+#include "DBCQueryResults.hpp"
+#include "RelayQueryResults.hpp"
 #include "PreparedStatement.hpp"
 #include "Logger.hpp"
 
@@ -347,8 +350,16 @@ private:
 
     void prepare_all(pqxx::connection &conn) {
         pqxx::work txn(conn);
+
+        prepareAuthSchema(conn);
+        prepareRelaySchema(conn);
+        prepareDBCSchema(conn);
+
+        txn.commit();
+    }
+
+    void prepareAuthSchema(pqxx::connection &conn) {
         std::string auth_schema = std::getenv("AUTH_SCHEMA") ? std::string(std::getenv("AUTH_SCHEMA")) : "auth_server";
-        std::string relay_schema = std::getenv("RELAY_SCHEMA") ? std::string(std::getenv("RELAY_SCHEMA")) : "relay_server";
 
         conn.prepare("SELECT_ACCOUNT_BY_USERNAME",
                      fmt::format("SELECT id, username, salt, verifier, session_key_auth, email, created_at FROM {}.accounts WHERE username = $1", auth_schema));
@@ -364,7 +375,10 @@ private:
                      fmt::format("UPDATE {}.accounts SET session_key_auth = decode($1, 'hex'), last_ip = $2, last_login = NOW() WHERE username = $3", auth_schema));
         conn.prepare("INSERT_REALM_CHARACTERS",
                      fmt::format("INSERT INTO {}.realmcharacters (realmid, acctid, numchars) VALUES ($1, $2, $3)", auth_schema));
+    }
 
+    void prepareRelaySchema(pqxx::connection &conn) {
+        std::string relay_schema = std::getenv("RELAY_SCHEMA") ? std::string(std::getenv("RELAY_SCHEMA")) : "relay_server";
 
         conn.prepare("REPLACE_ACCOUNT_DATA",
                      fmt::format("INSERT INTO {}.account_data (account_id, type, time, data) "
@@ -400,8 +414,28 @@ private:
                                  "WHERE c.account = $2 AND c.deleteInfos_Name IS NULL "
                                  "ORDER BY c.guid",
                                  relay_schema, relay_schema, relay_schema, relay_schema));
+    }
 
-        txn.commit();
+    void prepareDBCSchema(pqxx::connection &conn) {
+        std::string dbc_schema = std::getenv("DBC_SCHEMA") ? std::string(std::getenv("DBC_SCHEMA")) : "dbc";
+
+        conn.prepare("SELECT_DBC_CHRCLASSES",
+                     fmt::format("SELECT "
+                                 "id, field01, displaypower, petnametoken, "
+                                 "name_lang_enus, name_lang_engb, name_lang_kokr, name_lang_frfr, name_lang_dede, "
+                                 "name_lang_encn, name_lang_zhcn, name_lang_entw, name_lang_zhtw, "
+                                 "name_lang_eses, name_lang_esmx, name_lang_ruru, name_lang_ptpt, name_lang_ptbr, name_lang_itit, "
+                                 "name_lang_unk, name_lang_mask, "
+                                 "name_female_lang_enus, name_female_lang_engb, name_female_lang_kokr, name_female_lang_frfr, name_female_lang_dede, "
+                                 "name_female_lang_encn, name_female_lang_zhcn, name_female_lang_entw, name_female_lang_zhtw, "
+                                 "name_female_lang_eses, name_female_lang_esmx, name_female_lang_ruru, name_female_lang_ptpt, name_female_lang_ptbr, name_female_lang_itit, "
+                                 "name_female_lang_unk, name_female_lang_mask, "
+                                 "name_male_lang_enus, name_male_lang_engb, name_male_lang_kokr, name_male_lang_frfr, name_male_lang_dede, "
+                                 "name_male_lang_encn, name_male_lang_zhcn, name_male_lang_entw, name_male_lang_zhtw, "
+                                 "name_male_lang_eses, name_male_lang_esmx, name_male_lang_ruru, name_male_lang_ptpt, name_male_lang_ptbr, name_male_lang_itit, "
+                                 "name_male_lang_unk, name_male_lang_mask, "
+                                 "filename, spellclassset, flags, cinematicsequenceid, required_expansion "
+                                 "FROM {}.dbc_chrclasses", dbc_schema));
     }
 
 private:

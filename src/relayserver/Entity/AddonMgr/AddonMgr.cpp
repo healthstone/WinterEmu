@@ -4,6 +4,10 @@
 #include "Cryptography/CryptoHash.hpp"
 
 AddonMgr::~AddonMgr() {
+    cleanUpBeforeDelete();
+}
+
+void AddonMgr::cleanUpBeforeDelete() {
     knownAddons_.clear();
     bannedAddonsVector_.clear();
 }

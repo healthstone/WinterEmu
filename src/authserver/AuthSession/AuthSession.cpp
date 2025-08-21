@@ -3,7 +3,7 @@
 #include "src/authserver/SessionMode/ChallengeStage/reader/ReaderChallengeStage.hpp"
 #include "src/authserver/SessionMode/LogonProofStage/reader/ReaderLogonProofStage.hpp"
 #include "src/authserver/SessionMode/ReconnectProofStage/reader/ReaderReconnectProofStage.hpp"
-#include "src/authserver/SessionMode/RealmStage//reader/ReaderRealmStage.hpp"
+#include "src/authserver/SessionMode/RealmStage/reader/ReaderRealmStage.hpp"
 #include <iostream>
 
 using boost::asio::ip::tcp;

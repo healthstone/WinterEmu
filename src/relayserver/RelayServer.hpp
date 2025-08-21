@@ -8,6 +8,7 @@
 #include "Database.hpp"
 #include "src/relayserver/Entity/NodeManager/NodeManager.hpp"
 #include "src/relayserver/Entity/AddonMgr/AddonMgr.hpp"
+#include "DBCMgr/DBCMgr.hpp"
 
 class GameSession;
 
@@ -26,6 +27,7 @@ public:
 
     NodeManager* get_node_manager() const { return node_manager_.get(); }
     AddonMgr* getAddonMgr() const { return addon_manager_.get(); }
+    DBCMgr* getDBCMgr() const { return dbc_manager_.get(); }
     std::shared_ptr<Database> db() { return db_; }
 
     uint32_t clientCacheVersion() const {
@@ -39,6 +41,7 @@ private:
 
     std::unique_ptr<NodeManager> node_manager_;
     std::unique_ptr<AddonMgr> addon_manager_;
+    std::unique_ptr<DBCMgr> dbc_manager_;
     std::unordered_set<std::shared_ptr<GameSession>> sessions_;
     std::mutex sessions_mutex_;
 

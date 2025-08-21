@@ -1,6 +1,3 @@
-#ifndef CLIENT_BUILD_INFO_H
-#define CLIENT_BUILD_INFO_H
-
 #include <array>
 #include <string_view>
 #include <vector>
@@ -60,5 +57,3 @@ namespace ClientBuild
     void Clear();
     Info const* GetBuildInfo(uint32_t build);
 }
-
-#endif // CLIENT_BUILD_INFO_H

@@ -43,6 +43,14 @@ void RelayServer::start_accept() {
 void RelayServer::stop() {
     auto log = Logger::get();
 
+    if (dbc_manager_) {
+        dbc_manager_->cleanUpBeforeDelete();
+    }
+
+    if (addon_manager_) {
+        addon_manager_->cleanUpBeforeDelete();
+    }
+
     if (node_manager_) {
         node_manager_->stop_all();
     }
@@ -97,6 +105,9 @@ void RelayServer::log_session_count() {
 
 void RelayServer::init(unsigned int network_threads) {
     // Загружаем различные данные
+    dbc_manager_ = std::make_unique<DBCMgr>(shared_from_this());
+    dbc_manager_->initialize_for_relay();
+
     node_manager_ = std::make_unique<NodeManager>(io_context_);
     node_manager_->add_connectors(1, "127.0.0.1", 8086, network_threads);
     //node_manager_->start_all();

@@ -1,6 +1,7 @@
 #include "CharHandlers.hpp"
 #include "enums/PetDefines.hpp"
 #include "enums/Gender.hpp"
+#include "enums/DBCStructure.h"
 
 /** CMSG_CHAR_ENUM **/
 boost::asio::awaitable<void>
@@ -91,6 +92,7 @@ boost::asio::awaitable<std::vector<CharacterEnumRow>> CharHandlers::fetchFromDB(
 
 /** CMSG_CHAR_CREATE **/
 void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, const std::shared_ptr<WoWPacket> &p) {
+    auto log = Logger::get();
     try {
         /// User specified variables
         std::string name1    = p->read_string_nt_be();
@@ -120,9 +122,23 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
                              "{} CharCount", name1, race2, class3, gender4, skin5, face6, hairStyle7, hairColor8,
                              facialHair9, outfitId10, charCount11);
 
+        ChrClassesDBC const* classEntry = session->server()->getDBCMgr()->GetChrClassesDBC(class3);
+        if (!classEntry)
+        {
+            log->error("CharHandlers::handleCharacterCreate: Class ({}) not found in DBC while creating new char for account (ID: {}): wrong DBC files or cheater?", class3, session->getAccountName());
+            sendCharCreate(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
+            return;
+        }
 
     } catch (const std::exception &ex) {
         Logger::get()->error("[CharHandlers::handleCharacterCreate] DB exception: {}", ex.what());
         return;
     }
+}
+
+void CharHandlers::sendCharCreate(std::shared_ptr<GameSession> session, WoWOpcodes opcode, ResponseCodes result)
+{
+    WoWPacket pkt(opcode);
+    pkt.write_uint8(static_cast<uint8_t>(result));
+    session->send_packet(std::make_shared<WoWPacket>(pkt));
 }

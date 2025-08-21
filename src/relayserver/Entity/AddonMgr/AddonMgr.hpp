@@ -27,6 +27,8 @@ public:
 
     ~AddonMgr();
 
+    void cleanUpBeforeDelete();
+
     void loadFromDB();
     std::optional<SavedAddon> getAddonInfo(const std::string& name) const;
     const std::vector<BannedAddon>& getBannedAddons() const { return bannedAddonsVector_; }

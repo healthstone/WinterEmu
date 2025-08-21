@@ -108,13 +108,16 @@ add_executable(tests
 
 target_link_libraries(tests PRIVATE
         Boost::boost Boost::system Boost::locale
-        Catch2::Catch2WithMain
-        OpenSSL::Crypto
+        ${PostgreSQL_LIBRARIES}
+        ${PQXX_LIBRARIES}
         spdlog::spdlog
+        OpenSSL::Crypto
 )
 
 target_include_directories(tests PRIVATE
         ${COMMON_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}
         ${Boost_INCLUDE_DIRS}
+        ${PostgreSQL_INCLUDE_DIRS}
+        ${PQXX_INCLUDE_DIRS}
 )
