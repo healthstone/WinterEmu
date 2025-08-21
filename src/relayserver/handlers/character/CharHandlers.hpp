@@ -4,7 +4,9 @@
 
 namespace CharHandlers {
     boost::asio::awaitable<void>
-    handleCharacterEnum(const std::shared_ptr<GameSession> &session);
+    handleCharacterEnum(std::shared_ptr<GameSession> session);
 
     boost::asio::awaitable<std::vector<CharacterEnumRow>> fetchFromDB(std::shared_ptr<GameSession> session);
+
+    void handleCharacterCreate(std::shared_ptr<GameSession> session, const std::shared_ptr<WoWPacket> &p);
 }

@@ -49,6 +49,10 @@ void Handlers::dispatch(std::shared_ptr<GameSession> session, std::shared_ptr<Wo
             );
             break;
         }
+        case WoWOpcodes::CMSG_CHAR_CREATE: {
+            CharHandlers::handleCharacterCreate(session, p);
+            break;
+        }
         case WoWOpcodes::CMSG_REALM_SPLIT: {
             MiscHandlers::handleRealmSplitOpcode(session, p);
             break;

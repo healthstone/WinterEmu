@@ -1,9 +1,10 @@
 #include "CharHandlers.hpp"
 #include "enums/PetDefines.hpp"
+#include "enums/Gender.hpp"
 
 /** CMSG_CHAR_ENUM **/
 boost::asio::awaitable<void>
-CharHandlers::handleCharacterEnum(const std::shared_ptr<GameSession> &session) {
+CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
     Logger::get()->debug("CharHandlers::handleCharacterEnum - CMSG_CHAR_ENUM");
 
     WoWPacket pkt(WoWOpcodes::SMSG_CHAR_ENUM);
@@ -83,7 +84,45 @@ boost::asio::awaitable<std::vector<CharacterEnumRow>> CharHandlers::fetchFromDB(
         auto rows = co_await session->server()->db()->execute_async_many<CharacterEnumRow>(stmt);
         co_return rows;
     } catch (const std::exception &ex) {
-        Logger::get()->error("[fetchFromDB] DB exception: {}", ex.what());
+        Logger::get()->error("[CharHandlers::fetchFromDB] DB exception: {}", ex.what());
         co_return std::vector<CharacterEnumRow>{};
+    }
+}
+
+/** CMSG_CHAR_CREATE **/
+void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, const std::shared_ptr<WoWPacket> &p) {
+    try {
+        /// User specified variables
+        std::string name1    = p->read_string_nt_be();
+        uint8_t race2        = p->read_uint8();
+        uint8_t class3       = p->read_uint8();
+        uint8_t gender4      = p->read_uint8();
+        uint8_t skin5        = p->read_uint8();
+        uint8_t face6        = p->read_uint8();
+        uint8_t hairStyle7   = p->read_uint8();
+        uint8_t hairColor8   = p->read_uint8();
+        uint8_t facialHair9  = p->read_uint8();
+        uint8_t outfitId10    = p->read_uint8();
+        /// Server side data
+        uint8_t charCount11   = 0;
+
+        Logger::get()->debug("Create character:\n"
+                             "{} name\n"
+                             "{} Race\n"
+                             "{} Class\n"
+                             "{} Gender\n"
+                             "{} Skin\n"
+                             "{} Face\n"
+                             "{} HairStyle\n"
+                             "{} HairColor\n"
+                             "{} FacialHair\n"
+                             "{} OutfitId\n"
+                             "{} CharCount", name1, race2, class3, gender4, skin5, face6, hairStyle7, hairColor8,
+                             facialHair9, outfitId10, charCount11);
+
+
+    } catch (const std::exception &ex) {
+        Logger::get()->error("[CharHandlers::handleCharacterCreate] DB exception: {}", ex.what());
+        return;
     }
 }
