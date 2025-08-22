@@ -10,7 +10,7 @@ namespace AuthHandlers {
 
     std::optional<AuthSessionData> ReadPacketFields(const std::shared_ptr<WoWPacket> &p);
 
-    boost::asio::awaitable<std::optional<AccountsRow>> fetchFromDB(std::shared_ptr<GameSession> session);
+    boost::asio::awaitable<std::optional<AccountsRow>> fetchFromDB(std::shared_ptr<GameSession> session, const std::string &accName);
 
     void sendAuthResponse(std::shared_ptr<GameSession> session, ResponseCodes code);
 

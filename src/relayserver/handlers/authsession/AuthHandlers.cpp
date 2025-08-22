@@ -20,15 +20,12 @@ AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared
     }
 
     std::string accountNameUpper = UTF8Utils::to_uppercase(authSessionData->accountName);
-    session->setAccountName(accountNameUpper);
-
-    auto account = co_await fetchFromDB(session);
+    auto account = co_await fetchFromDB(session, accountNameUpper);
     if (!account) {
         sendAuthResponse(session, ResponseCodes::AUTH_UNKNOWN_ACCOUNT);
         co_return;
     }
-
-    session->setAccountId(account->id);
+    session->setAccount(account.value());
 
     // Ключевое изменение: инициализация шифрования ДО проверки дайджеста
     session->initCrypt(account->session_key_auth.value());
@@ -57,10 +54,10 @@ AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared
     co_return;
 }
 
-boost::asio::awaitable<std::optional<AccountsRow>> AuthHandlers::fetchFromDB(std::shared_ptr<GameSession> session) {
+boost::asio::awaitable<std::optional<AccountsRow>> AuthHandlers::fetchFromDB(std::shared_ptr<GameSession> session, const std::string &accName) {
     try {
         PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
-        stmt.set_param(0, session->getAccountName());
+        stmt.set_param(0, accName);
         auto user = co_await session->server()->db()->execute_async_one<AccountsRow>(stmt);
         co_return user;
     } catch (const std::exception &ex) {

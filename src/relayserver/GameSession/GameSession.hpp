@@ -2,6 +2,7 @@
 
 #include <boost/asio.hpp>
 #include <memory>
+#include <utility>
 #include <vector>
 #include <deque>
 #include <atomic>
@@ -84,11 +85,6 @@ public:
     uint32_t getLatency() const { return m_latency; }
     void setLatency(uint32_t latency) { m_latency = latency; }
 
-    boost::uuids::uuid const& getAccountId() const { return accountId_; }
-    void setAccountId(boost::uuids::uuid const &value) { accountId_ = value; }
-    std::string const& getAccountName() const { return accountName_; }
-    void setAccountName(std::string const &value) { accountName_= value; }  // Убедиться, что передаем сразу в верхнем регистре
-
     ObjectGuid getObjectGuid() const { return characterGUID_; }
     bool isLegitCharacterForAccount(ObjectGuid lowGUID)
     {
@@ -97,11 +93,10 @@ public:
     void addLegitCharacterForAccount(ObjectGuid lowGUID) {
         _legitCharacters.insert(lowGUID);
     }
-    //void setCharacterId(uint32_t const &value) { characterId_ = value; }
-    std::string const& getCharacterName() const { return characterName_; }
-    void setCharacterName(std::string const &value) { characterName_= value; }
 
     // Account Data
+    AccountsRow* getAccount() { return &account_; }
+    void setAccount(AccountsRow acc) { account_ = std::move(acc); }
     AccountData* getAccountData(AccountDataType type) { return &m_accountData[type]; }
     void sendAccountDataTimes(uint32_t mask);
     boost::asio::awaitable<void> setAccountData(AccountDataType type, time_t tm, std::string const& data);
@@ -150,10 +145,8 @@ private:
     std::array<uint8_t, 4> clientSeed_;
 
     // GameSection
-    boost::uuids::uuid accountId_;
-    std::string accountName_;
+    AccountsRow account_;
     ObjectGuid characterGUID_;
-    std::string characterName_;
     // this stores the GUIDs of the characters who can login
     GuidSet _legitCharacters;
 

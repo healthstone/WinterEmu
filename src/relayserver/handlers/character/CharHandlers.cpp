@@ -81,7 +81,7 @@ boost::asio::awaitable<std::vector<CharacterEnumRow>> CharHandlers::fetchFromDB(
     try {
         PreparedStatement stmt("SELECT_CHAR_ENUM");
         stmt.set_param(0, PetSaveMode::PET_SAVE_AS_CURRENT);
-        stmt.set_param(1, session->getAccountId());
+        stmt.set_param(1, session->getAccount()->id);
         auto rows = co_await session->server()->db()->execute_async_many<CharacterEnumRow>(stmt);
         co_return rows;
     } catch (const std::exception &ex) {
@@ -127,7 +127,7 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
         ChrRacesDBC const* raceEntry = dbcMgr->getChrRacesDBC(race2);
         if (!raceEntry)
         {
-            log->error("CharHandlers::handleCharacterCreate: Race ({}) not found in DBC while creating new char for account (login: {}): wrong DBC files or cheater?", race2, session->getAccountName());
+            log->error("CharHandlers::handleCharacterCreate: Race ({}) not found in DBC while creating new char for account (login: {}): wrong DBC files or cheater?", race2, session->getAccount()->username.value());
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
             return;
         }
@@ -135,7 +135,7 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
         ChrClassesDBC const* classEntry = dbcMgr->getChrClassesDBC(class3);
         if (!classEntry)
         {
-            log->error("CharHandlers::handleCharacterCreate: Class ({}) not found in DBC while creating new char for account (login: {}): wrong DBC files or cheater?", class3, session->getAccountName());
+            log->error("CharHandlers::handleCharacterCreate: Class ({}) not found in DBC while creating new char for account (login: {}): wrong DBC files or cheater?", class3, session->getAccount()->username.value());
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
             return;
         }

@@ -20,7 +20,7 @@ boost::asio::awaitable<void> GameSession::setAccountData(AccountDataType type, t
     try {
         if ((1 << type) & GLOBAL_CACHE_MASK) {
             PreparedStatement stmt("REPLACE_ACCOUNT_DATA");
-            stmt.set_param(0, getAccountId());
+            stmt.set_param(0, getAccount()->id);
             stmt.set_param(1, type);
             stmt.set_param(2, uint32_t(tm));
             stmt.set_param(3, data);
@@ -53,7 +53,7 @@ boost::asio::awaitable<void> GameSession::loadAccountData(uint32_t mask) {
                 m_accountData[i] = AccountData();
 
         PreparedStatement stmt("SELECT_ACCOUNT_DATA");
-        stmt.set_param(0, getAccountId());
+        stmt.set_param(0, getAccount()->id);
         auto rows = co_await server()->db()->execute_async_many<AccountDataRow>(stmt);
         if (!rows.empty()) {
             for (const auto &row: rows) {
@@ -89,7 +89,7 @@ boost::asio::awaitable<void> GameSession::loadTutorialsData() {
         memset(m_Tutorials, 0, sizeof(uint32_t) * MAX_ACCOUNT_TUTORIAL_VALUES);
 
         PreparedStatement stmt("SELECT_ACCOUNT_TUTORIALS");
-        stmt.set_param(0, getAccountId());
+        stmt.set_param(0, getAccount()->id);
         auto row = co_await server()->db()->execute_async_one<AccountTutorialRow>(stmt);
         if (row) {
             m_Tutorials[0] = row->tut0;
@@ -212,20 +212,20 @@ void GameSession::readAddonsInfo(const std::vector<uint8_t>& data) {
                         addon.Status = Addons::SecureAddonInfo::BANNED;
                         log->warn("Addon: {}: modified (CRC: 0x{:x} != 0x{:x}) - accountID {}",
                                   addon.Name, savedAddon->CRC, addon.PublicKeyCrc,
-                                  to_string(getAccountId()));
+                                  to_string(getAccount()->id));
                     } else {
                         addon.Status = Addons::SecureAddonInfo::SECURE_HIDDEN;
                     }
                 } else {
                     addon.Status = Addons::SecureAddonInfo::SECURE_HIDDEN;
                     log->trace("Addon: {}: validated (CRC: 0x{:x}) - accountID {}",
-                               addon.Name, savedAddon->CRC, to_string(getAccountId()));
+                               addon.Name, savedAddon->CRC, to_string(getAccount()->id));
                 }
             } else {
                 // Незарегистрированные аддоны всегда баним
                 addon.Status = Addons::SecureAddonInfo::BANNED;
                 log->warn("Addon: {}: not registered - accountId {}",
-                          addon.Name, to_string(getAccountId()));
+                          addon.Name, to_string(getAccount()->id));
             }
 
             _addons.SecureAddons.push_back(std::move(addon));
