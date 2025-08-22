@@ -2,6 +2,7 @@
 #include "enums/PetDefines.hpp"
 #include "enums/Gender.hpp"
 #include "enums/DBCStructure.h"
+#include "utils/utf8utils/UTF8Utils.hpp"
 
 /** CMSG_CHAR_ENUM **/
 boost::asio::awaitable<void>
@@ -123,20 +124,75 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
                              facialHair9, outfitId10, charCount11);
 
         auto dbcMgr = session->server()->getDBCMgr();
+        uint32_t m_expansion = session->getAccount()->expansion ? session->getAccount()->expansion.value() : 2; // default WoTLK addon = 2
+        std::string m_accountName = session->getAccount()->username.value();
 
         ChrRacesDBC const* raceEntry = dbcMgr->getChrRacesDBC(race2);
         if (!raceEntry)
         {
-            log->error("CharHandlers::handleCharacterCreate: Race ({}) not found in DBC while creating new char for account (login: {}): wrong DBC files or cheater?", race2, session->getAccount()->username.value());
+            log->error("CharHandlers::handleCharacterCreate: Race ({}) not found in DBC while creating new char for account:[{}] wrong DBC files or cheater?",
+                       race2, m_accountName);
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
+            return;
+        }
+
+        // prevent character creating Expansion race without Expansion account
+        if (raceEntry->RequiredExpansion > m_expansion)
+        {
+            log->error("CharHandlers::handleCharacterCreate: Expansion {} account:[{}] tried to Create character with expansion {} race ({})",
+                       m_expansion, m_accountName, raceEntry->RequiredExpansion, race2);
+            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_EXPANSION);
             return;
         }
 
         ChrClassesDBC const* classEntry = dbcMgr->getChrClassesDBC(class3);
         if (!classEntry)
         {
-            log->error("CharHandlers::handleCharacterCreate: Class ({}) not found in DBC while creating new char for account (login: {}): wrong DBC files or cheater?", class3, session->getAccount()->username.value());
+            log->error("CharHandlers::handleCharacterCreate: Class ({}) not found in DBC while creating new char for account:[{}] wrong DBC files or cheater?",
+                       class3, m_accountName);
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
+            return;
+        }
+
+        // prevent character creating Expansion class without Expansion account
+        if (classEntry->RequiredExpansion > m_expansion)
+        {
+            log->error("CharHandlers::handleCharacterCreate: Expansion {} account:[{}] tried to Create character with expansion {} class ({})",
+                       m_expansion, m_accountName, classEntry->RequiredExpansion, class3);
+            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_EXPANSION_CLASS);
+            return;
+        }
+
+        // TC RBAC_PERM_SKIP_CHECK_CHARACTER_CREATION_RACEMASK
+        if (raceEntry->Alliance == CHRRACES_ALLIANCE_TYPE_NOT_PLAYABLE || raceEntry->HasFlag(CHRRACES_FLAGS_NOT_PLAYABLE))
+        {
+            log->error("CharHandlers::handleCharacterCreate: Race ({}) was not playable but requested while creating new char for account:[{}] wrong DBC files or cheater?",
+                       race2, m_accountName);
+            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
+            return;
+        }
+
+        //TC CONFIG_CHARACTER_CREATING_DISABLED_RACEMASK
+        uint32_t raceMaskDisabled = 0;
+        if ((1 << (race2 - 1)) & raceMaskDisabled)
+        {
+            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
+            return;
+        }
+
+        //TC CONFIG_CHARACTER_CREATING_DISABLED_CLASSMASK
+        uint32_t classMaskDisabled = 0;
+        if ((1 << (class3 - 1)) & classMaskDisabled)
+        {
+            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
+            return;
+        }
+
+        // prevent character creating with invalid name
+        if (!UTF8Utils::normalizePlayerName(name1))
+        {
+            log->error("CharHandlers::handleCharacterCreate: Account:[{}] but tried to Create character with empty [name] ", m_accountName);
+            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_NAME_NO_NAME);
             return;
         }
 

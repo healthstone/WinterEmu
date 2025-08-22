@@ -1,47 +1,12 @@
+#include <algorithm>
 #include "UTF8Utils.hpp"
+#include "deps/utf8cpp/utf8.h"
 
 namespace UTF8Utils {
 
-    // Проверка UTF-8 по базовым правилам
     bool is_valid_utf8(const std::string &str) {
-        const unsigned char *bytes = reinterpret_cast<const unsigned char *>(str.c_str());
-        size_t len = str.size();
-        size_t i = 0;
-
-        while (i < len) {
-            unsigned char c = bytes[i];
-
-            if (c <= 0x7F) {
-                // ASCII 0xxxxxxx
-                i += 1;
-            } else if ((c & 0xE0) == 0xC0) {
-                // 2-byte sequence 110xxxxx 10xxxxxx
-                if (i + 1 >= len) return false;
-                if ((bytes[i + 1] & 0xC0) != 0x80) return false;
-                if (c < 0xC2) return false; // overlong encoding check
-                i += 2;
-            } else if ((c & 0xF0) == 0xE0) {
-                // 3-byte sequence 1110xxxx 10xxxxxx 10xxxxxx
-                if (i + 2 >= len) return false;
-                if ((bytes[i + 1] & 0xC0) != 0x80) return false;
-                if ((bytes[i + 2] & 0xC0) != 0x80) return false;
-                if (c == 0xE0 && bytes[i + 1] < 0xA0) return false; // overlong encoding
-                if (c == 0xED && bytes[i + 1] >= 0xA0) return false; // surrogate halves
-                i += 3;
-            } else if ((c & 0xF8) == 0xF0) {
-                // 4-byte sequence 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-                if (i + 3 >= len) return false;
-                if ((bytes[i + 1] & 0xC0) != 0x80) return false;
-                if ((bytes[i + 2] & 0xC0) != 0x80) return false;
-                if ((bytes[i + 3] & 0xC0) != 0x80) return false;
-                if (c == 0xF0 && bytes[i + 1] < 0x90) return false; // overlong
-                if (c > 0xF4) return false; // > U+10FFFF
-                i += 4;
-            } else {
-                return false;
-            }
-        }
-        return true;
+        std::wstring wname;
+        return Utf8toWStr(str, wname);
     }
 
     // Простое lowercase для ASCII, остальные символы остаются без изменений
@@ -93,5 +58,65 @@ namespace UTF8Utils {
 
         return result;
     }
+
+    bool normalizePlayerName(std::string& name)
+    {
+        if (name.empty())
+            return false;
+
+        std::wstring tmp;
+        if (!Utf8toWStr(name, tmp))
+            return false;
+
+        wstrToLower(tmp);
+        if (!tmp.empty())
+            tmp[0] = wcharToUpper(tmp[0]);
+
+        if (!WStrToUtf8(tmp, name))
+            return false;
+
+        return true;
+    }
+
+    bool Utf8toWStr(std::string_view utf8str, std::wstring& wstr)
+    {
+        wstr.clear();
+        try
+        {
+            utf8::utf8to16(utf8str.begin(), utf8str.end(), std::back_inserter(wstr));
+        }
+        catch(std::exception const&)
+        {
+            wstr.clear();
+            return false;
+        }
+
+        return true;
+    }
+
+    bool WStrToUtf8(std::wstring_view wstr, std::string& utf8str)
+    {
+        try
+        {
+            std::string utf8str2;
+            utf8str2.resize(wstr.size()*4);                     // allocate for most long case
+
+            if (!wstr.empty())
+            {
+                char* oend = utf8::utf16to8(wstr.begin(), wstr.end(), &utf8str2[0]);
+                utf8str2.resize(oend-(&utf8str2[0]));                // remove unused tail
+            }
+            utf8str = utf8str2;
+        }
+        catch(std::exception const&)
+        {
+            utf8str.clear();
+            return false;
+        }
+
+        return true;
+    }
+
+    void wstrToLower(std::wstring& str) { std::transform(std::begin(str), std::end(str), std::begin(str), wcharToLower); }
 
 } // namespace UTF8Utils

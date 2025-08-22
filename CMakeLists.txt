@@ -18,6 +18,10 @@ find_package(Catch2 REQUIRED)
 set(SPDLOG_DIR ${CMAKE_SOURCE_DIR}/deps/spdlog-1.15.3)
 add_subdirectory(${SPDLOG_DIR})
 
+# utf8cpp
+set(UTF8CPP_DIR ${CMAKE_SOURCE_DIR}/deps/utf8cpp)
+add_subdirectory(${UTF8CPP_DIR})
+
 file(GLOB_RECURSE COMMON_SOURCES CONFIGURE_DEPENDS src/common/*.cpp)
 file(GLOB_RECURSE AUTH_SERVER_SOURCES CONFIGURE_DEPENDS src/authserver/*.cpp)
 file(GLOB_RECURSE RELAY_SERVER_SOURCES CONFIGURE_DEPENDS src/relayserver/*.cpp)
