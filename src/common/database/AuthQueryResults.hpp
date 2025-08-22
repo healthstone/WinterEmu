@@ -10,6 +10,8 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/string_generator.hpp>
 
+#include "QueryResults.hpp"
+
 /** accounts **/
 struct AccountsRow {
     boost::uuids::uuid id;            // Оставляем UUID (не передается в пакетах)

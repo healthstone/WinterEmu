@@ -108,10 +108,11 @@ void RelayServer::init(unsigned int network_threads) {
     dbc_manager_ = std::make_unique<DBCMgr>(shared_from_this());
     dbc_manager_->initialize_for_relay();
 
+    addon_manager_ = std::make_unique<AddonMgr>(shared_from_this());
+    addon_manager_->loadFromDB();
+
+    // Подключаемся к нодам
     node_manager_ = std::make_unique<NodeManager>(io_context_);
     node_manager_->add_connectors(1, "127.0.0.1", 8086, network_threads);
     //node_manager_->start_all();
-
-    addon_manager_ = std::make_unique<AddonMgr>(shared_from_this());
-    addon_manager_->loadFromDB();
 }

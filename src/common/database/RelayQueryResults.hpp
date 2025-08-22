@@ -10,6 +10,8 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/string_generator.hpp>
 
+#include "QueryResults.hpp"
+
 struct CharacterEnumRow {
     uint32_t guid;                    // Изменено с UUID на uint32_t
     std::string name;

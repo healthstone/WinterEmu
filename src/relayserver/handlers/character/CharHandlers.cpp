@@ -122,10 +122,20 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
                              "{} CharCount", name1, race2, class3, gender4, skin5, face6, hairStyle7, hairColor8,
                              facialHair9, outfitId10, charCount11);
 
-        ChrClassesDBC const* classEntry = session->server()->getDBCMgr()->GetChrClassesDBC(class3);
+        auto dbcMgr = session->server()->getDBCMgr();
+
+        ChrRacesDBC const* raceEntry = dbcMgr->getChrRacesDBC(race2);
+        if (!raceEntry)
+        {
+            log->error("CharHandlers::handleCharacterCreate: Race ({}) not found in DBC while creating new char for account (login: {}): wrong DBC files or cheater?", race2, session->getAccountName());
+            sendCharCreate(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
+            return;
+        }
+
+        ChrClassesDBC const* classEntry = dbcMgr->getChrClassesDBC(class3);
         if (!classEntry)
         {
-            log->error("CharHandlers::handleCharacterCreate: Class ({}) not found in DBC while creating new char for account (ID: {}): wrong DBC files or cheater?", class3, session->getAccountName());
+            log->error("CharHandlers::handleCharacterCreate: Class ({}) not found in DBC while creating new char for account (login: {}): wrong DBC files or cheater?", class3, session->getAccountName());
             sendCharCreate(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
             return;
         }

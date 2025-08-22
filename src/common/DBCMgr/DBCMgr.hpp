@@ -7,6 +7,7 @@
 #include "enums/DBCStructure.h"
 
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
 
 class RelayServer;
 
@@ -20,7 +21,7 @@ public:
 
     void cleanUpBeforeDelete();
 
-    ChrClassesDBC const* GetChrClassesDBC(uint32_t id)
+    ChrClassesDBC const* getChrClassesDBC(uint32_t id)
     {
         auto itr = _chrClassesMap.find(id);
         if (itr != _chrClassesMap.end())
@@ -28,7 +29,7 @@ public:
         return nullptr;
     }
 
-    char const* GetChrClassName(uint8_t class_, uint8_t locale)
+    char const* getChrClassName(uint8_t class_, uint8_t locale)
     {
         auto itr = _chrClassesMap.find(class_);
         if (itr != _chrClassesMap.end())
@@ -36,10 +37,28 @@ public:
         return nullptr;
     }
 
+    ChrRacesDBC const* getChrRacesDBC(uint32_t id)
+    {
+        auto itr = _chrRacesMap.find(id);
+        if (itr != _chrRacesMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    char const* getRaceName(uint8_t race, uint8_t locale)
+    {
+        auto itr = _chrRacesMap.find(race);
+        if (itr != _chrRacesMap.end())
+            return itr->second.Name[locale].c_str();
+        return nullptr;
+    }
+
 private:
-    void load_ChrClasses();
+    void load_ChrClasses();     // load ChrClasses.dbc
+    void load_ChrRaces();       // load ChrRaces.dbc
 
     std::shared_ptr<RelayServer> server_;
 
     ChrClassesDBCMap _chrClassesMap;
+    ChrRacesDBCMap _chrRacesMap;
 };
