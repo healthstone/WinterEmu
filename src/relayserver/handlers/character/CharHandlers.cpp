@@ -128,7 +128,7 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
         if (!raceEntry)
         {
             log->error("CharHandlers::handleCharacterCreate: Race ({}) not found in DBC while creating new char for account (login: {}): wrong DBC files or cheater?", race2, session->getAccountName());
-            sendCharCreate(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
+            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
             return;
         }
 
@@ -136,7 +136,7 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
         if (!classEntry)
         {
             log->error("CharHandlers::handleCharacterCreate: Class ({}) not found in DBC while creating new char for account (login: {}): wrong DBC files or cheater?", class3, session->getAccountName());
-            sendCharCreate(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
+            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
             return;
         }
 
@@ -146,7 +146,7 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
     }
 }
 
-void CharHandlers::sendCharCreate(std::shared_ptr<GameSession> session, WoWOpcodes opcode, ResponseCodes result)
+void CharHandlers::sendCharResponse(std::shared_ptr<GameSession> session, WoWOpcodes opcode, ResponseCodes result)
 {
     WoWPacket pkt(opcode);
     pkt.write_uint8(static_cast<uint8_t>(result));

@@ -11,5 +11,5 @@ namespace CharHandlers {
 
     void handleCharacterCreate(std::shared_ptr<GameSession> session, const std::shared_ptr<WoWPacket> &p);
 
-    void sendCharCreate(std::shared_ptr<GameSession> session, WoWOpcodes opcode, ResponseCodes result);
+    void sendCharResponse(std::shared_ptr<GameSession> session, WoWOpcodes opcode, ResponseCodes result);
 }
