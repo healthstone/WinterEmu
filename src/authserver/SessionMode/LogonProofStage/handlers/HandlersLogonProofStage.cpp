@@ -9,12 +9,12 @@
 using namespace HandlersLogonProofStage;
 
 boost::asio::awaitable<void>
-HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>> payload) {
+HandlersLogonProofStage::handleLogonProof(std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>> payload) {
     auto log = Logger::get();
     ByteBuffer buffer(*payload);
     session->set_session_mode(SessionMode::STATUS_CLOSED);
 
-    std::string accountName = session->getAccountInfo()->Login;
+    std::string accountName = session->_login;
 
     try {
         // 1. Проверка сессии и получение SRP объекта
@@ -63,30 +63,11 @@ HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<AuthSession> session, 
         // 6. TODO Проверка 2FA токена, если используется (пример)
 
         // 7. TODO Проверка версии клиента (логика ValidateVersion)
-        log->trace("[HandleLogonProof] User '{}' successfully authenticated", accountName);
+        log->debug("[HandleLogonProof] User '{}' successfully authenticated", accountName);
         //Packet::log_raw_payload("REQUEST  AUTH_LOGON_PROOF", *payload);
 
         // 8. Обновление записи в базе
-        try {
-            std::string ip_str = NetUtils::uint32_to_ip_be(
-                    session->socket().remote_endpoint().address().to_v4().to_uint());
-            std::string safe_ip = ip_str.empty() ? "127.0.0.1" : ip_str;
-
-            PreparedStatement stmt("UPDATE_LOGIN_LOGONPROOF");
-            stmt.set_param(0, session->_sessionKey);
-            stmt.set_param(1, safe_ip);
-            stmt.set_param(2, accountName);
-
-            co_await session->server()->db()->execute_async_one<NothingRow>(stmt);
-        } catch (const std::exception &e) {
-            log->error("[HandleLogonProof] Database update error: {}", e.what());
-            RawPacket failReply;
-            failReply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_PROOF));
-            failReply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_DB_BUSY));
-            failReply.write_uint16_le(0); // LoginFlags
-            PacketUtils::send_packet_as<RawPacket>(std::move(session), failReply);
-            co_return;
-        }
+        co_await updateAccountFields(session);
 
         // 9. Отправка подтверждения клиенту (M2)
         auto M2 = Crypto::SRP6::GetSessionVerifier(A, clientM, *K_opt);
@@ -115,6 +96,36 @@ HandlersLogonProofStage::HandleLogonProof(std::shared_ptr<AuthSession> session, 
         failReply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_PROOF));
         failReply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_DISCONNECTED));
         failReply.write_uint16_le(0);
+        PacketUtils::send_packet_as<RawPacket>(std::move(session), failReply);
+        co_return;
+    }
+}
+
+boost::asio::awaitable<void> HandlersLogonProofStage::updateAccountFields(std::shared_ptr<AuthSession> session) {
+    try {
+        std::string ip_str = NetUtils::uint32_to_ip_be(
+                session->socket().remote_endpoint().address().to_v4().to_uint());
+        std::string safe_ip = ip_str.empty() ? "127.0.0.1" : ip_str;
+
+        PreparedStatement stmt("UPDATE_LOGIN_LOGONPROOF");
+        stmt.set_param(0, session->_sessionKey);
+        stmt.set_param(1, safe_ip);
+
+        LocaleConstant localeConstant = getLocaleConstantFromString(session->_logonChallenge.country);
+        stmt.set_param(2, localeConstant);
+        stmt.set_param(3, session->_logonChallenge.os);
+        stmt.set_param(4, session->_logonChallenge.timezone_bias);
+
+        stmt.set_param(5, session->_login);
+
+        co_await session->server()->db()->execute_async_one<NothingRow>(stmt);
+        co_return;
+    } catch (const std::exception &e) {
+        Logger::get()->error("[HandlersLogonProofStage::updateAccountFields] Database update error: {}", e.what());
+        RawPacket failReply;
+        failReply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_PROOF));
+        failReply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_DB_BUSY));
+        failReply.write_uint16_le(0); // LoginFlags
         PacketUtils::send_packet_as<RawPacket>(std::move(session), failReply);
         co_return;
     }

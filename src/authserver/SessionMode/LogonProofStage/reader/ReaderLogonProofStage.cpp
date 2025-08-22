@@ -34,7 +34,7 @@ void ReaderLogonProofStage::process_read_buffer(std::shared_ptr<AuthSession> ses
     boost::asio::co_spawn(
             ex,
             [session, payload]() -> boost::asio::awaitable<void> {
-                co_await HandlersLogonProofStage::HandleLogonProof(session, payload);
+                co_await HandlersLogonProofStage::handleLogonProof(session, payload);
             },
             boost::asio::detached
     );

@@ -4,7 +4,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <memory>
 #include <string>
-#include "src/authserver/enums/AccountTypes.hpp"
+#include "enums/AccountTypes.hpp"
 
 // === Флаги реалмов ===
 enum RealmFlags : uint8_t {

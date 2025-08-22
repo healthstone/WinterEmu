@@ -9,8 +9,9 @@
 #include "src/authserver/AuthServer.hpp"
 #include "packet/MessageBuffer.hpp"
 #include "packet/Packet.hpp"
-#include "src/authserver/Entity/AccountInfo/AccountInfo.hpp"
+#include "enums/AccountTypes.hpp"
 #include "Cryptography/srp6/SRP6.hpp"
+#include "src/authserver/SessionMode/ChallengeStage/handlers/LogonChallenge.hpp"
 
 class AuthServer; // forward declaration
 
@@ -48,9 +49,6 @@ public:
         return read_buffer_;
     }
 
-    // AuthSession part
-    AccountInfo *getAccountInfo() { return accountInfo_.get(); }
-
     boost::asio::ip::address GetRemoteIpAddress() const
     {
         boost::asio::ip::tcp::endpoint remote_ep = socket_.remote_endpoint();
@@ -63,16 +61,15 @@ public:
         return remote_ep.port();
     }
 
+    boost::uuids::uuid _accountGUID;
+    std::string _login;
+    uint8_t _expversion = 0;
     std::optional<Crypto::SRP6> _srp6;
     SessionKey _sessionKey = {};
     std::array<uint8_t, 16> _reconnectProof = {};
     std::optional<std::vector<uint8_t>> _totpSecret;
-    std::string _localizationName;
-    std::string _os;
-    std::string _ipCountry;
-    uint16_t _build;
-    uint16_t _timezoneOffset;
-    uint8_t _expversion;
+    LogonChallenge _logonChallenge;
+    AccountTypes _securityLevel = AccountTypes::SEC_PLAYER;
 
 private:
     void do_read();
@@ -85,7 +82,6 @@ private:
 
     boost::asio::ip::tcp::socket socket_;
     std::shared_ptr<AuthServer> server_;
-    std::shared_ptr<AccountInfo> accountInfo_ = std::make_shared<AccountInfo>();
 
     MessageBuffer read_buffer_;
 

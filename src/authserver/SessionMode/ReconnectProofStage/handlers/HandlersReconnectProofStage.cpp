@@ -22,14 +22,14 @@ void HandlersReconnectProofStage::HandleReconnectProof(std::shared_ptr<AuthSessi
         Crypto::SHA1::Digest R3 = buffer.read_bytes_as_array<20>();
         uint8_t number_of_keys = buffer.read_uint8();
 
-        if (session->getAccountInfo()->Login.empty())
+        if (session->_login.empty())
             return;
 
         uint8_t R1[16];
         std::memcpy(R1, R1_array.data(), 16);
 
         Crypto::SHA1 sha;
-        sha.UpdateData(session->getAccountInfo()->Login);
+        sha.UpdateData(session->_login);
         sha.UpdateData(R1, 16);
         sha.UpdateData(session->_reconnectProof);
         sha.UpdateData(session->_sessionKey);
@@ -58,7 +58,7 @@ void HandlersReconnectProofStage::HandleReconnectProof(std::shared_ptr<AuthSessi
             return;
         } else {
             log->error("[HandleReconnectProof] '{}:{}' [ERROR] user {} tried to login, but session is invalid",
-                       session->GetRemoteIpAddress().to_string(), session->GetRemotePort(), session->getAccountInfo()->Login);
+                       session->GetRemoteIpAddress().to_string(), session->GetRemotePort(), session->_login);
             return;
         }
 
@@ -76,11 +76,11 @@ bool HandlersReconnectProofStage::VerifyVersion(std::shared_ptr<AuthSession> ses
     Crypto::SHA1::Digest zeros = {};
     Crypto::SHA1::Digest const *versionHash = nullptr;
     if (!isReconnect) {
-        ClientBuild::Info const *buildInfo = ClientBuild::GetBuildInfo(session->_build);
+        ClientBuild::Info const *buildInfo = ClientBuild::GetBuildInfo(session->_logonChallenge.build);
         if (!buildInfo)
             return false;
 
-        auto platformItr = std::ranges::find(buildInfo->ExecutableHashes, ClientBuild::ToFourCC(session->_os),
+        auto platformItr = std::ranges::find(buildInfo->ExecutableHashes, ClientBuild::ToFourCC(session->_logonChallenge.os),
                                              &ClientBuild::ExecutableHash::Platform);
         if (platformItr == buildInfo->ExecutableHashes.end())
             return true;                                                            // not filled serverside

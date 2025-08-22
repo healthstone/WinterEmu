@@ -362,7 +362,12 @@ private:
         std::string auth_schema = std::getenv("AUTH_SCHEMA") ? std::string(std::getenv("AUTH_SCHEMA")) : "auth_server";
 
         conn.prepare("SELECT_ACCOUNT_BY_USERNAME",
-                     fmt::format("SELECT id, username, salt, verifier, session_key_auth, email, created_at FROM {}.accounts WHERE username = $1", auth_schema));
+                     fmt::format("SELECT "
+                                 "id, username, salt, verifier, session_key_auth, session_key_bnet, "
+                                 "totp_secret, email, reg_mail, joindate, last_ip, last_attempt_ip, "
+                                 "failed_logins, locked, lock_country, last_login, online, expansion, "
+                                 "mutetime, mutereason, muteby, locale, os, timezone_offset, recruiter, coins "
+                                 "FROM {}.accounts WHERE username = $1", auth_schema));
         conn.prepare("SELECT_BUILD_INFO",
                      fmt::format("SELECT majorVersion, minorVersion, bugfixVersion, hotfixVersion, build FROM {}.build_info ORDER BY build ASC", auth_schema));
         conn.prepare("SELECT_BUILD_EXECUTABLE_HASH",
@@ -372,7 +377,7 @@ private:
         conn.prepare("SELECT_REALM_CHARACTERS",
                      fmt::format("SELECT realmid, numchars FROM {}.realmcharacters WHERE acctid = $1", auth_schema));
         conn.prepare("UPDATE_LOGIN_LOGONPROOF",
-                     fmt::format("UPDATE {}.accounts SET session_key_auth = decode($1, 'hex'), last_ip = $2, last_login = NOW() WHERE username = $3", auth_schema));
+                     fmt::format("UPDATE {}.accounts SET session_key_auth = decode($1, 'hex'), last_ip = $2, last_login = NOW(), locale = $3, os = $4, timezone_offset = $5 WHERE username = $6", auth_schema));
         conn.prepare("INSERT_REALM_CHARACTERS",
                      fmt::format("INSERT INTO {}.realmcharacters (realmid, acctid, numchars) VALUES ($1, $2, $3)", auth_schema));
     }

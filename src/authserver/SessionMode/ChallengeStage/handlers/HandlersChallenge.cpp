@@ -22,7 +22,7 @@ HandlersChallenge::HandleLogonChallenge(std::shared_ptr<AuthSession> session,
         co_return;
 
     // 2 - Проверяем, можем ли обработать из кэша
-    if (!isPassedCache(AuthCmd::AUTH_LOGON_CHALLENGE, session->getAccountInfo()->Login, session))
+    if (!isPassedCache(AuthCmd::AUTH_LOGON_CHALLENGE, session->_login, session))
         co_return;
 
     // 3 - дефолтная логика для AUTH_LOGON_CHALLENGE
@@ -38,7 +38,7 @@ HandlersChallenge::HandleReconnectChallenge(std::shared_ptr<AuthSession> session
         co_return;
 
     // 2 - Проверяем, можем ли обработать из кэша
-    if (!isPassedCache(AuthCmd::AUTH_RECONNECT_CHALLENGE, session->getAccountInfo()->Login, session))
+    if (!isPassedCache(AuthCmd::AUTH_RECONNECT_CHALLENGE, session->_login, session))
         co_return;
 
     // 3 - дефолтная логика для AUTH_RECONNECT_CHALLENGE
@@ -81,16 +81,13 @@ bool HandlersChallenge::isPassedCommonLogic(AuthCmd cmd, std::shared_ptr<AuthSes
     }
 
     // 5 - записываем данные в сессию + логируем обработанный REQUEST packet
-    session->getAccountInfo()->Login = accountName;
-    session->_build = logonChallenge->build;
+    session->_login = accountName;
+    session->_logonChallenge = *logonChallenge;
     session->_expversion = uint8_t(
             AuthHelper::IsPostBCAcceptedClientBuild(logonChallenge->build) ?
             POST_BC_EXP_FLAG : (AuthHelper::IsPreBCAcceptedClientBuild(logonChallenge->build) ? PRE_BC_EXP_FLAG
                                                                                               : NO_VALID_EXP_FLAG)
     );
-    session->_timezoneOffset = logonChallenge->timezone_bias;
-    session->_localizationName = logonChallenge->country;
-    session->_os = logonChallenge->os;
 
     //Packet::log_raw_payload("REQUEST  " + opcode_name, *payload);
     return true;
@@ -151,7 +148,7 @@ bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_na
     auto cached_user_opt = cache->get(account_name);
     if (cached_user_opt) {
         auto &cached_user = *cached_user_opt;
-        session->getAccountInfo()->AccountID = cached_user.accountID;
+        session->_accountGUID = cached_user.account.id;
         std::string opcode_name =
                 cmd == AuthCmd::AUTH_LOGON_CHALLENGE ? "AUTH_LOGON_CHALLENGE" : "AUTH_RECONNECT_CHALLENGE";
 
@@ -162,17 +159,17 @@ bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_na
             case AuthCmd::AUTH_LOGON_CHALLENGE: {
                 // Инициализация SRP6 с salt и verifier
                 if (!session->_srp6)
-                    session->_srp6.emplace(account_name, cached_user.salt, cached_user.verifier);
+                    session->_srp6.emplace(account_name, cached_user.account.salt.value(), cached_user.account.verifier.value());
                 auto &srp = *session->_srp6;
 
                 Logger::get()->trace(
                         "[HandleLogonChallenge] AccID: {} opcode: {} B.size={}, g={}, N.size={}, salt.size={}",
-                        UUIDUtils::UUIDtoString(cached_user.accountID),
+                        UUIDUtils::UUIDtoString(cached_user.account.id),
                         opcode_name,
                         srp.B.size(),
                         Crypto::SRP6::g[0],
                         Crypto::SRP6::N.size(),
-                        cached_user.salt.size());
+                        cached_user.account.salt.value().size());
 
                 pkt.write_uint8(0x00); // reserved
                 pkt.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS));   // WOW_SUCCESS
@@ -189,10 +186,10 @@ bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_na
                 break;
             }
             case AuthCmd::AUTH_RECONNECT_CHALLENGE: {
-                if (cached_user.sessionKey.empty())
+                if (!cached_user.account.session_key_auth.has_value())
                     return true;
 
-                session->_sessionKey = cached_user.sessionKey;
+                session->_sessionKey = cached_user.account.session_key_auth.value();
                 Crypto::GetRandomBytes(session->_reconnectProof);
                 session->set_session_mode(SessionMode::STATUS_RECONNECT_PROOF);
 
@@ -215,7 +212,7 @@ bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_na
 boost::asio::awaitable<std::optional<AccountsRow>> HandlersChallenge::fetchFromDB(AuthCmd cmd, std::shared_ptr<AuthSession> session) {
     try {
         PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
-        stmt.set_param(0, session->getAccountInfo()->Login);
+        stmt.set_param(0, session->_login);
         auto user = co_await session->server()->db()->execute_async_one<AccountsRow>(stmt);
         co_return user;
     } catch (const std::exception &ex) {
@@ -227,7 +224,7 @@ boost::asio::awaitable<std::optional<AccountsRow>> HandlersChallenge::fetchFromD
 
 boost::asio::awaitable<void> HandlersChallenge::LogonChallengeLogic(std::shared_ptr<AuthSession> session) {
     auto log = Logger::get();
-    std::string accountName = session->getAccountInfo()->Login;
+    std::string accountName = session->_login;
 
     auto user = co_await fetchFromDB(AuthCmd::AUTH_LOGON_CHALLENGE, session);
     if (!user) {
@@ -243,16 +240,9 @@ boost::asio::awaitable<void> HandlersChallenge::LogonChallengeLogic(std::shared_
         co_return;
     }
 
-    session->getAccountInfo()->AccountID = user->id;
-    if (user->email)
-        session->getAccountInfo()->Email = user->email.value();
-
+    session->_accountGUID = user->id;
     AccountCache::AccountCacheEntry cacheEntry;
-    cacheEntry.accountID = user->id;
-    cacheEntry.salt = *user->salt;
-    cacheEntry.verifier = *user->verifier;
-    if (user->sessionkey)
-        cacheEntry.sessionKey = user->sessionkey.value();
+    cacheEntry.account = *user;
     session->server()->account_cache()->put(accountName, cacheEntry);
 
     session->_srp6.emplace(accountName, *user->salt, *user->verifier);
@@ -269,7 +259,7 @@ boost::asio::awaitable<void> HandlersChallenge::LogonChallengeLogic(std::shared_
     reply.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_LOGON_CHALLENGE));
     reply.write_uint8(0);
 
-    if (AuthHelper::IsAcceptedClientBuild(session->_build)) {
+    if (AuthHelper::IsAcceptedClientBuild(session->_logonChallenge.build)) {
         reply.write_uint8(static_cast<uint8_t>(AuthResult::WOW_SUCCESS));
         reply.write_bytes(srp.B.data(), srp.B.size());
         reply.write_uint8(static_cast<uint8_t>(Crypto::SRP6::g.size()));
@@ -294,14 +284,14 @@ boost::asio::awaitable<void> HandlersChallenge::ReconnectChallengeLogic(std::sha
     pkt.write_uint8(static_cast<uint8_t>(AuthCmd::AUTH_RECONNECT_CHALLENGE));  // opcode ID
 
     auto user = co_await fetchFromDB(AuthCmd::AUTH_RECONNECT_CHALLENGE, session);
-    if (!user || !user->sessionkey) {
+    if (!user || !user->session_key_auth) {
         Logger::get()->error("[ReconnectChallengeLogic] no found user or sessionkey");
         pkt.write_uint8(static_cast<uint8_t>(AuthResult::WOW_FAIL_UNKNOWN_ACCOUNT));
         PacketUtils::send_packet_as<RawPacket>(std::move(session), pkt);
         co_return;  // Завершаем корутину здесь, так как ошибка
     }
 
-    session->_sessionKey = user->sessionkey.value();
+    session->_sessionKey = user->session_key_auth.value();
     Crypto::GetRandomBytes(session->_reconnectProof);
     session->set_session_mode(SessionMode::STATUS_RECONNECT_PROOF);
 

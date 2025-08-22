@@ -21,10 +21,6 @@ void AuthSession::start() {
 
 void AuthSession::close() {
     if (closed_.exchange(true)) return;
-
-    if (getAccountInfo())
-        getAccountInfo()->handle_close_state();
-
     auto log = Logger::get();
 
     boost::system::error_code ec;
@@ -96,7 +92,7 @@ void AuthSession::process_read_buffer() {
             ReaderRealmStage::process_read_buffer(shared_from_this());
             break;
         case SessionMode::STATUS_CLOSED:
-            Logger::get()->warn("[auth_session][process_read_buffer] client[{}] sending data from STATUS_CLOSED, drop him!", getAccountInfo()->Login);
+            Logger::get()->warn("[auth_session][process_read_buffer] client[{}] sending data from STATUS_CLOSED, drop him!", _login);
             close();
             break;
         default:

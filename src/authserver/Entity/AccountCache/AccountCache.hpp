@@ -32,27 +32,25 @@ public:
     }
 
     struct AccountCacheEntry {
-        boost::uuids::uuid accountID;
-        std::array<uint8_t, 32> salt{};
-        std::array<uint8_t, 32> verifier{};
-        std::array<uint8_t, 40> sessionKey{};
+        //ttl
         std::chrono::steady_clock::time_point last_access; // скользящий TTL
+
+        //account entity
+        AccountsRow account;
     };
 
-    std::optional<AccountCacheEntry> get(const std::string &username) {
+    std::shared_ptr<AccountCacheEntry> get(const std::string &username) {
         std::lock_guard lock(mutex_);
         auto it = cache_.find(username);
-        if (it == cache_.end()) return std::nullopt;
+        if (it == cache_.end()) return nullptr;
 
         auto now = std::chrono::steady_clock::now();
         if (now - it->second.last_access > ttl_) {
-            // Просрочено — не возвращаем (но не удаляем немедленно)
-            return std::nullopt;
+            return nullptr;
         }
 
-        // Обновляем last_access: продлеваем TTL
         it->second.last_access = now;
-        return it->second;
+        return std::make_shared<AccountCacheEntry>(it->second);
     }
 
     void put(const std::string &username, const AccountCacheEntry &entry) {
@@ -72,7 +70,7 @@ public:
         std::lock_guard lock(mutex_);
         auto it = cache_.find(accountName);
         if (it != cache_.end()) {
-            it->second.sessionKey = K;
+            it->second.account.session_key_auth = K; // Простое присваивание
         }
     }
 

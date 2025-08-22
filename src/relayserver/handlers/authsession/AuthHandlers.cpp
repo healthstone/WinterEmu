@@ -31,7 +31,7 @@ AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared
     session->setAccountId(account->id);
 
     // Ключевое изменение: инициализация шифрования ДО проверки дайджеста
-    session->initCrypt(account->sessionkey.value());
+    session->initCrypt(account->session_key_auth.value());
 
     // Проверка дайджеста
     if (!verifyClientDigest(authSessionData.value(), account.value(), serverSeed)) {
@@ -156,8 +156,8 @@ bool AuthHandlers::verifyClientDigest(const AuthSessionData &asd,
     auto log = Logger::get();
 
     // 1. Проверка размера сессионного ключа
-    if (account.sessionkey.value().size() != 40) {
-        log->error("Invalid session key size: {}", account.sessionkey.value().size());
+    if (account.session_key_auth.value().size() != 40) {
+        log->error("Invalid session key size: {}", account.session_key_auth.value().size());
         return false;
     }
 
@@ -173,7 +173,7 @@ bool AuthHandlers::verifyClientDigest(const AuthSessionData &asd,
     sha.UpdateData(zero);                  // 4 нулевых байта
     sha.UpdateData(asd.LocalChallenge);    // Клиентский seed (4 байта)
     sha.UpdateData(authSeed);              // Серверный seed (4 байта)
-    sha.UpdateData(account.sessionkey.value());  // Сессионный ключ из БД
+    sha.UpdateData(account.session_key_auth.value());  // Сессионный ключ из БД
 
     sha.Finalize();
     SHA1::Digest computedDigest = sha.GetDigest();
@@ -183,7 +183,7 @@ bool AuthHandlers::verifyClientDigest(const AuthSessionData &asd,
     log->trace("  Account: {}", asd.accountName);
     log->trace("  LocalChallenge: {}", HexUtils::byte_array_to_hex(asd.LocalChallenge));
     log->trace("  ServerSeed: {}", HexUtils::byte_array_to_hex(authSeed));
-    log->trace("  SessionKey: {}", HexUtils::byte_array_to_hex(account.sessionkey.value()));
+    log->trace("  SessionKey: {}", HexUtils::byte_array_to_hex(account.session_key_auth.value()));
     log->trace("  Computed: {}", HexUtils::byte_array_to_hex(computedDigest));
     log->trace("  Received: {}", HexUtils::byte_array_to_hex(asd.digest));
 

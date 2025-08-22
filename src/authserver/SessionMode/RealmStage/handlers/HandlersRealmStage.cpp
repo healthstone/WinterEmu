@@ -14,7 +14,7 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
         std::map<uint32_t, uint8_t> characterCounts;
 
         PreparedStatement stmt1("SELECT_REALM_CHARACTERS");
-        stmt1.set_param(0, session->getAccountInfo()->AccountID);
+        stmt1.set_param(0, session->_accountGUID);
         //Packet::log_raw_payload("REQUEST  REALM_LIST", *payload);
 
         auto rows = co_await session->server()->db()->execute_async_many<RealmCharactersRow>(stmt1);
@@ -35,7 +35,7 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
 
             // Работай через realm->
             bool okBuild =
-                    ((session->_expversion & POST_BC_EXP_FLAG) && realm->Build == session->_build) ||
+                    ((session->_expversion & POST_BC_EXP_FLAG) && realm->Build == session->_logonChallenge.build) ||
                     ((session->_expversion & PRE_BC_EXP_FLAG) && !AuthHelper::IsPreBCAcceptedClientBuild(realm->Build));
 
             uint32_t flag = realm->Flags;
@@ -59,7 +59,7 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
                 name = ss.str();
             }
 
-            uint8_t lock = (realm->AllowedSecurityLevel > session->getAccountInfo()->SecurityLevel) ? 1 : 0;
+            uint8_t lock = (realm->AllowedSecurityLevel > session->_securityLevel) ? 1 : 0;
 
             packet.write_uint8(realm->Type);
             if (session->_expversion & POST_BC_EXP_FLAG)
@@ -130,7 +130,7 @@ HandlersRealmStage::fillInitialRealmCharacters(std::shared_ptr<AuthSession> sess
         for (const auto &[id, realm]: realmsMap) {
             PreparedStatement stmt("INSERT_REALM_CHARACTERS");
             stmt.set_param(0, id);
-            stmt.set_param(1, session->getAccountInfo()->AccountID);
+            stmt.set_param(1, session->_accountGUID);
             stmt.set_param(2, 0);
             co_await session->server()->db()->execute_async_one<NothingRow>(stmt);
         }

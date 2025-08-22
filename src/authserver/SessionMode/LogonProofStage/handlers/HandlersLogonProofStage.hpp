@@ -7,5 +7,8 @@
 /** only AUTH_LOGON_PROOF **/
 namespace HandlersLogonProofStage {
     boost::asio::awaitable<void>
-    HandleLogonProof(std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>> payload);
+    handleLogonProof(std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>> payload);
+
+    boost::asio::awaitable<void>
+    updateAccountFields(std::shared_ptr<AuthSession> session);
 }
