@@ -29,6 +29,10 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
             if (!session->isCanCreateDK() && character.level >= 55)
                 session->setIsCanCreateDK(true);
 
+            if (static_cast<Classes>(character.class_) == Classes::CLASS_DEATH_KNIGHT) {
+                session->addDKCountOnRealm();
+            }
+
             pkt.write_uint64_le(playerGuid.GetRawValue());
 
             // Основная информация о персонаже
@@ -194,10 +198,17 @@ boost::asio::awaitable<void> CharHandlers::handleCharacterCreate(std::shared_ptr
 
         if (static_cast<Classes>(class3) == Classes::CLASS_DEATH_KNIGHT)
         {
-            // speedup check for death knight class disabled case
+            // level check >= 55lvl exists
             if (!session->isCanCreateDK())
             {
                 sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_LEVEL_REQUIREMENT);
+                co_return;
+            }
+
+            // DK count check
+            if (session->getDKCountOnRealm() > 0)
+            {
+                sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_UNIQUE_CLASS_LIMIT);
                 co_return;
             }
         }

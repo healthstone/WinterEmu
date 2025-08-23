@@ -94,6 +94,8 @@ public:
         _legitCharacters.insert(lowGUID);
     }
     uint8_t getCharactersCountOnRealm() const { return _legitCharacters.size(); }
+    void addDKCountOnRealm() { dkCount_++; }
+    uint8_t getDKCountOnRealm() const { return dkCount_; }
 
     // Account Data
     AccountsRow* getAccount() { return &account_; }
@@ -162,6 +164,7 @@ private:
     uint32_t m_Tutorials[MAX_ACCOUNT_TUTORIAL_VALUES];
     uint8_t  m_TutorialsChanged;
     bool m_isCanCreateDK = false;
+    uint8_t dkCount_ = 0;
 
     Addons _addons;
 };
