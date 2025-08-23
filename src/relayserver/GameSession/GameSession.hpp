@@ -115,6 +115,9 @@ public:
         }
     }
 
+    void setIsCanCreateDK(bool value) { m_isCanCreateDK = value; }
+    bool isCanCreateDK() const { return m_isCanCreateDK; }
+
     void readAddonsInfo(const std::vector<uint8_t>& data);
     void sendAddonsInfo();
     void sendClientCacheVersion();
@@ -157,6 +160,7 @@ private:
     AccountData m_accountData[NUM_ACCOUNT_DATA_TYPES];
     uint32_t m_Tutorials[MAX_ACCOUNT_TUTORIAL_VALUES];
     uint8_t  m_TutorialsChanged;
+    bool m_isCanCreateDK = false;
 
     Addons _addons;
 };

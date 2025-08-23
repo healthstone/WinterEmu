@@ -3,6 +3,7 @@
 #include "enums/Gender.hpp"
 #include "enums/DBCStructure.h"
 #include "utils/utf8utils/UTF8Utils.hpp"
+#include "enums/Classes.hpp"
 
 /** CMSG_CHAR_ENUM **/
 boost::asio::awaitable<void>
@@ -25,6 +26,9 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
             // Создаем ObjectGuid для персонажа
             ObjectGuid playerGuid = ObjectGuid::Create<HighGuid::Player>(character.guid);
             session->addLegitCharacterForAccount(playerGuid);
+            if (!session->isCanCreateDK() && character.level >= 55)
+                session->setIsCanCreateDK(true);
+
             pkt.write_uint64_le(playerGuid.GetRawValue());
 
             // Основная информация о персонаже
@@ -194,6 +198,16 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
             log->error("CharHandlers::handleCharacterCreate: Account:[{}] but tried to Create character with empty [name] ", m_accountName);
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_NAME_NO_NAME);
             return;
+        }
+
+        if (static_cast<Classes>(class3) == Classes::CLASS_DEATH_KNIGHT)
+        {
+            // speedup check for death knight class disabled case
+            if (!session->isCanCreateDK())
+            {
+                sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_LEVEL_REQUIREMENT);
+                return;
+            }
         }
 
     } catch (const std::exception &ex) {
