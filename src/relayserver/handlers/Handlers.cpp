@@ -50,7 +50,14 @@ void Handlers::dispatch(std::shared_ptr<GameSession> session, std::shared_ptr<Wo
             break;
         }
         case WoWOpcodes::CMSG_CHAR_CREATE: {
-            CharHandlers::handleCharacterCreate(session, p);
+            auto ex = boost::asio::make_strand(session->socket().get_executor());
+            boost::asio::co_spawn(
+                    ex,
+                    [session, p]() -> boost::asio::awaitable<void> {
+                        co_await CharHandlers::handleCharacterCreate(session, p);
+                    },
+                    boost::asio::detached
+            );
             break;
         }
         case WoWOpcodes::CMSG_REALM_SPLIT: {

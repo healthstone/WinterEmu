@@ -96,7 +96,7 @@ boost::asio::awaitable<std::vector<CharacterEnumRow>> CharHandlers::fetchFromDB(
 }
 
 /** CMSG_CHAR_CREATE **/
-void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, const std::shared_ptr<WoWPacket> &p) {
+boost::asio::awaitable<void> CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, const std::shared_ptr<WoWPacket> &p) {
     auto log = Logger::get();
     try {
         /// User specified variables
@@ -137,7 +137,7 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
             log->error("CharHandlers::handleCharacterCreate: Race ({}) not found in DBC while creating new char for account:[{}] wrong DBC files or cheater?",
                        race2, m_accountName);
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
-            return;
+            co_return;
         }
 
         // prevent character creating Expansion race without Expansion account
@@ -146,7 +146,7 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
             log->error("CharHandlers::handleCharacterCreate: Expansion {} account:[{}] tried to Create character with expansion {} race ({})",
                        m_expansion, m_accountName, raceEntry->RequiredExpansion, race2);
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_EXPANSION);
-            return;
+            co_return;
         }
 
         ChrClassesDBC const* classEntry = dbcMgr->getChrClassesDBC(class3);
@@ -155,7 +155,7 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
             log->error("CharHandlers::handleCharacterCreate: Class ({}) not found in DBC while creating new char for account:[{}] wrong DBC files or cheater?",
                        class3, m_accountName);
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
-            return;
+            co_return;
         }
 
         // prevent character creating Expansion class without Expansion account
@@ -164,7 +164,7 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
             log->error("CharHandlers::handleCharacterCreate: Expansion {} account:[{}] tried to Create character with expansion {} class ({})",
                        m_expansion, m_accountName, classEntry->RequiredExpansion, class3);
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_EXPANSION_CLASS);
-            return;
+            co_return;
         }
 
         // TC RBAC_PERM_SKIP_CHECK_CHARACTER_CREATION_RACEMASK
@@ -173,7 +173,7 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
             log->error("CharHandlers::handleCharacterCreate: Race ({}) was not playable but requested while creating new char for account:[{}] wrong DBC files or cheater?",
                        race2, m_accountName);
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
-            return;
+            co_return;
         }
 
         //TC CONFIG_CHARACTER_CREATING_DISABLED_RACEMASK
@@ -181,7 +181,7 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
         if ((1 << (race2 - 1)) & raceMaskDisabled)
         {
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
-            return;
+            co_return;
         }
 
         //TC CONFIG_CHARACTER_CREATING_DISABLED_CLASSMASK
@@ -189,7 +189,7 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
         if ((1 << (class3 - 1)) & classMaskDisabled)
         {
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
-            return;
+            co_return;
         }
 
         // prevent character creating with invalid name
@@ -197,7 +197,7 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
         {
             log->error("CharHandlers::handleCharacterCreate: Account:[{}] but tried to Create character with empty [name] ", m_accountName);
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_NAME_NO_NAME);
-            return;
+            co_return;
         }
 
         if (static_cast<Classes>(class3) == Classes::CLASS_DEATH_KNIGHT)
@@ -206,13 +206,18 @@ void CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, c
             if (!session->isCanCreateDK())
             {
                 sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_LEVEL_REQUIREMENT);
-                return;
+                co_return;
             }
+        }
+
+        if (session->getCharactersCountOnRealm() + 1 > MAX_CHARACTERS_PER_REALM) {
+            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_SERVER_LIMIT);
+            co_return;
         }
 
     } catch (const std::exception &ex) {
         Logger::get()->error("[CharHandlers::handleCharacterCreate] DB exception: {}", ex.what());
-        return;
+        co_return;
     }
 }
 

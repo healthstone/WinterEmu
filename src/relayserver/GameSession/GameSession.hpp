@@ -93,6 +93,7 @@ public:
     void addLegitCharacterForAccount(ObjectGuid lowGUID) {
         _legitCharacters.insert(lowGUID);
     }
+    uint8_t getCharactersCountOnRealm() const { return _legitCharacters.size(); }
 
     // Account Data
     AccountsRow* getAccount() { return &account_; }
