@@ -9,6 +9,7 @@
 boost::asio::awaitable<void>
 CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
     Logger::get()->debug("CharHandlers::handleCharacterEnum - CMSG_CHAR_ENUM");
+    auto dbcMgr = session->server()->getDBCMgr();
 
     WoWPacket pkt(WoWOpcodes::SMSG_CHAR_ENUM);
     // Получаем данные из базы
@@ -31,6 +32,10 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
 
             if (static_cast<Classes>(character.class_) == Classes::CLASS_DEATH_KNIGHT) {
                 session->addDKCountOnRealm();
+            }
+
+            if (session->getAccountTeam() == Team::TEAM_OTHER) {
+                session->setAccountTeam(dbcMgr->teamForRace(character.race));
             }
 
             pkt.write_uint64_le(playerGuid.GetRawValue());
@@ -230,6 +235,17 @@ boost::asio::awaitable<void> CharHandlers::handleCharacterCreate(std::shared_ptr
         if (usernameCount > 0) {
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_NAME_IN_USE);
             co_return;
+        }
+
+        bool allowTwoSideAccounts = !session->server()->getRealm()->isPvPRealm();
+        if (!allowTwoSideAccounts) {
+            // Актуально только для последующих чаров (не первых), когда тима уже определена
+            if (session->getAccountTeam() != Team::TEAM_OTHER) {
+                if (session->getAccountTeam() != dbcMgr->teamForRace(race2)) {
+                    sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_PVP_TEAMS_VIOLATION);
+                    co_return;
+                }
+            }
         }
 
     } catch (const std::exception &ex) {

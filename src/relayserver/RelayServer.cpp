@@ -103,8 +103,10 @@ void RelayServer::log_session_count() {
     Logger::get()->info("[RelayServer] Active sessions: {}", sessions_.size());
 }
 
-void RelayServer::init(unsigned int network_threads) {
+void RelayServer::init(unsigned int network_threads, uint32_t realmID) {
     // Загружаем различные данные
+    load_realm_by_id(realmID);
+
     dbc_manager_ = std::make_unique<DBCMgr>(shared_from_this());
     dbc_manager_->initialize_for_relay();
 
@@ -115,4 +117,28 @@ void RelayServer::init(unsigned int network_threads) {
     node_manager_ = std::make_unique<NodeManager>(io_context_);
     node_manager_->add_connectors(1, "127.0.0.1", 8086, network_threads);
     //node_manager_->start_all();
+
+    Logger::get()->info("[RelayServer] Realm {} has been successfully started", realm_->Name);
+}
+
+void RelayServer::load_realm_by_id(uint32_t id) {
+    realm_ = std::make_unique<Realm>();
+    try {
+        auto stmt = PreparedStatement("SELECT_REALMLIST_BY_ID");
+        stmt.set_param(0, id);
+        auto row = db()->execute_sync_one<RealmRow>(stmt);
+        if (row) {
+            realm_->Id = row->id;
+            realm_->Name = row->name;
+            realm_->Build = row->build;
+            realm_->Type = static_cast<RealmType>(row->icon);
+            realm_->Flags = static_cast<RealmFlags>(row->flag);
+            realm_->Timezone = row->timezone;
+            realm_->AllowedSecurityLevel = static_cast<AccountTypes>(row->securityLevel);
+            realm_->PopulationLevel = row->population;
+            realm_->Port = row->port;
+        }
+    } catch (const std::exception &ex) {
+        Logger::get()->error("RelayServer::load_realm_by_id failed: {}", ex.what());
+    }
 }

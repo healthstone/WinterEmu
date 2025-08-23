@@ -86,16 +86,17 @@ public:
     void setLatency(uint32_t latency) { m_latency = latency; }
 
     ObjectGuid getObjectGuid() const { return characterGUID_; }
-    bool isLegitCharacterForAccount(ObjectGuid lowGUID)
-    {
-        return _legitCharacters.find(lowGUID) != _legitCharacters.end();
+    bool isLegitCharacterForAccount(ObjectGuid lowGUID) {
+        return legitCharacters_.find(lowGUID) != legitCharacters_.end();
     }
     void addLegitCharacterForAccount(ObjectGuid lowGUID) {
-        _legitCharacters.insert(lowGUID);
+        legitCharacters_.insert(lowGUID);
     }
-    uint8_t getCharactersCountOnRealm() const { return _legitCharacters.size(); }
+    uint8_t getCharactersCountOnRealm() const { return legitCharacters_.size(); }
     void addDKCountOnRealm() { dkCount_++; }
     uint8_t getDKCountOnRealm() const { return dkCount_; }
+    Team getAccountTeam() const { return accountTeam_; }
+    void setAccountTeam(Team value) { accountTeam_ = value; }
 
     // Account Data
     AccountsRow* getAccount() { return &account_; }
@@ -154,7 +155,9 @@ private:
     AccountsRow account_;
     ObjectGuid characterGUID_;
     // this stores the GUIDs of the characters who can login
-    GuidSet _legitCharacters;
+    GuidSet legitCharacters_;
+    // актуально для PvP realms
+    Team accountTeam_ = Team::TEAM_OTHER;
 
     TimePoint m_lastPingTime;
     uint32_t m_overSpeedPings;

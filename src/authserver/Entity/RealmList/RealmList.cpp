@@ -56,7 +56,7 @@ void RealmList::load_realms(bool isFirst) {
             realm->Id = row.id;
             realm->Name = row.name;
             realm->Build = row.build;
-            realm->Type = row.icon;
+            realm->Type = static_cast<RealmType>(row.icon);
             realm->Flags = static_cast<RealmFlags>(row.flag);
             realm->Timezone = row.timezone;
             realm->AllowedSecurityLevel = static_cast<AccountTypes>(row.securityLevel);

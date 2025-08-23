@@ -121,7 +121,7 @@ void GameSession::sendTutorialsData() {
 
 void GameSession::sendClientCacheVersion() {
     WoWPacket pkt(WoWOpcodes::SMSG_CLIENTCACHE_VERSION);
-    pkt.write_uint32_le(server()->clientCacheVersion());
+    pkt.write_uint32_le(server()->getRealm()->Build);
     send_packet(std::make_shared<WoWPacket>(pkt));
 }
 

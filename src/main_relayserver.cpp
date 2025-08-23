@@ -29,6 +29,9 @@ int main() {
         // read env AUTH_PORT
         int port = std::getenv("RELAY_PORT") ? static_cast<int>(std::stoi(std::getenv("RELAY_PORT"))) : 8085;
 
+        // read env
+        uint32_t realmID = std::getenv("REALM_ID") ? static_cast<int>(std::stoi(std::getenv("REALM_ID"))) : 1;
+
         // 🟢 Используем только io_context
         boost::asio::io_context io_context;
 
@@ -45,7 +48,7 @@ int main() {
         );
 
         auto server = std::make_shared<RelayServer>(io_context, db, port);
-        server->init(network_threads);
+        server->init(network_threads, realmID);
         server->start_accept();
         log->info("[RelayServer] Running on port {} with {} network threads", port, network_threads);
 

@@ -17,6 +17,24 @@ void DBCMgr::initialize_for_relay() {
     load_ChrRaces();
 }
 
+Team DBCMgr::teamForRace(uint8_t race)
+{
+    auto log = Logger::get();
+    if (ChrRacesDBC const* rEntry = getChrRacesDBC(race))
+    {
+        switch (rEntry->BaseLanguage)
+        {
+            case 1: return Team::HORDE;
+            case 7: return Team::ALLIANCE;
+        }
+        log->error("DBCMgr::teamForRace: Race ({}) has wrong teamid ({}) in DBC: wrong DBC files?", race, rEntry->BaseLanguage);
+    }
+    else
+        log->error("DBCMgr::teamForRace: Race ({}) not found in DBC: wrong DBC files?", race);
+
+    return Team::ALLIANCE;
+}
+
 void DBCMgr::load_ChrClasses() {
     auto log = Logger::get();
     _chrClassesMap.clear();

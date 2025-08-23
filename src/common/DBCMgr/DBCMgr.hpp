@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <memory>
 #include "enums/DBCStructure.h"
+#include "enums/Team.hpp"
 
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
@@ -20,6 +21,11 @@ public:
     ~DBCMgr();
 
     void cleanUpBeforeDelete();
+
+    // Utilities
+    Team teamForRace(uint8_t race);
+
+    // Base functions
 
     ChrClassesDBC const* getChrClassesDBC(uint32_t id)
     {

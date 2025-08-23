@@ -374,6 +374,8 @@ private:
                      fmt::format("SELECT build, platform, executableHash FROM {}.build_executable_hash", auth_schema));
         conn.prepare("SELECT_REALMLIST",
                      fmt::format("SELECT id, name, address, local_address, local_subnet_mask, port, icon, flag, timezone, allowed_security_level, population, gamebuild FROM {}.realmlist WHERE flag <> 3 ORDER BY name", auth_schema));
+        conn.prepare("SELECT_REALMLIST_BY_ID",
+                     fmt::format("SELECT id, name, address, local_address, local_subnet_mask, port, icon, flag, timezone, allowed_security_level, population, gamebuild FROM {}.realmlist WHERE id = $1", auth_schema));
         conn.prepare("SELECT_REALM_CHARACTERS",
                      fmt::format("SELECT realmid, numchars FROM {}.realmcharacters WHERE acctid = $1", auth_schema));
         conn.prepare("UPDATE_LOGIN_LOGONPROOF",

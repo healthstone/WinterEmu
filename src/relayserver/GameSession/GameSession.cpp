@@ -51,7 +51,7 @@ void GameSession::cleanBeforeDelete() {
     for (auto & i : m_accountData)
         i = AccountData();
     memset(m_Tutorials, 0, sizeof(uint32_t) * MAX_ACCOUNT_TUTORIAL_VALUES);
-    _legitCharacters.clear();
+    legitCharacters_.clear();
 }
 
 void GameSession::do_read() {
