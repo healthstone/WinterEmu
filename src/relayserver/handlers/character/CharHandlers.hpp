@@ -14,7 +14,7 @@ namespace CharHandlers {
     boost::asio::awaitable<void>
     handleCharacterCreate(std::shared_ptr<GameSession> session, const std::shared_ptr<WoWPacket> &p);
 
-    //boost::asio::awaitable<std::optional<AccountsRow>> fetchFromDB(std::shared_ptr<GameSession> session);
+    boost::asio::awaitable<uint64_t> fetchUsernameCountFromDB(std::shared_ptr<GameSession> session, const std::string &charName);
 
     void sendCharResponse(std::shared_ptr<GameSession> session, WoWOpcodes opcode, ResponseCodes result);
 }

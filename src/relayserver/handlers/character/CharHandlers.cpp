@@ -149,6 +149,23 @@ boost::asio::awaitable<void> CharHandlers::handleCharacterCreate(std::shared_ptr
             co_return;
         }
 
+        // TC RBAC_PERM_SKIP_CHECK_CHARACTER_CREATION_RACEMASK
+        if (raceEntry->Alliance == CHRRACES_ALLIANCE_TYPE_NOT_PLAYABLE || raceEntry->HasFlag(CHRRACES_FLAGS_NOT_PLAYABLE))
+        {
+            log->error("CharHandlers::handleCharacterCreate: Race ({}) was not playable but requested while creating new char for account:[{}] wrong DBC files or cheater?",
+                       race2, m_accountName);
+            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
+            co_return;
+        }
+
+        //TC CONFIG_CHARACTER_CREATING_DISABLED_RACEMASK
+        uint32_t raceMaskDisabled = 0;
+        if ((1 << (race2 - 1)) & raceMaskDisabled)
+        {
+            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
+            co_return;
+        }
+
         ChrClassesDBC const* classEntry = dbcMgr->getChrClassesDBC(class3);
         if (!classEntry)
         {
@@ -167,36 +184,11 @@ boost::asio::awaitable<void> CharHandlers::handleCharacterCreate(std::shared_ptr
             co_return;
         }
 
-        // TC RBAC_PERM_SKIP_CHECK_CHARACTER_CREATION_RACEMASK
-        if (raceEntry->Alliance == CHRRACES_ALLIANCE_TYPE_NOT_PLAYABLE || raceEntry->HasFlag(CHRRACES_FLAGS_NOT_PLAYABLE))
-        {
-            log->error("CharHandlers::handleCharacterCreate: Race ({}) was not playable but requested while creating new char for account:[{}] wrong DBC files or cheater?",
-                       race2, m_accountName);
-            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
-            co_return;
-        }
-
-        //TC CONFIG_CHARACTER_CREATING_DISABLED_RACEMASK
-        uint32_t raceMaskDisabled = 0;
-        if ((1 << (race2 - 1)) & raceMaskDisabled)
-        {
-            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
-            co_return;
-        }
-
         //TC CONFIG_CHARACTER_CREATING_DISABLED_CLASSMASK
         uint32_t classMaskDisabled = 0;
         if ((1 << (class3 - 1)) & classMaskDisabled)
         {
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
-            co_return;
-        }
-
-        // prevent character creating with invalid name
-        if (!UTF8Utils::normalizePlayerName(name1))
-        {
-            log->error("CharHandlers::handleCharacterCreate: Account:[{}] but tried to Create character with empty [name] ", m_accountName);
-            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_NAME_NO_NAME);
             co_return;
         }
 
@@ -215,9 +207,35 @@ boost::asio::awaitable<void> CharHandlers::handleCharacterCreate(std::shared_ptr
             co_return;
         }
 
+        // prevent character creating with invalid name
+        if (!UTF8Utils::normalizePlayerName(name1))
+        {
+            log->error("CharHandlers::handleCharacterCreate: Account:[{}] but tried to Create character with empty [name] ", m_accountName);
+            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_NAME_NO_NAME);
+            co_return;
+        }
+
+        auto usernameCount = co_await fetchUsernameCountFromDB(session, name1);
+        if (usernameCount > 0) {
+            sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_NAME_IN_USE);
+            co_return;
+        }
+
     } catch (const std::exception &ex) {
         Logger::get()->error("[CharHandlers::handleCharacterCreate] DB exception: {}", ex.what());
         co_return;
+    }
+}
+
+boost::asio::awaitable<uint64_t> CharHandlers::fetchUsernameCountFromDB(std::shared_ptr<GameSession> session, const std::string &charName) {
+    try {
+        PreparedStatement stmt("SELECT_COUNT_CHARS_BY_USERNAME");
+        stmt.set_param(0, charName);
+        auto row = co_await session->server()->db()->execute_async_one<uint64_t>(stmt);
+        co_return row.value();
+    } catch (const std::exception &ex) {
+        Logger::get()->error("[CharHandlers::fetchUsernameCountFromDB] DB exception: {}", ex.what());
+        co_return 1;
     }
 }
 

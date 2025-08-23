@@ -29,8 +29,6 @@ enum LocaleConstant : uint8_t
 
 #define DEFAULT_LOCALE LOCALE_enUS
 
-#define MAX_LOCALES 8
-
 // Вспомогательная функция для преобразования строки в нижний регистр
 static std::string toLower(const std::string& str) {
     std::string result = str;

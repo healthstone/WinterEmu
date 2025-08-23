@@ -419,6 +419,9 @@ private:
                                  "WHERE c.account = $2 AND c.deleteInfos_Name IS NULL "
                                  "ORDER BY c.guid",
                                  relay_schema, relay_schema, relay_schema, relay_schema));
+        conn.prepare("SELECT_COUNT_CHARS_BY_USERNAME",
+                     fmt::format("SELECT COUNT(*) "
+                                 "FROM {}.characters WHERE name = $1", relay_schema));
     }
 
     void prepareDBCSchema(pqxx::connection &conn) {
