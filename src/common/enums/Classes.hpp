@@ -17,3 +17,6 @@ enum class Classes : uint8_t
     //CLASS_UNK           = 10,
     CLASS_DRUID         = 11 // TITLE Druid
 };
+
+// max+1 for player class
+#define MAX_CLASSES       12

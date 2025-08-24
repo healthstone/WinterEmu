@@ -89,6 +89,7 @@ public:
     bool isLegitCharacterForAccount(ObjectGuid lowGUID) {
         return legitCharacters_.find(lowGUID) != legitCharacters_.end();
     }
+    void resetLegitCharacterForAccount() { legitCharacters_.clear(); }
     void addLegitCharacterForAccount(ObjectGuid lowGUID) {
         legitCharacters_.insert(lowGUID);
     }

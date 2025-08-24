@@ -51,6 +51,10 @@ void RelayServer::stop() {
         addon_manager_->cleanUpBeforeDelete();
     }
 
+    if (playerInfo_manager_) {
+        playerInfo_manager_->cleanUpBeforeDelete();
+    }
+
     if (node_manager_) {
         node_manager_->stop_all();
     }
@@ -112,6 +116,9 @@ void RelayServer::init(unsigned int network_threads, uint32_t realmID) {
 
     addon_manager_ = std::make_unique<AddonMgr>(shared_from_this());
     addon_manager_->loadFromDB();
+
+    playerInfo_manager_ = std::make_unique<PlayerInfoMgr>(shared_from_this());
+    playerInfo_manager_->loadFromDB();
 
     // Подключаемся к нодам
     node_manager_ = std::make_unique<NodeManager>(io_context_);

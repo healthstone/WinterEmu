@@ -10,6 +10,7 @@
 #include "src/relayserver/Entity/AddonMgr/AddonMgr.hpp"
 #include "DBCMgr/DBCMgr.hpp"
 #include "src/authserver/Entity/RealmList/Realm.hpp"
+#include "src/relayserver/Entity/PlayerInfo/PlayerInfoMgr.hpp"
 
 class GameSession;
 
@@ -31,6 +32,7 @@ public:
     NodeManager* get_node_manager() const { return node_manager_.get(); }
     AddonMgr* getAddonMgr() const { return addon_manager_.get(); }
     DBCMgr* getDBCMgr() const { return dbc_manager_.get(); }
+    PlayerInfoMgr* getPlayerInfoMgr() const { return playerInfo_manager_.get(); }
     std::shared_ptr<Database> db() { return db_; }
 
 private:
@@ -42,6 +44,7 @@ private:
     std::unique_ptr<NodeManager> node_manager_;
     std::unique_ptr<AddonMgr> addon_manager_;
     std::unique_ptr<DBCMgr> dbc_manager_;
+    std::unique_ptr<PlayerInfoMgr> playerInfo_manager_;
     std::unordered_set<std::shared_ptr<GameSession>> sessions_;
     std::mutex sessions_mutex_;
 };

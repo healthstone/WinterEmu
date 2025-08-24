@@ -424,6 +424,29 @@ private:
         conn.prepare("SELECT_COUNT_CHARS_BY_USERNAME",
                      fmt::format("SELECT COUNT(*) "
                                  "FROM {}.characters WHERE name = $1", relay_schema));
+
+        conn.prepare("INSERT_CHARACTER",
+                     //                                         1       2    3      4      5       6     7    8     9     10      11         12          13          14         15          16
+                     fmt::format("INSERT INTO {}.characters (account, name, race, class, gender, level, xp, money, skin, face, hairstyle, haircolor, facialstyle, bankslots, reststate, playerflags, "
+                                 //17       18              19              20          21          22          23         24      25        26       27        28
+                                 "map, instance_id, instance_mode_mask, position_x, position_y, position_z, orientation, trans_x, trans_y, trans_z, trans_o, transguid, "
+                                 // 29         30
+                                 "taximask, cinematic, "
+                                 //   31        32          33          34              35                 36                  37
+                                 "totaltime, leveltime, rest_bonus, logout_time, is_logout_resting, resettalents_cost, resettalents_time, "
+                                 //   38             39         40      41
+                                 "extra_flags, stable_slots, at_login, zone, "
+                                 //     42              43          44              45                46                47                 48
+                                 "death_expire_time, taxi_path, arenapoints, totalhonorpoints, todayhonorpoints, yesterdayhonorpoints, totalkills, "
+                                 //    49           50            51              52              53         54     55       56      57     58
+                                 "todaykills, yesterdaykills, chosentitle, knowncurrencies, watchedfaction, drunk, health, power1, power2, power3, "
+                                 // 59      60      61      62      63              64                65               66             67          68         69          70            71
+                                 "power4, power5, power6, power7, latency, talentgroupscount, activetalentgroup, exploredzones, equipmentcache, ammoid, knowntitles, actionbars, grantablelevels) "
+                                 "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56, $57, $58, $59, $60, $61, $62, $63, $64, $65, $66, $67, $68, $69, $70, $71)",
+                                 relay_schema));
+
+        conn.prepare("SELECT_PLAYER_CREATE_INFO",
+                     fmt::format("SELECT race, class, map, zone, position_x, position_y, position_z, orientation FROM {}.playercreateinfo", relay_schema));
     }
 
     void prepareDBCSchema(pqxx::connection &conn) {
