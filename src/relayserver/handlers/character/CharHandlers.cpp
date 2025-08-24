@@ -5,6 +5,7 @@
 #include "utils/utf8utils/UTF8Utils.hpp"
 #include "enums/Classes.hpp"
 #include "src/relayserver/Entity/PlayerInfo/PlayerInfoData.hpp"
+#include "src/relayserver/enums/CharacterFlags.hpp"
 
 /** CMSG_CHAR_ENUM **/
 boost::asio::awaitable<void>
@@ -19,10 +20,12 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
     if (!characters.empty()) {
         pkt.write_uint8(static_cast<uint8_t>(characters.size()));
 
+        int counter = 0;
         // Обрабатываем каждого персонажа
         for (const auto& character : characters) {
+            counter++;
             // Пропускаем забаненных персонажей
-            if (character.banned_guid.has_value()) {
+            if (character.banned_guid) {
                 continue;
             }
 
@@ -41,7 +44,6 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
             }
 
             pkt.write_uint64_le(playerGuid.GetRawValue());
-
             // Основная информация о персонаже
             pkt.write_string_nt_be(character.name);    // Имя
             pkt.write_uint8(character.race);           // Раса
@@ -59,37 +61,94 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
             pkt.write_float_le(character.position_y);     // Позиция Y
             pkt.write_float_le(character.position_z);     // Позиция Z
 
-            if (character.guildid.has_value()) {
+            if (character.guildid) {
                 pkt.write_uint32_le(character.guildid.value());
             } else {
                 pkt.write_uint32_le(0);
             }
 
-            pkt.write_uint32_le(character.playerFlags);   // Флаги игрока
+            // Character flags calculation (simplified TrinityCore logic)
+            uint32_t charFlags = 0;
+            uint32_t playerFlags = character.playerFlags;
+            uint16_t atLoginFlags = character.at_login;
 
-            // Флаги at_login (используем только первый бит для firstLogin)
-            uint8_t firstLogin = (character.at_login & 0x01) ? 1 : 0;
+            if (atLoginFlags & AT_LOGIN_RESURRECT)
+                playerFlags &= ~PLAYER_FLAGS_GHOST;
+            if (playerFlags & PLAYER_FLAGS_HIDE_HELM)
+                charFlags |= CHARACTER_FLAG_HIDE_HELM;
+            if (playerFlags & PLAYER_FLAGS_HIDE_CLOAK)
+                charFlags |= CHARACTER_FLAG_HIDE_CLOAK;
+            if (playerFlags & PLAYER_FLAGS_GHOST)
+                charFlags |= CHARACTER_FLAG_GHOST;
+            if (atLoginFlags & AT_LOGIN_RENAME)
+                charFlags |= CHARACTER_FLAG_RENAME;
+            if (character.banned_guid)
+                charFlags |= CHARACTER_FLAG_LOCKED_BY_BILLING;
+
+            pkt.write_uint32_le(charFlags);
+
+            // Customize flags
+            uint32_t customizeFlags = CHAR_CUSTOMIZE_FLAG_NONE;
+            if (atLoginFlags & AT_LOGIN_CUSTOMIZE)
+                customizeFlags = CHAR_CUSTOMIZE_FLAG_CUSTOMIZE;
+            else if (atLoginFlags & AT_LOGIN_CHANGE_FACTION)
+                customizeFlags = CHAR_CUSTOMIZE_FLAG_FACTION;
+            else if (atLoginFlags & AT_LOGIN_CHANGE_RACE)
+                customizeFlags = CHAR_CUSTOMIZE_FLAG_RACE;
+
+            pkt.write_uint32_le(customizeFlags);
+
+            // First login flag
+            uint8_t firstLogin = (atLoginFlags & AT_LOGIN_FIRST) ? 1 : 0;
             pkt.write_uint8(firstLogin);
 
-            // Данные о питомце
-            pkt.write_uint32_le(character.pet_modelid.value_or(0)); // Model ID питомца
-            pkt.write_uint32_le(character.pet_level.value_or(0));   // Уровень питомца
-            pkt.write_uint32_le(0);                                 // Семейство питомца (не реализовано)
+            // Pet info
+            pkt.write_uint32_le(character.pet_modelid.value_or(0));
+            pkt.write_uint32_le(character.pet_level.value_or(0));
+            pkt.write_uint32_le(0); // Pet family
 
-            // Экипировка (19 слотов)
-            // TODO: Реализовать парсинг equipmentCache
+            // Equipment (19 slots, 3 values per slot)
             for (int i = 0; i < 19; ++i) {
                 pkt.write_uint32_le(0); // Display ID
                 pkt.write_uint8(0);     // Inventory type
+                pkt.write_uint32_le(0); // Enchant visual
             }
 
-            // Дополнительные данные
-            pkt.write_uint32_le(0); // Bag display ID
-            pkt.write_uint8(0);     // Bag inventory type
+            Logger::get()->warn("char [{}]\n"
+                                " pkt.write_uint64_le(playerGuid.GetRawValue()) -- {}\n"
+                                " pkt.write_string_nt_be(character.name)        -- {}\n"
+                                " pkt.write_uint8(character.race)               -- {}\n"
+                                " pkt.write_uint8(character.gender)             -- {}\n"
+                                " pkt.write_uint8(character.skin)               -- {}\n"
+                                " pkt.write_uint8(character.face)               -- {}\n"
+                                " pkt.write_uint8(character.hairStyle)          -- {}\n"
+                                " pkt.write_uint8(character.hairColor)          -- {}\n"
+                                " pkt.write_uint8(character.facialStyle)        -- {}\n"
+                                " pkt.write_uint8(character.level)              -- {}\n"
+                                " pkt.write_uint32_le(character.zone)           -- {}\n"
+                                " pkt.write_uint32_le(character.map)            -- {}\n"
+                                " pkt.write_float_le(character.position_x)      -- {}\n"
+                                " pkt.write_float_le(character.position_y)      -- {}\n"
+                                " pkt.write_float_le(character.position_z)      -- {}\n"
+                                " pkt.write_uint32_le(0)                    (guildid)\n"
+                                " pkt.write_uint32_le(charFlags)                -- {}\n"
+                                " pkt.write_uint32_le(customizeFlags)           -- {}\n"
+                                " pkt.write_uint8(firstLogin)                   -- {}\n"
+                                " pkt.write_uint32_le(character.pet_modelid.value_or(0)) -- {}\n"
+                                " pkt.write_uint32_le(character.pet_level.value_or(0))   -- {}\n"
+                                " pkt.write_uint32_le(0)                     (Pet family)\n"
+                                "",
+                                counter, playerGuid.ToString(), character.name, character.class_, character.gender,
+                                character.skin, character.face, character.hairStyle, character.hairColor,
+                                character.facialStyle, character.level, character.zone, character.map,
+                                character.position_x, character.position_y, character.position_z, charFlags, customizeFlags, firstLogin,
+                                character.pet_modelid.value_or(0), character.pet_level.value_or(0));
         }
     }
     else
         pkt.write_uint8(0); // Количество персонажей (0)
+
+    Packet::log_raw_payload("SMSG_CHAR_ENUM", pkt.serialize());
     session->send_packet(std::make_shared<WoWPacket>(pkt));
 }
 

@@ -36,17 +36,17 @@ struct CharacterEnumRow {
     uint8_t hairColor;
     uint8_t facialStyle;
     uint8_t level;
-    uint16_t zone;
-    uint16_t map;
+    uint32_t zone;
+    uint32_t map;
     float position_x;
     float position_y;
     float position_z;
     std::optional<uint32_t> guildid;  // Изменено с UUID на uint32_t
     uint32_t playerFlags;
-    uint16_t at_login;
+    uint8_t at_login;
     std::optional<uint32_t> pet_entry;
     std::optional<uint32_t> pet_modelid;
-    std::optional<uint16_t> pet_level;
+    std::optional<uint32_t> pet_level;
     std::string equipmentCache;
     std::optional<uint32_t> banned_guid; // Изменено с UUID на uint32_t
 };
@@ -124,29 +124,29 @@ struct PgRowMapper<CharacterEnumRow> {
         row.hairColor = static_cast<uint8_t>(r["hairColor"].as<int>());
         row.facialStyle = static_cast<uint8_t>(r["facialStyle"].as<int>());
         row.level = static_cast<uint8_t>(r["level"].as<int>());
-        row.zone = static_cast<uint16_t>(r["zone"].as<int>());
-        row.map = static_cast<uint16_t>(r["map"].as<int>());
+        row.zone = static_cast<uint32_t>(r["zone"].as<int>());
+        row.map = static_cast<uint32_t>(r["map"].as<int>());
         row.position_x = r["position_x"].as<float>();
         row.position_y = r["position_y"].as<float>();
         row.position_z = r["position_z"].as<float>();
 
         // GUID гильдии (теперь uint32_t)
-        if (!r["guildid"].is_null()) {
-            row.guildid = r["guildid"].as<uint32_t>();
+        if (!r["guild_guildid"].is_null()) {
+            row.guildid = r["guild_guildid"].as<uint32_t>();
         }
 
         row.playerFlags = r["playerFlags"].as<uint32_t>();
-        row.at_login = static_cast<uint16_t>(r["at_login"].as<int>());
+        row.at_login = static_cast<uint8_t>(r["at_login"].as<int>());
 
-        if (!r["entry"].is_null()) row.pet_entry = r["entry"].as<uint32_t>();
-        if (!r["modelid"].is_null()) row.pet_modelid = r["modelid"].as<uint32_t>();
-        if (!r["level"].is_null()) row.pet_level = static_cast<uint16_t>(r["level"].as<int>());
+        if (!r["pet_entry"].is_null()) row.pet_entry = r["pet_entry"].as<uint32_t>();
+        if (!r["pet_modelid"].is_null()) row.pet_modelid = r["pet_modelid"].as<uint32_t>();
+        if (!r["pet_level"].is_null()) row.pet_level = r["pet_level"].as<uint32_t>();
 
         row.equipmentCache = r["equipmentCache"].as<std::string>();
 
         // GUID бана (теперь uint32_t)
-        if (!r["guid"].is_null()) {
-            row.banned_guid = r["guid"].as<uint32_t>();
+        if (!r["banned_guid"].is_null()) {
+            row.banned_guid = r["banned_guid"].as<uint32_t>();
         }
 
         return row;

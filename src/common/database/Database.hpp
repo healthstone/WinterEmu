@@ -412,8 +412,11 @@ private:
                      fmt::format("SELECT account_id, tut0, tut1, tut2, tut3, tut4, tut5, tut6, tut7 FROM {}.account_tutorial WHERE account_id = $1", relay_schema));
 
         conn.prepare("SELECT_CHAR_ENUM",
-                     fmt::format("SELECT c.guid, c.name, c.race, c.class, c.gender, c.skin, c.face, c.hairStyle, c.hairColor, c.facialStyle, c.level, c.zone, c.map, c.position_x, c.position_y, c.position_z, "
-                                 "gm.guildid, c.playerFlags, c.at_login, cp.entry, cp.modelid, cp.level, c.equipmentCache, cb.guid "
+                     fmt::format("SELECT c.guid, c.name, c.race, c.class, c.gender, c.skin, c.face, c.hairStyle, c.hairColor, c.facialStyle, "
+                                 "c.level, c.zone, c.map, c.position_x, c.position_y, c.position_z, c.equipmentCache, c.playerFlags, c.at_login, "
+                                 "gm.guildid as guild_guildid, "
+                                 "cp.entry as pet_entry, cp.modelid as pet_modelid, cp.level as pet_level, "
+                                 "cb.guid as banned_guid "
                                  "FROM {}.characters AS c "
                                  "LEFT JOIN {}.character_pet AS cp ON c.guid = cp.owner AND cp.slot = $1 "
                                  "LEFT JOIN {}.guild_member AS gm ON c.guid = gm.guid "
