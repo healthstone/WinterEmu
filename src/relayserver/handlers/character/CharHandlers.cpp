@@ -2,10 +2,13 @@
 #include "enums/PetDefines.hpp"
 #include "enums/Gender.hpp"
 #include "enums/DBCStructure.h"
-#include "utils/utf8utils/UTF8Utils.hpp"
 #include "enums/Classes.hpp"
 #include "src/relayserver/Entity/PlayerInfo/PlayerInfoData.hpp"
-#include "src/relayserver/enums/CharacterFlags.hpp"
+#include "src/relayserver/enums/CharacterEnums.hpp"
+#include "src/relayserver/enums/PlayerEnums.hpp"
+#include "utils/utf8utils/UTF8Utils.hpp"
+#include "utils/util/Util.hpp"
+
 
 /** CMSG_CHAR_ENUM **/
 boost::asio::awaitable<void>
@@ -99,29 +102,65 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
             pkt.write_uint32_le(character.pet_level.value_or(0));
             pkt.write_uint32_le(0); // Pet family
 
-            // Equipment (19 слотов)
-            for (int i = 0; i < 19; ++i) {
-                pkt.write_uint32_le(0); // Display ID
-                pkt.write_uint8(0);     // Inventory type
-                pkt.write_uint32_le(0); // Enchant visual
-            }
+            std::vector<std::string_view> equipment = Util::Tokenize(character.m_equipmentCache, ' ', false);
+            for (uint8_t slot = 0; slot < INVENTORY_SLOT_BAG_END; ++slot)
+            {
+                uint32_t const visualBase = slot * 2;
+                std::optional<uint32_t> itemId;
+                if (visualBase < equipment.size())
+                    itemId = Util::stringToUInt32(equipment[visualBase]);
 
-            // Bags (4 слота)
-            for (int i = 0; i < 4; ++i) {
-                pkt.write_uint32_le(0); // DisplayID
-                pkt.write_uint8(0);     // InventoryType
-            }
+//                ItemTemplate const* proto = nullptr;
+//                if (itemId)
+//                    proto = sObjectMgr->GetItemTemplate(*itemId);
+//
+//                if (!proto)
+//                {
+//                    if (!itemId || *itemId)
+//                    {
+//                        TC_LOG_WARN("entities.player.loading", "Player {} has invalid equipment '{}' in `equipmentcache` at index {}. Skipped.",
+//                                    guid, (visualBase < equipment.size()) ? std::string(equipment[visualBase]) : "<none>", visualBase);
+//                    }
+//
+//                    *data << uint32(0);
+//                    *data << uint8(0);
+//                    *data << uint32(0);
+//
+//                    continue;
+//                }
+//
+//                SpellItemEnchantmentEntry const* enchant = nullptr;
+//
+//                Optional<uint32> enchants;
+//                if ((visualBase+1) < equipment.size())
+//                    enchants = Trinity::StringTo<uint32>(equipment[visualBase + 1]);
+//                if (!enchants)
+//                {
+//                    TC_LOG_WARN("entities.player.loading", "Player {} has invalid enchantment info '{}' in `equipmentcache` at index {}. Skipped.",
+//                                guid, ((visualBase+1) < equipment.size()) ? std::string(equipment[visualBase + 1]) : "<none>", visualBase + 1);
+//                    enchants = 0;
+//                }
+//                for (uint8 enchantSlot = PERM_ENCHANTMENT_SLOT; enchantSlot <= TEMP_ENCHANTMENT_SLOT; ++enchantSlot)
+//                {
+//                    // values stored in 2 uint16
+//                    uint32 enchantId = 0x0000FFFF & ((*enchants) >> enchantSlot * 16);
+//                    if (!enchantId)
+//                        continue;
+//
+//                    enchant = sSpellItemEnchantmentStore.LookupEntry(enchantId);
+//                    if (enchant)
+//                        break;
+//                }
 
-            pkt.write_uint32_le(0); // Ammo
-            pkt.write_uint32_le(0); // ActionBars
-            pkt.write_uint32_le(0); // KnownTitles
-            pkt.write_uint32_le(0); // ExploredZones
+                pkt.write_uint32_le(0); // proto->DisplayInfoID
+                pkt.write_uint8(0);     // proto->InventoryType
+                pkt.write_uint32_le(0); // enchant ? enchant->ItemVisual : 0
+            }
         }
     } else {
         pkt.write_uint8(0); // Количество персонажей (0)
     }
 
-    Packet::log_raw_payload("SMSG_CHAR_ENUM", pkt.serialize());
     session->send_packet(std::make_shared<WoWPacket>(pkt));
 }
 
