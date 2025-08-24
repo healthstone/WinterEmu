@@ -67,38 +67,44 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
                 pkt.write_uint32_le(0);
             }
 
-            // Character flags calculation (simplified TrinityCore logic)
-            uint32_t charFlags = 0;
+            // Character flags calculation (TrinityCore-like)
+            uint32_t charFlags = CHARACTER_FLAG_NONE;
             uint32_t playerFlags = character.playerFlags;
             uint16_t atLoginFlags = character.at_login;
 
+            // Если персонаж воскресает → снимаем "призрак"
             if (atLoginFlags & AT_LOGIN_RESURRECT)
                 playerFlags &= ~PLAYER_FLAGS_GHOST;
+
+            // Маппинг playerFlags → charFlags
             if (playerFlags & PLAYER_FLAGS_HIDE_HELM)
                 charFlags |= CHARACTER_FLAG_HIDE_HELM;
             if (playerFlags & PLAYER_FLAGS_HIDE_CLOAK)
                 charFlags |= CHARACTER_FLAG_HIDE_CLOAK;
             if (playerFlags & PLAYER_FLAGS_GHOST)
                 charFlags |= CHARACTER_FLAG_GHOST;
+
+            // Маппинг atLoginFlags → charFlags
             if (atLoginFlags & AT_LOGIN_RENAME)
                 charFlags |= CHARACTER_FLAG_RENAME;
             if (character.banned_guid)
                 charFlags |= CHARACTER_FLAG_LOCKED_BY_BILLING;
 
+            // Записываем charFlags
             pkt.write_uint32_le(charFlags);
 
-            // Customize flags
+            // Customize flags (для кастомизации при входе)
             uint32_t customizeFlags = CHAR_CUSTOMIZE_FLAG_NONE;
             if (atLoginFlags & AT_LOGIN_CUSTOMIZE)
-                customizeFlags = CHAR_CUSTOMIZE_FLAG_CUSTOMIZE;
-            else if (atLoginFlags & AT_LOGIN_CHANGE_FACTION)
-                customizeFlags = CHAR_CUSTOMIZE_FLAG_FACTION;
-            else if (atLoginFlags & AT_LOGIN_CHANGE_RACE)
-                customizeFlags = CHAR_CUSTOMIZE_FLAG_RACE;
+                customizeFlags |= CHAR_CUSTOMIZE_FLAG_CUSTOMIZE;
+            if (atLoginFlags & AT_LOGIN_CHANGE_FACTION)
+                customizeFlags |= CHAR_CUSTOMIZE_FLAG_FACTION;
+            if (atLoginFlags & AT_LOGIN_CHANGE_RACE)
+                customizeFlags |= CHAR_CUSTOMIZE_FLAG_RACE;
 
             pkt.write_uint32_le(customizeFlags);
 
-            // First login flag
+            // First login (важно для новых персонажей!)
             uint8_t firstLogin = (atLoginFlags & AT_LOGIN_FIRST) ? 1 : 0;
             pkt.write_uint8(firstLogin);
 
@@ -423,7 +429,10 @@ boost::asio::awaitable<void> CharHandlers::handleInsertCharacter(std::shared_ptr
 
         stmt.set_param(37, 0);                        // extra_flags
         stmt.set_param(38, 0);                        // stable_slots
-        stmt.set_param(39, 0);                        // at_login
+
+        uint8_t m_atLoginFlags = AT_LOGIN_NONE;
+        m_atLoginFlags |= AT_LOGIN_FIRST;
+        stmt.set_param(39, m_atLoginFlags);           // at_login
         stmt.set_param(40, 0);                        // zone
 
         stmt.set_param(41, 0);                        // death_expire_time
