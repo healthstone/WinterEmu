@@ -11,6 +11,7 @@
 #include "src/relayserver/Entity/NodeManager/NodeManager.hpp"
 #include "src/relayserver/Entity/AddonMgr/AddonMgr.hpp"
 #include "src/game/managers/DBCMgr/DBCMgr.hpp"
+#include "src/game/managers/ItemTemplateMgr/ItemTemplateMgr.hpp"
 
 class GameSession;
 
@@ -37,6 +38,7 @@ public:
     Realm* getRealm() const { return realm_.get(); }
     NodeManager* get_node_manager() const  { return node_manager_.get(); }
     AddonMgr* getAddonMgr() const { return addon_manager_.get(); }
+    ItemTemplateMgr* getItemTemplateMgr() const { return itemTemplate_manager_.get(); }
 
 private:
     boost::asio::io_context &io_context_;
@@ -48,6 +50,7 @@ private:
     std::unique_ptr<AddonMgr> addon_manager_;
     std::unique_ptr<DBCMgr> dbc_manager_;
     std::unique_ptr<PlayerInfoMgr> playerInfo_manager_;
+    std::unique_ptr<ItemTemplateMgr> itemTemplate_manager_;
     std::unordered_set<std::shared_ptr<GameSession>> sessions_;
     std::mutex sessions_mutex_;
 };

@@ -55,6 +55,10 @@ void RelayServer::stop() {
         playerInfo_manager_->cleanUpBeforeDelete();
     }
 
+    if (itemTemplate_manager_) {
+        itemTemplate_manager_->cleanUpBeforeDelete();
+    }
+
     if (node_manager_) {
         node_manager_->stop_all();
     }
@@ -119,6 +123,9 @@ void RelayServer::init(unsigned int network_threads, uint32_t realmID) {
 
     playerInfo_manager_ = std::make_unique<PlayerInfoMgr>(shared_from_this());
     playerInfo_manager_->loadFromDB();
+
+    itemTemplate_manager_ = std::make_unique<ItemTemplateMgr>(shared_from_this());
+    itemTemplate_manager_->loadFromDB();
 
     // Подключаемся к нодам
     node_manager_ = std::make_unique<NodeManager>(io_context_);
