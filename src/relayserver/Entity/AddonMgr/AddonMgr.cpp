@@ -21,7 +21,7 @@ void AddonMgr::loadFromDB() {
         uint32_t oldMSTime1 = getMSTime();
 
         auto stmt1 = PreparedStatement("SELECT_ADDONS");
-        auto rows1 = server_->db()->execute_sync_many<AddonRow>(stmt1);
+        auto rows1 = server_->db()->execute_sync_many<Addon>(stmt1);
         for (const auto &row: rows1) {
             knownAddons_[row.name] = {row.name, row.crc};
         }

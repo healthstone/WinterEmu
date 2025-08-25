@@ -20,13 +20,20 @@
 #include <boost/asio/this_coro.hpp>
 
 #include "QueryResults.hpp"
-#include "RelayQueryResults.hpp"
 
 #include "database/mapper/PgRealm.hpp"
 #include "database/mapper/auth/PgAccount.hpp"
 #include "database/mapper/auth/PgBuildInfo.hpp"
 #include "database/mapper/auth/PgBuildExeHash.hpp"
 #include "database/mapper/auth/PgRealmCharacters.hpp"
+
+#include "database/mapper/relay/PgAccountDataRow.hpp"
+#include "database/mapper/relay/PgAccountTutorial.hpp"
+#include "database/mapper/relay/PgAddon.hpp"
+#include "database/mapper/relay/PgBannedAddonRow.hpp"
+#include "database/mapper/relay/PgCharacterEnumRow.hpp"
+#include "database/mapper/relay/PgPlayerCreateInfo.hpp"
+
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/world/PgItemTemplate.hpp"

@@ -90,7 +90,7 @@ boost::asio::awaitable<void> GameSession::loadTutorialsData() {
 
         PreparedStatement stmt("SELECT_ACCOUNT_TUTORIALS");
         stmt.set_param(0, getAccount()->id);
-        auto row = co_await server()->db()->execute_async_one<AccountTutorialRow>(stmt);
+        auto row = co_await server()->db()->execute_async_one<AccountTutorial>(stmt);
         if (row) {
             m_Tutorials[0] = row->tut0;
             m_Tutorials[1] = row->tut1;
