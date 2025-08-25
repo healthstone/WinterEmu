@@ -196,7 +196,7 @@ enum InventoryType : uint8_t
 
 #define MAX_INVTYPE                               29
 
-enum ItemQualities
+enum ItemQualities : uint8_t
 {
     ITEM_QUALITY_POOR                  = 0,                 //GREY
     ITEM_QUALITY_NORMAL                = 1,                 //WHITE

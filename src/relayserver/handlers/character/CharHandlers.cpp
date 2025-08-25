@@ -101,6 +101,7 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
             pkt.write_uint32_le(character.pet_level.value_or(0));
             pkt.write_uint32_le(0); // Pet family
 
+            auto itemTemplateMgr = session->server()->getItemTemplateMgr();
             std::vector<std::string_view> equipment = Util::Tokenize(character.m_equipmentCache, ' ', false);
             for (uint8_t slot = 0; slot < INVENTORY_SLOT_BAG_END; ++slot) {
                 uint32_t const visualBase = slot * 2;
@@ -108,25 +109,24 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
                 if (visualBase < equipment.size())
                     itemId = Util::stringToUInt32(equipment[visualBase]);
 
-//                ItemTemplate const* proto = nullptr;
-//                if (itemId)
-//                    proto = sObjectMgr->GetItemTemplate(*itemId);
-//
-//                if (!proto)
-//                {
-//                    if (!itemId || *itemId)
-//                    {
-//                        TC_LOG_WARN("entities.player.loading", "Player {} has invalid equipment '{}' in `equipmentcache` at index {}. Skipped.",
-//                                    guid, (visualBase < equipment.size()) ? std::string(equipment[visualBase]) : "<none>", visualBase);
-//                    }
-//
-//                    *data << uint32(0);
-//                    *data << uint8(0);
-//                    *data << uint32(0);
-//
-//                    continue;
-//                }
-//
+                ItemTemplate const* proto = nullptr;
+                if (itemId)
+                    proto = itemTemplateMgr->getItemTemplate(*itemId);
+
+                if (!proto)
+                {
+                    if (!itemId || *itemId)
+                    {
+                        Logger::get()->error("Player {} has invalid equipment '{}' in `equipmentcache` at index {}. Skipped.",
+                                playerGuid.ToString(), (visualBase < equipment.size()) ? std::string(equipment[visualBase]) : "<none>", visualBase);
+                    }
+
+                    pkt.write_uint32_le(0); // proto->DisplayInfoID
+                    pkt.write_uint8(0);     // proto->InventoryType
+                    pkt.write_uint32_le(0); // enchant ? enchant->ItemVisual : 0
+                    continue;
+                }
+
 //                SpellItemEnchantmentEntry const* enchant = nullptr;
 //
 //                Optional<uint32> enchants;
@@ -150,9 +150,10 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
 //                        break;
 //                }
 
-                pkt.write_uint32_le(0); // proto->DisplayInfoID
-                pkt.write_uint8(0);     // proto->InventoryType
-                pkt.write_uint32_le(0); // enchant ? enchant->ItemVisual : 0
+                pkt.write_uint32_le(proto->DisplayInfoID);
+                pkt.write_uint8(proto->InventoryType);
+                //pkt.write_uint32_le(enchant ? enchant->ItemVisual : 0);
+                pkt.write_uint32_le(0);
             }
         }
     } else {

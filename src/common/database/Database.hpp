@@ -23,6 +23,7 @@
 #include "AuthQueryResults.hpp"
 #include "DBCQueryResults.hpp"
 #include "RelayQueryResults.hpp"
+#include "WorldQueryResults.hpp"
 #include "PreparedStatement.hpp"
 #include "Logger.hpp"
 
@@ -354,6 +355,7 @@ private:
         prepareAuthSchema(conn);
         prepareRelaySchema(conn);
         prepareDBCSchema(conn);
+        prepareWorldSchema(conn);
 
         txn.commit();
     }
@@ -507,6 +509,44 @@ private:
                                  "facialhaircustomization_1, facialhaircustomization_2, "
                                  "haircustomization, required_expansion "
                                  "FROM {}.dbc_chrraces", dbc_schema));
+    }
+
+    void prepareWorldSchema(pqxx::connection &conn) {
+        std::string world_schema = std::getenv("WORLD_SCHEMA") ? std::string(std::getenv("DBC_SCHEMA")) : "world";
+
+        conn.prepare("SELECT_ITEM_TEMPLATE",
+                     fmt::format("SELECT "
+                                 "entry, class, subclass, soundoverridesubclass, "
+                                 "name, displayid, quality, flags, flagsextra, "
+                                 "buycount, buyprice, sellprice, inventorytype, "
+                                 "allowableclass, allowablerace, itemlevel, "
+                                 "requiredlevel, requiredskill, requiredskillrank, "
+                                 "requiredspell, requiredhonorrank, requiredcityrank, "
+                                 "requiredreputationfaction, requiredreputationrank, "
+                                 "maxcount, stackable, containerslots, statscount, "
+                                 "stat_type1, stat_value1, stat_type2, stat_value2, "
+                                 "stat_type3, stat_value3, stat_type4, stat_value4, "
+                                 "stat_type5, stat_value5, stat_type6, stat_value6, "
+                                 "stat_type7, stat_value7, stat_type8, stat_value8, "
+                                 "stat_type9, stat_value9, stat_type10, stat_value10, "
+                                 "scalingstatdistribution, scalingstatvalue, "
+                                 "dmg_min1, dmg_max1, dmg_type1, dmg_min2, dmg_max2, dmg_type2, "
+                                 "armor, holy_res, fire_res, nature_res, frost_res, shadow_res, arcane_res, "
+                                 "delay, ammo_type, rangedmodrange, "
+                                 "spellid_1, spelltrigger_1, spellcharges_1, spellppmrate_1, spellcooldown_1, spellcategory_1, spellcategorycooldown_1, "
+                                 "spellid_2, spelltrigger_2, spellcharges_2, spellppmrate_2, spellcooldown_2, spellcategory_2, spellcategorycooldown_2, "
+                                 "spellid_3, spelltrigger_3, spellcharges_3, spellppmrate_3, spellcooldown_3, spellcategory_3, spellcategorycooldown_3, "
+                                 "spellid_4, spelltrigger_4, spellcharges_4, spellppmrate_4, spellcooldown_4, spellcategory_4, spellcategorycooldown_4, "
+                                 "spellid_5, spelltrigger_5, spellcharges_5, spellppmrate_5, spellcooldown_5, spellcategory_5, spellcategorycooldown_5, "
+                                 "bonding, description, pagetext, languageid, pagematerial, "
+                                 "startquest, lockid, material, sheath, "
+                                 "randomproperty, randomsuffix, block, itemset, maxdurability, "
+                                 "area, map, bagfamily, totemcategory, "
+                                 "socketcolor_1, socketcontent_1, socketcolor_2, socketcontent_2, socketcolor_3, socketcontent_3, "
+                                 "socketbonus, gemproperties, requireddisenchantskill, armordamagemodifier, "
+                                 "duration, itemlimitcategory, holidayid, scriptname, "
+                                 "disenchantid, foodtype, minmoneyloot, maxmoneyloot, flagscustom, verifiedbuild "
+                                 "FROM {}.item_template", world_schema));
     }
 
 private:

@@ -39,18 +39,18 @@ struct _Socket
 
 struct ItemTemplate {
     uint32_t ItemId;
-    uint32_t Class;                                           // id from ItemClass.dbc
-    uint32_t SubClass;                                        // id from ItemSubClass.dbc
+    uint8_t Class;                                           // id from ItemClass.dbc
+    uint8_t SubClass;                                        // id from ItemSubClass.dbc
     int32_t SoundOverrideSubclass;                           // < 0: id from ItemSubClass.dbc, used to override weapon sound from actual SubClass
     std::string Name1;
     uint32_t DisplayInfoID;                                   // id from ItemDisplayInfo.dbc
-    uint32_t Quality;
+    uint8_t Quality;
     uint32_t Flags;
     uint32_t Flags2;
     uint32_t BuyCount;
     int32_t BuyPrice;
     uint32_t SellPrice;
-    uint32_t InventoryType;
+    uint8_t InventoryType;
     uint32_t AllowableClass;
     uint32_t AllowableRace;
     uint32_t ItemLevel;
@@ -107,12 +107,13 @@ struct ItemTemplate {
     uint32_t Duration;
     uint32_t ItemLimitCategory;                               // id from ItemLimitCategory.dbc
     uint32_t HolidayId;                                       // id from Holidays.dbc
-    uint32_t ScriptId;
+    std::string ScriptName;
     uint32_t DisenchantID;
     uint32_t FoodType;
     uint32_t MinMoneyLoot;
     uint32_t MaxMoneyLoot;
     uint32_t FlagsCu;
+    uint32_t VerifiedBuild;
 
     // helpers
     bool CanChangeEquipStateInCombat() const;

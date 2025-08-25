@@ -16,14 +16,15 @@ void ItemTemplateMgr::loadFromDB() {
     cleanUpBeforeDelete();
 
     try {
-        auto dbcMgr = server_->getDBCMgr();
-        uint32_t oldMSTime1 = getMSTime();
+        uint32_t oldMSTime = getMSTime();
 
-        auto stmt1 = PreparedStatement("SELECT_PLAYER_CREATE_INFO");
-        auto rows1 = server_->db()->execute_sync_many<PlayerCreateInfoRow>(stmt1);
-        for (const auto &row: rows1) {
+        auto stmt = PreparedStatement("SELECT_ITEM_TEMPLATE");
+        auto rows = server_->db()->execute_sync_many<ItemTemplate>(stmt);
+        for (const auto &row: rows)
+            itemTemplateStore_[row.ItemId] = row;
 
-        }
+        log->info(">>> ItemTemplateMgr: loaded {} ItemTemplate in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
     }
     catch (const std::exception &ex) {
         log->error("ItemTemplateMgr::loadFromDB failed: {}", ex.what());

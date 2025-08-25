@@ -1,8 +1,7 @@
 #include "ItemTemplate.hpp"
 #include "src/game/enums/SkillType.hpp"
 
-bool ItemTemplate::HasSignature() const
-{
+bool ItemTemplate::HasSignature() const {
     return GetMaxStackSize() == 1 &&
            Class != ITEM_CLASS_CONSUMABLE &&
            Class != ITEM_CLASS_QUEST &&
@@ -10,18 +9,15 @@ bool ItemTemplate::HasSignature() const
            ItemId != 6948; /*Hearthstone*/
 }
 
-bool ItemTemplate::CanChangeEquipStateInCombat() const
-{
-    switch (InventoryType)
-    {
+bool ItemTemplate::CanChangeEquipStateInCombat() const {
+    switch (InventoryType) {
         case INVTYPE_RELIC:
         case INVTYPE_SHIELD:
         case INVTYPE_HOLDABLE:
             return true;
     }
 
-    switch (Class)
-    {
+    switch (Class) {
         case ITEM_CLASS_WEAPON:
         case ITEM_CLASS_PROJECTILE:
             return true;
@@ -30,8 +26,7 @@ bool ItemTemplate::CanChangeEquipStateInCombat() const
     return false;
 }
 
-float ItemTemplate::getDPS() const
-{
+float ItemTemplate::getDPS() const {
     if (!Delay)
         return 0.f;
 
@@ -42,13 +37,12 @@ float ItemTemplate::getDPS() const
     return temp * 500.f / Delay;
 }
 
-int32_t ItemTemplate::getFeralBonus(int32_t extraDPS /*= 0*/) const
-{
-    constexpr uint32_t feralApEnabledInventoryTypeMaks = 1 << INVTYPE_WEAPON | 1 << INVTYPE_2HWEAPON | 1 << INVTYPE_WEAPONMAINHAND | 1 << INVTYPE_WEAPONOFFHAND;
+int32_t ItemTemplate::getFeralBonus(int32_t extraDPS /*= 0*/) const {
+    constexpr uint32_t feralApEnabledInventoryTypeMaks =
+            1 << INVTYPE_WEAPON | 1 << INVTYPE_2HWEAPON | 1 << INVTYPE_WEAPONMAINHAND | 1 << INVTYPE_WEAPONOFFHAND;
 
     // 0x02A5F3 - is mask for Melee weapon from ItemSubClassMask.dbc
-    if (Class == ITEM_CLASS_WEAPON && (1 << InventoryType) & feralApEnabledInventoryTypeMaks)
-    {
+    if (Class == ITEM_CLASS_WEAPON && (1 << InventoryType) & feralApEnabledInventoryTypeMaks) {
         int32_t bonus = int32_t((extraDPS + getDPS()) * 14.0f) - 767;
         if (bonus < 0)
             return 0;
@@ -58,11 +52,9 @@ int32_t ItemTemplate::getFeralBonus(int32_t extraDPS /*= 0*/) const
     return 0;
 }
 
-float ItemTemplate::GetItemLevelIncludingQuality() const
-{
+float ItemTemplate::GetItemLevelIncludingQuality() const {
     float itemLevel(ItemLevel);
-    switch (Quality)
-    {
+    switch (Quality) {
         case ITEM_QUALITY_POOR:
         case ITEM_QUALITY_NORMAL:
         case ITEM_QUALITY_UNCOMMON:
@@ -82,14 +74,13 @@ float ItemTemplate::GetItemLevelIncludingQuality() const
     return std::max<float>(0.f, itemLevel);
 }
 
-uint32_t ItemTemplate::GetSkill() const
-{
+uint32_t ItemTemplate::GetSkill() const {
     static uint32_t const itemWeaponSkills[MAX_ITEM_SUBCLASS_WEAPON] =
             {
-                    SKILL_AXES,     SKILL_2H_AXES,  SKILL_BOWS,          SKILL_GUNS,         SKILL_MACES,
-                    SKILL_2H_MACES, SKILL_POLEARMS, SKILL_SWORDS,        SKILL_2H_SWORDS,    0,
-                    SKILL_STAVES,   0,              0,                   SKILL_FIST_WEAPONS, 0,
-                    SKILL_DAGGERS,  SKILL_THROWN,   SKILL_ASSASSINATION, SKILL_CROSSBOWS,    SKILL_WANDS,
+                    SKILL_AXES, SKILL_2H_AXES, SKILL_BOWS, SKILL_GUNS, SKILL_MACES,
+                    SKILL_2H_MACES, SKILL_POLEARMS, SKILL_SWORDS, SKILL_2H_SWORDS, 0,
+                    SKILL_STAVES, 0, 0, SKILL_FIST_WEAPONS, 0,
+                    SKILL_DAGGERS, SKILL_THROWN, SKILL_ASSASSINATION, SKILL_CROSSBOWS, SKILL_WANDS,
                     SKILL_FISHING
             };
 
@@ -98,8 +89,7 @@ uint32_t ItemTemplate::GetSkill() const
                     0, SKILL_CLOTH, SKILL_LEATHER, SKILL_MAIL, SKILL_PLATE_MAIL, 0, SKILL_SHIELD, 0, 0, 0, 0
             };
 
-    switch (Class)
-    {
+    switch (Class) {
         case ITEM_CLASS_WEAPON:
             if (SubClass >= MAX_ITEM_SUBCLASS_WEAPON)
                 return 0;
@@ -117,8 +107,7 @@ uint32_t ItemTemplate::GetSkill() const
     }
 }
 
-void ItemTemplate::_LoadTotalAP()
-{
+void ItemTemplate::_LoadTotalAP() {
     int32_t totalAP = 0;
     for (uint32_t i = 0; i < StatsCount; ++i)
         if (ItemStat[i].ItemStatType == ITEM_MOD_ATTACK_POWER)
