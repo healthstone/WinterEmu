@@ -62,7 +62,7 @@ HandlersLogonProofStage::handleLogonProof(std::shared_ptr<AuthSession> session,
         // 6. TODO Проверка 2FA токена, если используется (пример)
 
         // 7. TODO Проверка версии клиента (логика ValidateVersion)
-        log->debug("[HandleLogonProof] User '{}' successfully authenticated", accountName);
+        log->trace("[HandleLogonProof] User '{}' successfully authenticated", accountName);
         //Packet::log_raw_payload("REQUEST  AUTH_LOGON_PROOF", *payload);
 
         // 8. Обновление записи в базе
