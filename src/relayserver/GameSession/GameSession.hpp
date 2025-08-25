@@ -101,8 +101,8 @@ public:
     void setAccountTeam(Team value) { accountTeam_ = value; }
 
     // Account Data
-    AccountsRow* getAccount() { return &account_; }
-    void setAccount(AccountsRow acc) { account_ = std::move(acc); }
+    Account* getAccount() { return &account_; }
+    void setAccount(Account acc) { account_ = std::move(acc); }
     AccountData* getAccountData(AccountDataType type) { return &m_accountData[type]; }
     void sendAccountDataTimes(uint32_t mask);
     boost::asio::awaitable<void> setAccountData(AccountDataType type, time_t tm, std::string const& data);
@@ -154,7 +154,7 @@ private:
     std::array<uint8_t, 4> clientSeed_;
 
     // GameSection
-    AccountsRow account_;
+    Account account_;
     ObjectGuid characterGUID_;
     // this stores the GUIDs of the characters who can login
     GuidSet legitCharacters_;

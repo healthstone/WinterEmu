@@ -19,7 +19,7 @@ namespace HandlersChallenge
     bool isPassedCommonLogic(AuthCmd cmd, std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>> &payload);
     bool isPassedCache(AuthCmd cmd, const std::string &account_name, std::shared_ptr<AuthSession> session);
 
-    boost::asio::awaitable<std::optional<AccountsRow>> fetchFromDB(AuthCmd cmd, std::shared_ptr<AuthSession> session);
+    boost::asio::awaitable<std::optional<Account>> fetchFromDB(AuthCmd cmd, std::shared_ptr<AuthSession> session);
 
     boost::asio::awaitable<void> LogonChallengeLogic(std::shared_ptr<AuthSession> session);
     boost::asio::awaitable<void> ReconnectChallengeLogic(std::shared_ptr<AuthSession> session);

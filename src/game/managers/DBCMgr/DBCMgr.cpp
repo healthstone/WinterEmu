@@ -46,7 +46,7 @@ void DBCMgr::load_ChrClasses() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CHRCLASSES");
-        auto rows = server_->db()->execute_sync_many<DbcChrClassesRow>(stmt);
+        auto rows = server_->db()->execute_sync_many<DbcChrClasses>(stmt);
         for (const auto &row: rows) {
             ChrClassesDBC cc;
             cc.ID           = row.ID;
@@ -90,7 +90,7 @@ void DBCMgr::load_ChrRaces() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CHRRACES");
-        auto rows = server_->db()->execute_sync_many<DbcChrRacesRow>(stmt);
+        auto rows = server_->db()->execute_sync_many<DbcChrRaces>(stmt);
         for (const auto &row: rows) {
             ChrRacesDBC cr;
             cr.ID                  = row.ID;

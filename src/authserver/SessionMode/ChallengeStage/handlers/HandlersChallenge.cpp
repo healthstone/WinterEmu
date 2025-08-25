@@ -208,12 +208,12 @@ bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_na
         return true;
 }
 
-boost::asio::awaitable<std::optional<AccountsRow>>
+boost::asio::awaitable<std::optional<Account>>
 HandlersChallenge::fetchFromDB(AuthCmd cmd, std::shared_ptr<AuthSession> session) {
     try {
         PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
         stmt.set_param(0, session->_login);
-        auto user = co_await session->server()->db()->execute_async_one<AccountsRow>(stmt);
+        auto user = co_await session->server()->db()->execute_async_one<Account>(stmt);
         co_return user;
     } catch (const std::exception &ex) {
         Logger::get()->error("[fetchFromDB] DB exception: {}", ex.what());

@@ -36,7 +36,7 @@ public:
         std::chrono::steady_clock::time_point last_access; // скользящий TTL
 
         //account entity
-        AccountsRow account;
+        Account account;
     };
 
     std::shared_ptr<AccountCacheEntry> get(const std::string &username) {

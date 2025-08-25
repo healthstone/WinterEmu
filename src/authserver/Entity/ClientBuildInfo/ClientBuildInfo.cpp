@@ -62,7 +62,7 @@ namespace ClientBuild
         try {
             // === 1) Загружаем основное описание билдов ===
             PreparedStatement stmt1("SELECT_BUILD_INFO");
-            auto rows = db->execute_sync_many<BuildInfoRow>(stmt1);
+            auto rows = db->execute_sync_many<BuildInfo>(stmt1);
             for (auto const& row : rows)
             {
                 Info& build = Builds.emplace_back();
@@ -86,7 +86,7 @@ namespace ClientBuild
         try {
             // === 2) Загружаем таблицу с хешами исполняемых файлов ===
             PreparedStatement stmt2("SELECT_BUILD_EXECUTABLE_HASH");
-            auto exeHashRows = db->execute_sync_many<BuildExeHashRow>(stmt2);
+            auto exeHashRows = db->execute_sync_many<BuildExeHash>(stmt2);
             for (auto const& row : exeHashRows)
             {
                 auto buildInfo = std::ranges::find(Builds, row.build, &Info::Build);

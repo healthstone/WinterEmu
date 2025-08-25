@@ -51,11 +51,11 @@ AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared
     co_return;
 }
 
-boost::asio::awaitable<std::optional<AccountsRow>> AuthHandlers::fetchFromDB(std::shared_ptr<GameSession> session, const std::string &accName) {
+boost::asio::awaitable<std::optional<Account>> AuthHandlers::fetchFromDB(std::shared_ptr<GameSession> session, const std::string &accName) {
     try {
         PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
         stmt.set_param(0, accName);
-        auto user = co_await session->server()->db()->execute_async_one<AccountsRow>(stmt);
+        auto user = co_await session->server()->db()->execute_async_one<Account>(stmt);
         co_return user;
     } catch (const std::exception &ex) {
         Logger::get()->error("[fetchFromDB] DB exception: {}", ex.what());
@@ -144,7 +144,7 @@ void AuthHandlers::sendAuthResponse(
 }
 
 bool AuthHandlers::verifyClientDigest(const AuthSessionData &asd,
-                                      const AccountsRow &account,
+                                      const Account &account,
                                       const std::array<uint8_t, 4> &authSeed) {
     using namespace Crypto;
     auto log = Logger::get();

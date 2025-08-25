@@ -15,7 +15,7 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
         stmt1.set_param(0, session->_accountGUID);
         //Packet::log_raw_payload("REQUEST  REALM_LIST", *payload);
 
-        auto rows = co_await session->server()->db()->execute_async_many<RealmCharactersRow>(stmt1);
+        auto rows = co_await session->server()->db()->execute_async_many<RealmCharacters>(stmt1);
         if (!rows.empty()) {
             for (const auto &row: rows) {
                 characterCounts[row.realmid] = row.numchars;

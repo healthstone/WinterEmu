@@ -20,12 +20,12 @@ struct PgRowMapper<ItemTemplate> {
         ItemTemplate item;
 
         // Базовые поля
-        item.ItemId = static_cast<uint32_t>(row["entry"].as<int32_t>());
+        item.ItemId = row["entry"].as<uint32_t>();
         item.Class = static_cast<uint8_t>(row["class"].as<int16_t>());
         item.SubClass = static_cast<uint8_t>(row["subclass"].as<int16_t>());
         item.SoundOverrideSubclass = row["soundoverridesubclass"].as<int32_t>();
         item.Name1 = row["name"].as<std::string>();
-        item.DisplayInfoID = static_cast<uint32_t>(row["displayid"].as<int32_t>());
+        item.DisplayInfoID = row["displayid"].as<uint32_t>();
         item.Quality = static_cast<uint8_t>(row["quality"].as<int16_t>());
         item.Flags = static_cast<uint32_t>(row["flags"].as<int32_t>());
         item.Flags2 = static_cast<uint32_t>(row["flagsextra"].as<int32_t>());
