@@ -1,7 +1,7 @@
 #include "DBCMgr.hpp"
-#include "src/relayserver/RelayServer.hpp"
 #include "Time/Timer.hpp"
 #include "Logger.hpp"
+#include "BaseServer.hpp"
 
 DBCMgr::~DBCMgr() {
     cleanUpBeforeDelete();
@@ -15,6 +15,10 @@ void DBCMgr::cleanUpBeforeDelete() {
 void DBCMgr::initialize_for_relay() {
     load_ChrClasses();
     load_ChrRaces();
+}
+
+void DBCMgr::initialize_for_node() {
+    Logger::get()->info(">>> DBCMgr: initialized");
 }
 
 Team DBCMgr::teamForRace(uint8_t race)

@@ -1,7 +1,8 @@
 #include "PlayerInfoMgr.hpp"
-#include "src/relayserver/RelayServer.hpp"
+#include "BaseServer.hpp"
 #include "Logger.hpp"
 #include "Time/Timer.hpp"
+#include "src/game/enums/DBCStructure.hpp"
 
 PlayerInfoMgr::~PlayerInfoMgr() {
     cleanUpBeforeDelete();
@@ -26,28 +27,28 @@ void PlayerInfoMgr::loadFromDB() {
         auto stmt1 = PreparedStatement("SELECT_PLAYER_CREATE_INFO");
         auto rows1 = server_->db()->execute_sync_many<PlayerCreateInfoRow>(stmt1);
         for (const auto &row: rows1) {
-            if (row.m_race >= MAX_RACES)
-            {
-                log->error("PlayerInfoMgr::loadFromDB: Wrong race {} in `playercreateinfo` table, ignoring.", row.m_race);
+            if (row.m_race >= MAX_RACES) {
+                log->error("PlayerInfoMgr::loadFromDB: Wrong race {} in `playercreateinfo` table, ignoring.",
+                           row.m_race);
                 continue;
             }
 
-            ChrRacesDBC const* rEntry = dbcMgr->getChrRacesDBC(row.m_race);
-            if (!rEntry)
-            {
-                log->error("PlayerInfoMgr::loadFromDB: Wrong race {} in `playercreateinfo` table, ignoring.", row.m_race);
+            ChrRacesDBC const *rEntry = dbcMgr->getChrRacesDBC(row.m_race);
+            if (!rEntry) {
+                log->error("PlayerInfoMgr::loadFromDB: Wrong race {} in `playercreateinfo` table, ignoring.",
+                           row.m_race);
                 continue;
             }
 
-            if (row.m_class >= MAX_CLASSES)
-            {
-                log->error("PlayerInfoMgr::loadFromDB: Wrong class {} in `playercreateinfo` table, ignoring.", row.m_class);
+            if (row.m_class >= MAX_CLASSES) {
+                log->error("PlayerInfoMgr::loadFromDB: Wrong class {} in `playercreateinfo` table, ignoring.",
+                           row.m_class);
                 continue;
             }
 
-            if (!dbcMgr->getChrClassesDBC(row.m_class))
-            {
-                log->error("PlayerInfoMgr::loadFromDB: Wrong class {} in `playercreateinfo` table, ignoring.", row.m_class);
+            if (!dbcMgr->getChrClassesDBC(row.m_class)) {
+                log->error("PlayerInfoMgr::loadFromDB: Wrong class {} in `playercreateinfo` table, ignoring.",
+                           row.m_class);
                 continue;
             }
 

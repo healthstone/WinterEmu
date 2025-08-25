@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Realm.hpp"
-#include "Database.hpp"
-#include "Logger.hpp"
-#include "Resolver.hpp"
-
-#include <boost/asio.hpp>
 #include <unordered_map>
 #include <mutex>
 #include <memory>
+#include <boost/asio.hpp>
+
+#include "Database.hpp"
+#include "Logger.hpp"
+#include "src/game/Entity/Realm/Realm.hpp"
+#include "src/game/Entity/Realm/Resolver.hpp"
 
 class AuthServer;
 

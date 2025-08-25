@@ -9,7 +9,7 @@
 #include "src/authserver/AuthServer.hpp"
 #include "packet/MessageBuffer.hpp"
 #include "packet/Packet.hpp"
-#include "enums/AccountTypes.hpp"
+#include "src/game/enums/AccountTypes.hpp"
 #include "Cryptography/srp6/SRP6.hpp"
 #include "src/authserver/SessionMode/ChallengeStage/handlers/LogonChallenge.hpp"
 

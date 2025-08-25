@@ -1,9 +1,6 @@
 #include "AuthHandlers.hpp"
-
 #include "utils/HexUtils.hpp"
 #include "utils/utf8utils/UTF8Utils.hpp"
-
-using namespace AuthHandlers;
 
 boost::asio::awaitable<void>
 AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p) {

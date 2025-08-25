@@ -1,7 +1,7 @@
 #include "GameSession.hpp"
+#include "Cryptography/CryptoRandom.hpp"
 #include "Logger.hpp"
 #include "src/relayserver/handlers/Handlers.hpp"
-#include "Cryptography/CryptoRandom.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -48,7 +48,7 @@ void GameSession::close() {
 }
 
 void GameSession::cleanBeforeDelete() {
-    for (auto & i : m_accountData)
+    for (auto &i: m_accountData)
         i = AccountData();
     memset(m_Tutorials, 0, sizeof(uint32_t) * MAX_ACCOUNT_TUTORIAL_VALUES);
     legitCharacters_.clear();
@@ -87,10 +87,10 @@ void GameSession::do_read() {
 
 void GameSession::process_read_buffer() {
     auto log = Logger::get();
-    MessageBuffer& buffer = read_buffer();
+    MessageBuffer &buffer = read_buffer();
 
     while (buffer.get_active_size() >= 6) { // Минимум 6 байт: size(2) + cmd(4)
-        const uint8_t* data = buffer.read_ptr();
+        const uint8_t *data = buffer.read_ptr();
         uint8_t header_buffer[6];
         std::memcpy(header_buffer, data, 6); // Копируем заголовок для дешифровки
 
@@ -141,7 +141,7 @@ void GameSession::process_read_buffer() {
             packet->deserialize(packet_data);
             Handlers::dispatch(shared_from_this(), packet);
         }
-        catch (const std::exception& ex) {
+        catch (const std::exception &ex) {
             log->error("Packet processing failed: {}", ex.what());
             close();
             return;
@@ -152,7 +152,7 @@ void GameSession::process_read_buffer() {
 /**
  * Обертка для безопасной отправки пакета из любого потока и корутины
  */
-void GameSession::send_packet(const std::shared_ptr<const WoWPacket>& packet) {
+void GameSession::send_packet(const std::shared_ptr<const WoWPacket> &packet) {
     if (closed_) {
         Logger::get()->debug("[relay_session][send_packet] called. closed_={}", closed_.load());
         return;
@@ -244,7 +244,7 @@ void GameSession::send_auth_challenge() {
     send_packet(std::make_shared<WoWPacket>(challenge_pkt));
 }
 
-void GameSession::initCrypt(const std::array<uint8_t, 40>& key) {
+void GameSession::initCrypt(const std::array<uint8_t, 40> &key) {
     // Преобразуем 40-байтный ключ в формат SessionKey
     SessionKey sessionKey;
     std::copy(key.begin(), key.end(), sessionKey.begin());

@@ -1,15 +1,14 @@
 #include "HandlersLogonProofStage.hpp"
+#include "utils/PacketUtils.hpp"
+#include "utils/NetUtils.hpp"
 #include "packet/RawPacket.hpp"
 #include "src/authserver/enums/AuthCmd.hpp"
 #include "src/authserver/enums/AuthResult.hpp"
-#include "utils/PacketUtils.hpp"
-#include "utils/NetUtils.hpp"
 #include "src/authserver/Entity/AuthCodes/AuthCodes.hpp"
 
-using namespace HandlersLogonProofStage;
-
 boost::asio::awaitable<void>
-HandlersLogonProofStage::handleLogonProof(std::shared_ptr<AuthSession> session, std::shared_ptr<std::vector<uint8_t>> payload) {
+HandlersLogonProofStage::handleLogonProof(std::shared_ptr<AuthSession> session,
+                                          std::shared_ptr<std::vector<uint8_t>> payload) {
     auto log = Logger::get();
     ByteBuffer buffer(*payload);
     session->set_session_mode(SessionMode::STATUS_CLOSED);

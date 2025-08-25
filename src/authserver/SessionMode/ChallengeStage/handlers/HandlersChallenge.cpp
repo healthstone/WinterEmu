@@ -1,13 +1,11 @@
 #include "HandlersChallenge.hpp"
+#include "Cryptography/CryptoRandom.hpp"
 #include "utils/NetUtils.hpp"
 #include "utils/utf8utils/UTF8Utils.hpp"
 #include "utils/PacketUtils.hpp"
+#include "utils/UUIDUtils.hpp"
 #include "packet/RawPacket.hpp"
 #include "src/authserver/Entity/AuthCodes/AuthCodes.hpp"
-#include "Cryptography/CryptoRandom.hpp"
-#include "utils/UUIDUtils.hpp"
-
-using namespace HandlersChallenge;
 
 uint8_t VersionChallenge[16] = {
         0xBA, 0xA3, 0x1E, 0x99, 0xA0, 0x0B, 0x21, 0x57,
@@ -155,11 +153,12 @@ bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_na
         RawPacket pkt;
         pkt.write_uint8(static_cast<uint8_t>(cmd));                       // opcode ID
 
-        switch(cmd) {
+        switch (cmd) {
             case AuthCmd::AUTH_LOGON_CHALLENGE: {
                 // Инициализация SRP6 с salt и verifier
                 if (!session->_srp6)
-                    session->_srp6.emplace(account_name, cached_user.account.salt.value(), cached_user.account.verifier.value());
+                    session->_srp6.emplace(account_name, cached_user.account.salt.value(),
+                                           cached_user.account.verifier.value());
                 auto &srp = *session->_srp6;
 
                 Logger::get()->trace(
@@ -209,7 +208,8 @@ bool HandlersChallenge::isPassedCache(AuthCmd cmd, const std::string &account_na
         return true;
 }
 
-boost::asio::awaitable<std::optional<AccountsRow>> HandlersChallenge::fetchFromDB(AuthCmd cmd, std::shared_ptr<AuthSession> session) {
+boost::asio::awaitable<std::optional<AccountsRow>>
+HandlersChallenge::fetchFromDB(AuthCmd cmd, std::shared_ptr<AuthSession> session) {
     try {
         PreparedStatement stmt("SELECT_ACCOUNT_BY_USERNAME");
         stmt.set_param(0, session->_login);

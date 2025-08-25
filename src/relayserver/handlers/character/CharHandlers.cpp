@@ -1,14 +1,13 @@
 #include "CharHandlers.hpp"
-#include "enums/PetDefines.hpp"
-#include "enums/Gender.hpp"
-#include "enums/DBCStructure.h"
-#include "enums/Classes.hpp"
-#include "src/relayserver/Entity/PlayerInfo/PlayerInfoData.hpp"
-#include "src/relayserver/enums/CharacterEnums.hpp"
-#include "src/relayserver/enums/PlayerEnums.hpp"
 #include "utils/utf8utils/UTF8Utils.hpp"
 #include "utils/util/Util.hpp"
-
+#include "src/game/enums/Classes.hpp"
+#include "src/game/enums/CharacterEnums.hpp"
+#include "src/game/enums/DBCStructure.hpp"
+#include "src/game/enums/Gender.hpp"
+#include "src/game/enums/PetDefines.hpp"
+#include "src/game/enums/PlayerEnums.hpp"
+#include "src/game/Entity/PlayerInfo/PlayerInfo.hpp"
 
 /** CMSG_CHAR_ENUM **/
 boost::asio::awaitable<void>
@@ -24,7 +23,7 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
     if (!characters.empty()) {
         pkt.write_uint8(static_cast<uint8_t>(characters.size())); // Количество персонажей
 
-        for (const auto& character : characters) {
+        for (const auto &character: characters) {
             ObjectGuid playerGuid = ObjectGuid::Create<HighGuid::Player>(character.m_guid);
             session->addLegitCharacterForAccount(playerGuid);
 
@@ -103,8 +102,7 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
             pkt.write_uint32_le(0); // Pet family
 
             std::vector<std::string_view> equipment = Util::Tokenize(character.m_equipmentCache, ' ', false);
-            for (uint8_t slot = 0; slot < INVENTORY_SLOT_BAG_END; ++slot)
-            {
+            for (uint8_t slot = 0; slot < INVENTORY_SLOT_BAG_END; ++slot) {
                 uint32_t const visualBase = slot * 2;
                 std::optional<uint32_t> itemId;
                 if (visualBase < equipment.size())
@@ -165,7 +163,8 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
 }
 
 /** CMSG_CHAR_CREATE **/
-boost::asio::awaitable<void> CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, const std::shared_ptr<WoWPacket> &p) {
+boost::asio::awaitable<void>
+CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, const std::shared_ptr<WoWPacket> &p) {
     auto log = Logger::get();
     auto ccd = ReadPacketFields(p);
     if (!ccd) {
@@ -174,82 +173,78 @@ boost::asio::awaitable<void> CharHandlers::handleCharacterCreate(std::shared_ptr
     }
 
     auto dbcMgr = session->server()->getDBCMgr();
-    uint32_t m_expansion = session->getAccount()->expansion ? session->getAccount()->expansion.value() : 2; // default WoTLK addon = 2
+    uint32_t m_expansion = session->getAccount()->expansion ? session->getAccount()->expansion.value()
+                                                            : 2; // default WoTLK addon = 2
     std::string m_accountName = session->getAccount()->username.value();
 
-    ChrRacesDBC const* raceEntry = dbcMgr->getChrRacesDBC(ccd->m_race);
-    if (!raceEntry)
-    {
-        log->error("CharHandlers::handleCharacterCreate: Race ({}) not found in DBC while creating new char for account:[{}] wrong DBC files or cheater?",
-                   ccd->m_race, m_accountName);
+    ChrRacesDBC const *raceEntry = dbcMgr->getChrRacesDBC(ccd->m_race);
+    if (!raceEntry) {
+        log->error(
+                "CharHandlers::handleCharacterCreate: Race ({}) not found in DBC while creating new char for account:[{}] wrong DBC files or cheater?",
+                ccd->m_race, m_accountName);
         sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
         co_return;
     }
 
     // prevent character creating Expansion race without Expansion account
-    if (raceEntry->RequiredExpansion > m_expansion)
-    {
-        log->error("CharHandlers::handleCharacterCreate: Expansion {} account:[{}] tried to Create character with expansion {} race ({})",
-                   m_expansion, m_accountName, raceEntry->RequiredExpansion, ccd->m_race);
+    if (raceEntry->RequiredExpansion > m_expansion) {
+        log->error(
+                "CharHandlers::handleCharacterCreate: Expansion {} account:[{}] tried to Create character with expansion {} race ({})",
+                m_expansion, m_accountName, raceEntry->RequiredExpansion, ccd->m_race);
         sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_EXPANSION);
         co_return;
     }
 
     // TC RBAC_PERM_SKIP_CHECK_CHARACTER_CREATION_RACEMASK
-    if (raceEntry->Alliance == CHRRACES_ALLIANCE_TYPE_NOT_PLAYABLE || raceEntry->HasFlag(CHRRACES_FLAGS_NOT_PLAYABLE))
-    {
-        log->error("CharHandlers::handleCharacterCreate: Race ({}) was not playable but requested while creating new char for account:[{}] wrong DBC files or cheater?",
-                   ccd->m_race, m_accountName);
+    if (raceEntry->Alliance == CHRRACES_ALLIANCE_TYPE_NOT_PLAYABLE || raceEntry->HasFlag(CHRRACES_FLAGS_NOT_PLAYABLE)) {
+        log->error(
+                "CharHandlers::handleCharacterCreate: Race ({}) was not playable but requested while creating new char for account:[{}] wrong DBC files or cheater?",
+                ccd->m_race, m_accountName);
         sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
         co_return;
     }
 
     //TC CONFIG_CHARACTER_CREATING_DISABLED_RACEMASK
     uint32_t raceMaskDisabled = 0;
-    if ((1 << (ccd->m_race - 1)) & raceMaskDisabled)
-    {
+    if ((1 << (ccd->m_race - 1)) & raceMaskDisabled) {
         sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
         co_return;
     }
 
-    ChrClassesDBC const* classEntry = dbcMgr->getChrClassesDBC(ccd->m_class);
-    if (!classEntry)
-    {
-        log->error("CharHandlers::handleCharacterCreate: Class ({}) not found in DBC while creating new char for account:[{}] wrong DBC files or cheater?",
-                   ccd->m_class, m_accountName);
+    ChrClassesDBC const *classEntry = dbcMgr->getChrClassesDBC(ccd->m_class);
+    if (!classEntry) {
+        log->error(
+                "CharHandlers::handleCharacterCreate: Class ({}) not found in DBC while creating new char for account:[{}] wrong DBC files or cheater?",
+                ccd->m_class, m_accountName);
         sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_FAILED);
         co_return;
     }
 
     // prevent character creating Expansion class without Expansion account
-    if (classEntry->RequiredExpansion > m_expansion)
-    {
-        log->error("CharHandlers::handleCharacterCreate: Expansion {} account:[{}] tried to Create character with expansion {} class ({})",
-                   m_expansion, m_accountName, classEntry->RequiredExpansion, ccd->m_class);
+    if (classEntry->RequiredExpansion > m_expansion) {
+        log->error(
+                "CharHandlers::handleCharacterCreate: Expansion {} account:[{}] tried to Create character with expansion {} class ({})",
+                m_expansion, m_accountName, classEntry->RequiredExpansion, ccd->m_class);
         sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_EXPANSION_CLASS);
         co_return;
     }
 
     //TC CONFIG_CHARACTER_CREATING_DISABLED_CLASSMASK
     uint32_t classMaskDisabled = 0;
-    if ((1 << (ccd->m_class - 1)) & classMaskDisabled)
-    {
+    if ((1 << (ccd->m_class - 1)) & classMaskDisabled) {
         sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_DISABLED);
         co_return;
     }
 
-    if (static_cast<Classes>(ccd->m_class) == Classes::CLASS_DEATH_KNIGHT)
-    {
+    if (static_cast<Classes>(ccd->m_class) == Classes::CLASS_DEATH_KNIGHT) {
         // level check >= 55lvl exists
-        if (!session->isCanCreateDK())
-        {
+        if (!session->isCanCreateDK()) {
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_LEVEL_REQUIREMENT);
             co_return;
         }
 
         // DK count check
-        if (session->getDKCountOnRealm() > 0)
-        {
+        if (session->getDKCountOnRealm() > 0) {
             sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_UNIQUE_CLASS_LIMIT);
             co_return;
         }
@@ -261,9 +256,9 @@ boost::asio::awaitable<void> CharHandlers::handleCharacterCreate(std::shared_ptr
     }
 
     // prevent character creating with invalid name
-    if (!UTF8Utils::normalizePlayerName(ccd->m_name))
-    {
-        log->error("CharHandlers::handleCharacterCreate: Account:[{}] but tried to Create character with empty [name] ", m_accountName);
+    if (!UTF8Utils::normalizePlayerName(ccd->m_name)) {
+        log->error("CharHandlers::handleCharacterCreate: Account:[{}] but tried to Create character with empty [name] ",
+                   m_accountName);
         sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_NAME_NO_NAME);
         co_return;
     }
@@ -285,9 +280,8 @@ boost::asio::awaitable<void> CharHandlers::handleCharacterCreate(std::shared_ptr
         }
     }
 
-    PlayerInfo const* info = session->server()->getPlayerInfoMgr()->getPlayerInfo(ccd->m_race, ccd->m_class);
-    if (!info)
-    {
+    PlayerInfo const *info = session->server()->getPlayerInfoMgr()->getPlayerInfo(ccd->m_race, ccd->m_class);
+    if (!info) {
         log->error("CharHandlers::handleCharacterCreate: Possible hacking attempt: "
                    "Account {} tried to create a character named '{}' with an invalid race/class pair ({}/{}) - refusing to do so.",
                    m_accountName, ccd->m_name, ccd->m_race, ccd->m_class);
@@ -300,8 +294,7 @@ boost::asio::awaitable<void> CharHandlers::handleCharacterCreate(std::shared_ptr
     co_return;
 }
 
-void CharHandlers::sendCharResponse(std::shared_ptr<GameSession> session, WoWOpcodes opcode, ResponseCodes result)
-{
+void CharHandlers::sendCharResponse(std::shared_ptr<GameSession> session, WoWOpcodes opcode, ResponseCodes result) {
     WoWPacket pkt(opcode);
     pkt.write_uint8(static_cast<uint8_t>(result));
     session->send_packet(std::make_shared<WoWPacket>(pkt));
@@ -311,16 +304,16 @@ std::optional<CharCreateData> CharHandlers::ReadPacketFields(const std::shared_p
     try {
         /// User specified variables
         CharCreateData ccd;
-        ccd.m_name       = p->read_string_nt_be();
-        ccd.m_race       = p->read_uint8();
-        ccd.m_class      = p->read_uint8();
-        ccd.m_gender     = p->read_uint8();
-        ccd.m_skin       = p->read_uint8();
-        ccd.m_face       = p->read_uint8();
-        ccd.m_hairStyle  = p->read_uint8();
-        ccd.m_hairColor  = p->read_uint8();
+        ccd.m_name = p->read_string_nt_be();
+        ccd.m_race = p->read_uint8();
+        ccd.m_class = p->read_uint8();
+        ccd.m_gender = p->read_uint8();
+        ccd.m_skin = p->read_uint8();
+        ccd.m_face = p->read_uint8();
+        ccd.m_hairStyle = p->read_uint8();
+        ccd.m_hairColor = p->read_uint8();
         ccd.m_facialHair = p->read_uint8();
-        ccd.m_outfitId   = p->read_uint8();
+        ccd.m_outfitId = p->read_uint8();
 
         Logger::get()->debug("Create character:\n"
                              "{} name\n"
@@ -357,7 +350,8 @@ boost::asio::awaitable<std::vector<CharacterEnumRow>> CharHandlers::fetchFromDB(
     }
 }
 
-boost::asio::awaitable<uint64_t> CharHandlers::fetchUsernameCountFromDB(std::shared_ptr<GameSession> session, const std::string &charName) {
+boost::asio::awaitable<uint64_t>
+CharHandlers::fetchUsernameCountFromDB(std::shared_ptr<GameSession> session, const std::string &charName) {
     try {
         PreparedStatement stmt("SELECT_COUNT_CHARS_BY_USERNAME");
         stmt.set_param(0, charName);
@@ -369,7 +363,9 @@ boost::asio::awaitable<uint64_t> CharHandlers::fetchUsernameCountFromDB(std::sha
     }
 }
 
-boost::asio::awaitable<void> CharHandlers::handleInsertCharacter(std::shared_ptr<GameSession> session, const CharCreateData &ccd, PlayerInfo const* playerInfo) {
+boost::asio::awaitable<void>
+CharHandlers::handleInsertCharacter(std::shared_ptr<GameSession> session, const CharCreateData &ccd,
+                                    PlayerInfo const *playerInfo) {
     try {
         PreparedStatement stmt("INSERT_CHARACTER");
         //conn.prepare("INSERT_CHARACTER",

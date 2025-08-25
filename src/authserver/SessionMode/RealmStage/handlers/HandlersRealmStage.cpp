@@ -1,11 +1,9 @@
 #include "HandlersRealmStage.hpp"
-#include "src/authserver/Entity/AuthCodes/AuthCodes.hpp"
-#include "src/authserver/Entity/ClientBuildInfo/ClientBuildInfo.hpp"
+#include "utils/PacketUtils.hpp"
 #include "packet/RawPacket.hpp"
 #include "src/authserver/enums/AuthCmd.hpp"
-#include "utils/PacketUtils.hpp"
-
-using namespace HandlersRealmStage;
+#include "src/authserver/Entity/AuthCodes/AuthCodes.hpp"
+#include "src/authserver/Entity/ClientBuildInfo/ClientBuildInfo.hpp"
 
 boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
         std::shared_ptr<AuthSession> session,
@@ -43,7 +41,8 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
             const ClientBuild::Info *buildInfo = ClientBuild::GetBuildInfo(realm->Build);
             if (!okBuild) {
                 if (!buildInfo) continue;
-                flag |= static_cast<uint32_t>(RealmFlags::REALM_FLAG_OFFLINE) | static_cast<uint32_t>(RealmFlags::REALM_FLAG_SPECIFYBUILD);
+                flag |= static_cast<uint32_t>(RealmFlags::REALM_FLAG_OFFLINE) |
+                        static_cast<uint32_t>(RealmFlags::REALM_FLAG_SPECIFYBUILD);
             }
 
             if (!buildInfo) {
@@ -51,7 +50,8 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
             }
 
             std::string name = realm->Name;
-            if ((session->_expversion & PRE_BC_EXP_FLAG) && (flag & static_cast<uint32_t>(RealmFlags::REALM_FLAG_SPECIFYBUILD))) {
+            if ((session->_expversion & PRE_BC_EXP_FLAG) &&
+                (flag & static_cast<uint32_t>(RealmFlags::REALM_FLAG_SPECIFYBUILD))) {
                 std::ostringstream ss;
                 ss << name << " (" << buildInfo->MajorVersion
                    << '.' << buildInfo->MinorVersion
@@ -81,7 +81,8 @@ boost::asio::awaitable<void> HandlersRealmStage::HandleRealmList(
             else
                 packet.write_uint8(0x0);
 
-            if ((session->_expversion & POST_BC_EXP_FLAG) && (flag & static_cast<uint32_t>(RealmFlags::REALM_FLAG_SPECIFYBUILD))) {
+            if ((session->_expversion & POST_BC_EXP_FLAG) &&
+                (flag & static_cast<uint32_t>(RealmFlags::REALM_FLAG_SPECIFYBUILD))) {
                 packet.write_uint8(buildInfo->MajorVersion);
                 packet.write_uint8(buildInfo->MinorVersion);
                 packet.write_uint8(buildInfo->BugfixVersion);

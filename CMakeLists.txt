@@ -23,6 +23,7 @@ set(UTF8CPP_DIR ${CMAKE_SOURCE_DIR}/deps/utf8cpp)
 add_subdirectory(${UTF8CPP_DIR})
 
 file(GLOB_RECURSE COMMON_SOURCES CONFIGURE_DEPENDS src/common/*.cpp)
+file(GLOB_RECURSE GAME_COMMON_SOURCES CONFIGURE_DEPENDS src/game/*.cpp)
 file(GLOB_RECURSE AUTH_SERVER_SOURCES CONFIGURE_DEPENDS src/authserver/*.cpp)
 file(GLOB_RECURSE RELAY_SERVER_SOURCES CONFIGURE_DEPENDS src/relayserver/*.cpp)
 file(GLOB_RECURSE NODE_SERVER_SOURCES CONFIGURE_DEPENDS src/nodeserver/*.cpp)
@@ -38,6 +39,7 @@ add_executable(authserver
         src/main_authserver.cpp
         ${AUTH_SERVER_SOURCES}
         ${COMMON_SOURCES}
+        ${GAME_COMMON_SOURCES}
 )
 
 target_link_libraries(authserver PRIVATE
@@ -61,6 +63,7 @@ add_executable(relayserver
         src/main_relayserver.cpp
         ${RELAY_SERVER_SOURCES}
         ${COMMON_SOURCES}
+        ${GAME_COMMON_SOURCES}
 )
 
 target_link_libraries(relayserver PRIVATE
@@ -85,6 +88,7 @@ add_executable(nodeserver
         src/main_nodeserver.cpp
         ${NODE_SERVER_SOURCES}
         ${COMMON_SOURCES}
+        ${GAME_COMMON_SOURCES}
 )
 
 target_link_libraries(nodeserver PRIVATE
@@ -108,6 +112,7 @@ add_executable(tests
         tests/tests_main.cpp
         ${TEST_SOURCES}
         ${COMMON_SOURCES}
+        ${GAME_COMMON_SOURCES}
 )
 
 target_link_libraries(tests PRIVATE

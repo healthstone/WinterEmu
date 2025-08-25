@@ -1,15 +1,15 @@
 #pragma once
 
 #include <memory>
-#include "PlayerInfoData.hpp"
-#include "enums/Races.hpp"
-#include "enums/Classes.hpp"
+#include "src/game/Entity/PlayerInfo/PlayerInfo.hpp"
+#include "src/game/enums/Races.hpp"
+#include "src/game/enums/Classes.hpp"
 
-class RelayServer;
+class BaseServer;
 
 class PlayerInfoMgr {
 public:
-    explicit PlayerInfoMgr(std::shared_ptr<RelayServer> server) : server_(std::move(server)) {}
+    explicit PlayerInfoMgr(std::shared_ptr<BaseServer> server) : server_(std::move(server)) {}
 
     ~PlayerInfoMgr();
 
@@ -30,6 +30,6 @@ public:
     }
 
 private:
-    std::shared_ptr<RelayServer> server_;
+    std::shared_ptr<BaseServer> server_;
     std::unique_ptr<PlayerInfo> _playerInfo[MAX_RACES][MAX_CLASSES];
 };

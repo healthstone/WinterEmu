@@ -1,8 +1,8 @@
 #include <memory>
-#include "src/relayserver/GameSession/GameSession.hpp"
-#include "packet/WoWPacket.hpp"
-#include "src/relayserver/enums/ResponseCodes.hpp"
 #include "CharCreateData.hpp"
+#include "packet/WoWPacket.hpp"
+#include "src/relayserver/GameSession/GameSession.hpp"
+#include "src/relayserver/enums/ResponseCodes.hpp"
 
 namespace CharHandlers {
     uint32_t constexpr MAX_CHARACTERS_PER_REALM = 10; // max supported by client in char enum

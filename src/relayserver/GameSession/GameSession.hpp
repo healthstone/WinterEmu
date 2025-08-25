@@ -7,12 +7,13 @@
 #include <deque>
 #include <atomic>
 
+#include "utils/Duration.hpp"
 #include "ObjectGuid/ObjectGuid.hpp"
-#include "src/relayserver/RelayServer.hpp"
+#include "Cryptography/AuthCrypt.hpp"
 #include "packet/MessageBuffer.hpp"
 #include "packet/WoWPacket.hpp"
-#include "Cryptography/AuthCrypt.hpp"
-#include "utils/Duration.hpp"
+
+#include "src/relayserver/RelayServer.hpp"
 #include "src/relayserver/Entity/Addons/Addons.hpp"
 #include "src/relayserver/enums/AccountDataType.hpp"
 #include "src/relayserver/enums/TutorialsFlag.hpp"

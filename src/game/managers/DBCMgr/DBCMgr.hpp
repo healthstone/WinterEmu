@@ -4,19 +4,20 @@
 #include <array>
 #include <unordered_map>
 #include <memory>
-#include "enums/DBCStructure.h"
-#include "enums/Team.hpp"
+#include "src/game/enums/DBCStructure.hpp"
+#include "src/game/enums/Team.hpp"
 
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
 
-class RelayServer;
+class BaseServer;
 
 class DBCMgr {
 public:
-    explicit DBCMgr(std::shared_ptr<RelayServer> server) : server_(std::move(server)) {}
+    explicit DBCMgr(std::shared_ptr<BaseServer> server) : server_(std::move(server)) {}
 
     void initialize_for_relay();
+    void initialize_for_node();
 
     ~DBCMgr();
 
@@ -63,7 +64,7 @@ private:
     void load_ChrClasses();     // load ChrClasses.dbc
     void load_ChrRaces();       // load ChrRaces.dbc
 
-    std::shared_ptr<RelayServer> server_;
+    std::shared_ptr<BaseServer> server_;
 
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;

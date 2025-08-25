@@ -1,15 +1,13 @@
 #include "HandlersReconnectProofStage.hpp"
-#include "src/authserver/Entity/ClientBuildInfo/ClientBuildInfo.hpp"
+#include "utils/PacketUtils.hpp"
 #include "packet/RawPacket.hpp"
 #include "src/authserver/enums/AuthCmd.hpp"
 #include "src/authserver/enums/AuthResult.hpp"
-#include "utils/PacketUtils.hpp"
-
-using namespace HandlersReconnectProofStage;
+#include "src/authserver/Entity/ClientBuildInfo/ClientBuildInfo.hpp"
 
 /** AUTH_RECONNECT_PROOF **/
 void HandlersReconnectProofStage::HandleReconnectProof(std::shared_ptr<AuthSession> session,
-                                                       const std::shared_ptr<std::vector<uint8_t>>& payload) {
+                                                       const std::shared_ptr<std::vector<uint8_t>> &payload) {
     auto log = Logger::get();
     ByteBuffer buffer(*payload);
     session->set_session_mode(SessionMode::STATUS_CLOSED);
@@ -80,7 +78,8 @@ bool HandlersReconnectProofStage::VerifyVersion(std::shared_ptr<AuthSession> ses
         if (!buildInfo)
             return false;
 
-        auto platformItr = std::ranges::find(buildInfo->ExecutableHashes, ClientBuild::ToFourCC(session->_logonChallenge.os),
+        auto platformItr = std::ranges::find(buildInfo->ExecutableHashes,
+                                             ClientBuild::ToFourCC(session->_logonChallenge.os),
                                              &ClientBuild::ExecutableHash::Platform);
         if (platformItr == buildInfo->ExecutableHashes.end())
             return true;                                                            // not filled serverside

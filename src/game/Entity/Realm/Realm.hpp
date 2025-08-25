@@ -4,8 +4,8 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <memory>
 #include <string>
-#include "enums/AccountTypes.hpp"
-#include "enums/RealmEnums.hpp"
+#include "src/game/enums/AccountTypes.hpp"
+#include "src/game/enums/RealmEnums.hpp"
 
 // === Описание Realm ===
 struct Realm {

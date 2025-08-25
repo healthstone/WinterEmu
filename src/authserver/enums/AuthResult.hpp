@@ -1,3 +1,5 @@
+#pragma once
+
 enum class AuthResult : uint8_t
 {
     WOW_SUCCESS                                  = 0x00,
