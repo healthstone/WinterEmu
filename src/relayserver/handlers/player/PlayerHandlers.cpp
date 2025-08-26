@@ -14,7 +14,7 @@ PlayerHandlers::handlePlayerLogin(std::shared_ptr<GameSession> session, std::sha
         if (!session->isLegitCharacterForAccount(playerGuid)) {
             log->error("[PlayerHandlers::handlePlayerLogin] Account ({}) can't login with that character ({}).",
                        session->getAccount()->username.value(), playerGuid.ToString());
-            session->close();
+            sendCharacterError(session, CharacterLoginErrorReason::CHAR_LOGIN_NO_CHARACTER);
             co_return;
         }
 
@@ -83,7 +83,13 @@ bool PlayerHandlers::sendLoginVerifyWorld(const std::shared_ptr<GameSession> &se
     else {
         Logger::get()->error("[PlayerHandlers::sendLoginVerifyWorld] Account ({}) haven't character ({}). WTF!?",
                    session->getAccount()->username.value(), characterGuid.ToString());
-        session->close();
+        sendCharacterError(session, CharacterLoginErrorReason::CHAR_LOGIN_NO_CHARACTER);
         return false;
     }
+}
+
+void PlayerHandlers::sendCharacterError(const std::shared_ptr<GameSession> &session, CharacterLoginErrorReason errorReason) {
+    WoWPacket pkt(WoWOpcodes::SMSG_LOGIN_VERIFY_WORLD);
+    pkt.write_uint8(static_cast<uint8_t>(errorReason));
+    session->send_packet(std::make_shared<WoWPacket>(pkt));
 }
