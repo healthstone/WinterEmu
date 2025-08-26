@@ -3,10 +3,13 @@
 #include "packet/WoWPacket.hpp"
 
 namespace MiscHandlers {
+    /** CMSG_PING **/
     void handleClientPingCommand(const std::shared_ptr<GameSession> &session, std::shared_ptr<WoWPacket> p);
 
+    /** CMSG_READY_FOR_ACCOUNT_DATA_TIMES **/
     void handleReadyForAccountDataTimes(const std::shared_ptr<GameSession> &session);
 
+    /** CMSG_UPDATE_ACCOUNT_DATA **/
     boost::asio::awaitable<void>
     handleUpdateAccountData(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p);
 

@@ -5,6 +5,7 @@
 #include "src/relayserver/enums/ResponseCodes.hpp"
 
 namespace AuthHandlers {
+    /** CMSG_AUTH_SESSION **/
     boost::asio::awaitable<void>
     handleAuthPacket(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p);
 

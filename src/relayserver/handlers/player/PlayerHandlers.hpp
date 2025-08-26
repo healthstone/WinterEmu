@@ -4,5 +4,7 @@
 
 namespace PlayerHandlers {
     /** CMSG_PLAYER_LOGIN **/
-    void handlePlayerLogin(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p);
+    boost::asio::awaitable<void> handlePlayerLogin(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p);
+
+    bool sendLoginVerifyWorld(const std::shared_ptr<GameSession> &session, ObjectGuid characterGuid);
 }

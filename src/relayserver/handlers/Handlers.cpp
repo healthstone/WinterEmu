@@ -74,7 +74,14 @@ void Handlers::dispatch(std::shared_ptr<GameSession> session, std::shared_ptr<Wo
             break;
         }
         case WoWOpcodes::CMSG_PLAYER_LOGIN: {
-            PlayerHandlers::handlePlayerLogin(session, p);
+            auto ex = boost::asio::make_strand(session->socket().get_executor());
+            boost::asio::co_spawn(
+                    ex,
+                    [session, p]() -> boost::asio::awaitable<void> {
+                        co_await PlayerHandlers::handlePlayerLogin(session, p);
+                    },
+                    boost::asio::detached
+            );
             break;
         }
         default:

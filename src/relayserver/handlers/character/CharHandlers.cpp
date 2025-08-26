@@ -25,7 +25,7 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
 
         for (const auto &character: characters) {
             ObjectGuid playerGuid = ObjectGuid::Create<HighGuid::Player>(character.m_guid);
-            session->addLegitCharacterForAccount(playerGuid);
+            session->addLegitCharacterForAccount(playerGuid, character);
 
             if (!session->isCanCreateDK() && character.m_level >= 55)
                 session->setIsCanCreateDK(true);

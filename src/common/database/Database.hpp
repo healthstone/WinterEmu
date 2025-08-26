@@ -428,7 +428,7 @@ private:
 
         conn.prepare("SELECT_CHAR_ENUM",
                      fmt::format("SELECT c.guid, c.name, c.race, c.class, c.gender, c.skin, c.face, c.hairStyle, c.hairColor, c.facialStyle, "
-                                 "c.level, c.zone, c.map, c.position_x, c.position_y, c.position_z, c.equipmentCache, c.playerFlags, c.at_login, "
+                                 "c.level, c.zone, c.map, c.position_x, c.position_y, c.position_z, c.orientation, c.equipmentCache, c.playerFlags, c.at_login, "
                                  "gm.guildid as guild_guildid, "
                                  "cp.entry as pet_entry, cp.modelid as pet_modelid, cp.level as pet_level, "
                                  "cb.guid as banned_guid "

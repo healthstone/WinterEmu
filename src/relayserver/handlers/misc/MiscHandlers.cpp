@@ -1,7 +1,6 @@
 #include "MiscHandlers.hpp"
 #include <zlib.h> // Для распаковки данных
 
-/** CMSG_PING **/
 void MiscHandlers::handleClientPingCommand(const std::shared_ptr<GameSession> &session, std::shared_ptr<WoWPacket> p) {
     auto log = Logger::get();
     log->debug("MiscHandlers::handleClientPingCommand - CMSG_PING");
@@ -43,13 +42,11 @@ void MiscHandlers::handleClientPingCommand(const std::shared_ptr<GameSession> &s
     session->send_packet(std::make_shared<WoWPacket>(reply));
 }
 
-/** CMSG_READY_FOR_ACCOUNT_DATA_TIMES **/
 void MiscHandlers::handleReadyForAccountDataTimes(const std::shared_ptr<GameSession> &session) {
     Logger::get()->debug("MiscHandlers::handleReadyForAccountDataTimes - CMSG_READY_FOR_ACCOUNT_DATA_TIMES");
     session->sendAccountDataTimes(GLOBAL_CACHE_MASK);
 }
 
-/** CMSG_UPDATE_ACCOUNT_DATA **/
 boost::asio::awaitable<void>
 MiscHandlers::handleUpdateAccountData(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p) {
     auto log = Logger::get();
