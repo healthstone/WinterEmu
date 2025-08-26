@@ -22,6 +22,9 @@ void NodeSession::start() {
 void NodeSession::close() {
     if (closed_.exchange(true)) return;
 
+    // Очищаем очередь пакетов при закрытии
+    recv_queue_.clear();
+
     auto log = Logger::get();
 
     boost::system::error_code ec;
@@ -111,7 +114,9 @@ void NodeSession::process_read_buffer() {
             return;
         }
 
-        NHandlers::dispatch(shared_from_this(), packet);
+        // Добавляем пакет в очередь вместо немедленной обработки
+        recv_queue_.push_back(packet);
+        schedule_processing();
 
     } catch (const std::exception& ex) {
         log->error("[NodeSession] Packet deserialize failed: {}", ex.what());
@@ -119,8 +124,7 @@ void NodeSession::process_read_buffer() {
     }
 }
 
-
-void NodeSession::send_packet(const std::shared_ptr<const Packet>& packet) {
+void NodeSession::send_packet(const std::shared_ptr<const NodePacket>& packet) {
     if (closed_) {
         Logger::get()->debug("[node_session][send_packet] called on closed session");
         return;
@@ -133,7 +137,7 @@ void NodeSession::send_packet(const std::shared_ptr<const Packet>& packet) {
                       });
 }
 
-void NodeSession::do_send_packet(const Packet& packet) {
+void NodeSession::do_send_packet(const NodePacket &packet) {
     std::vector<uint8_t> full_packet = packet.build_packet();
     write_queue_.push_back(std::move(full_packet));
 
@@ -166,4 +170,34 @@ void NodeSession::do_write() {
                                  write_queue_.pop_front();
                                  do_write();
                              });
+}
+
+void NodeSession::schedule_processing() {
+    if (processing_queue_ || closed_) return;
+
+    processing_queue_ = true;
+    auto self = shared_from_this();
+    boost::asio::post(
+            socket_.get_executor(),
+            [self]() {
+                self->process_packets();
+            }
+    );
+}
+
+void NodeSession::process_packets() {
+    if (closed_) return;
+
+    std::deque<std::shared_ptr<NodePacket>> queue;
+    std::swap(recv_queue_, queue);
+
+    for (auto& packet : queue) {
+        if (closed_) break;
+        NHandlers::dispatch(shared_from_this(), packet);
+    }
+
+    processing_queue_ = false;
+    if (!recv_queue_.empty() && !closed_) {
+        schedule_processing();
+    }
 }

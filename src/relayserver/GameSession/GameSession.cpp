@@ -18,6 +18,9 @@ void GameSession::start() {
 
 void GameSession::close() {
     if (closed_.exchange(true)) return;
+    // Очищаем очередь пакетов при закрытии
+    recv_queue_.clear();
+
     cleanBeforeDelete();
 
     auto log = Logger::get();
@@ -141,7 +144,10 @@ void GameSession::process_read_buffer() {
 
             auto packet = std::make_shared<WoWPacket>();
             packet->deserialize(packet_data);
-            Handlers::dispatch(shared_from_this(), packet);
+
+            // Добавляем пакет в очередь вместо немедленной обработки
+            recv_queue_.push_back(packet);
+            schedule_processing();
         }
         catch (const std::exception &ex) {
             log->error("Packet processing failed: {}", ex.what());
@@ -255,3 +261,32 @@ void GameSession::initCrypt(const std::array<uint8_t, 40> &key) {
     authCrypt_.Init(sessionKey);
 }
 
+void GameSession::schedule_processing() {
+    if (processing_queue_ || closed_) return;
+
+    processing_queue_ = true;
+    auto self = shared_from_this();
+    boost::asio::post(
+            socket_.get_executor(),
+            [self]() {
+                self->process_packets();
+            }
+    );
+}
+
+void GameSession::process_packets() {
+    if (closed_) return;
+
+    std::deque<std::shared_ptr<WoWPacket>> queue;
+    std::swap(recv_queue_, queue);
+
+    for (auto &packet: queue) {
+        if (closed_) break;
+        Handlers::dispatch(shared_from_this(), packet);
+    }
+
+    processing_queue_ = false;
+    if (!recv_queue_.empty() && !closed_) {
+        schedule_processing();
+    }
+}

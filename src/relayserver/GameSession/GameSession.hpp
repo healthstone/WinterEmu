@@ -131,14 +131,15 @@ public:
 
 private:
     void send_auth_challenge();
-
     void do_read();
 
     void process_read_buffer();
-
     void do_write();
 
     void do_send_packet(const WoWPacket &packet);
+
+    void schedule_processing();
+    void process_packets();
 
     boost::asio::ip::tcp::socket socket_;
     std::shared_ptr<RelayServer> server_;
@@ -147,17 +148,19 @@ private:
 
     std::deque<std::vector<uint8_t>> write_queue_;
     bool writing_ = false;
+    std::deque<std::shared_ptr<WoWPacket>> recv_queue_;
+    bool processing_queue_ = false;
     std::atomic<bool> closed_{false};
 
+    // Security section
     AuthCrypt authCrypt_;
     bool authed_ = false;
     std::array<uint8_t, 4> authSeed_;
     std::array<uint8_t, 4> clientSeed_;
 
-    // GameSection
+    // Game Section
     Account account_;
     ObjectGuid currentPlayerObjectGuid_;
-    // this stores the GUIDs of the characters who can login
     GuidSet legitCharacters_;
     // актуально для PvP realms
     Team accountTeam_ = Team::TEAM_OTHER;
