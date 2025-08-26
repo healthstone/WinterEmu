@@ -10,9 +10,12 @@ void PlayerHandlers::handlePlayerLogin(std::shared_ptr<GameSession> session, std
     ObjectGuid playerGuid(guid);
     Logger::get()->debug("PlayerHandlers::handlePlayerLogin - playerGuid = {}", playerGuid.ToString());
 
+    // Заносим
+    session->server()->addSessionInPlayerMap(playerGuid, session);
+
+    // А теперь транслируем сам пакет
     NodeData data;
     data.write_uint64_le(guid);
-    data.write_uint16_le(static_cast<uint16_t>(p->get_opcode()));
 
     NodePacket pkt(NodeOpcodes::REL_TO_NODE_WOWPACKET, data, *p);
     auto nodeSession = session->server()->get_node_manager()->get_first_connector(1);

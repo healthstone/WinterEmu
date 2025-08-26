@@ -77,6 +77,20 @@ public:
         }
     }
 
+    /// Отправить пакет на все ноды (по одному случайному коннектору для каждой ноды)
+    void notify_all_nodes(const NodePacket& packet) {
+        for (const auto& [node_id, connectors] : connectors_) {
+            if (!connectors.empty()) {
+                // Выбираем случайный коннектор для текущей ноды
+                static thread_local std::mt19937 rng{std::random_device{}()};
+                std::uniform_int_distribution<size_t> dist(0, connectors.size() - 1);
+                size_t index = dist(rng);
+                connectors[index]->send_packet(packet);
+                Logger::get()->debug("[NodeManager] Sent packet to NodeID {} via connector {}", node_id, index);
+            }
+        }
+    }
+
 private:
     boost::asio::io_context& io_;
     /// Пул коннекторов для каждого NodeID

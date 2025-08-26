@@ -86,7 +86,8 @@ public:
     uint32_t getLatency() const { return m_latency; }
     void setLatency(uint32_t latency) { m_latency = latency; }
 
-    ObjectGuid getObjectGuid() const { return characterGUID_; }
+    ObjectGuid getCurrentPlayerObjectGuid() const { return currentPlayerObjectGuid_; }
+    void setCurrentPlayerObjectGuid(ObjectGuid value) { currentPlayerObjectGuid_ = value; }
     bool isLegitCharacterForAccount(ObjectGuid lowGUID) {
         return legitCharacters_.find(lowGUID) != legitCharacters_.end();
     }
@@ -155,7 +156,7 @@ private:
 
     // GameSection
     Account account_;
-    ObjectGuid characterGUID_;
+    ObjectGuid currentPlayerObjectGuid_;
     // this stores the GUIDs of the characters who can login
     GuidSet legitCharacters_;
     // актуально для PvP realms

@@ -26,9 +26,9 @@ boost::asio::awaitable<void> GameSession::setAccountData(AccountDataType type, t
             stmt.set_param(3, data);
             co_await server()->db()->execute_async_one<NothingRow>(stmt);
         } else {
-            if (!getObjectGuid().IsEmpty()) {
+            if (!getCurrentPlayerObjectGuid().IsEmpty()) {
                 PreparedStatement stmt("REPLACE_CHARACTER_ACCOUNT_DATA");
-                stmt.set_param(0, getObjectGuid().GetCounter());
+                stmt.set_param(0, getCurrentPlayerObjectGuid().GetCounter());
                 stmt.set_param(1, type);
                 stmt.set_param(2, uint32_t(tm));
                 stmt.set_param(3, data);

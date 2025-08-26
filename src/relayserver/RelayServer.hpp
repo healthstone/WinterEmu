@@ -7,6 +7,7 @@
 
 #include "Database.hpp"
 #include "BaseServer.hpp"
+#include "ObjectGuid/ObjectGuid.hpp"
 #include "src/game/Entity/Realm/Realm.hpp"
 #include "src/relayserver/Entity/NodeManager/NodeManager.hpp"
 #include "src/relayserver/Entity/AddonMgr/AddonMgr.hpp"
@@ -28,6 +29,10 @@ public:
 
     void init(unsigned int network_threads, uint32_t realmID);
     void load_realm_by_id(uint32_t id);
+
+    void addSessionInPlayerMap(ObjectGuid guid, std::shared_ptr<GameSession> session);
+    void removeSessionFromPlayerMap(ObjectGuid guid, std::shared_ptr<GameSession> session);
+    std::shared_ptr<GameSession> getSessionByPlayerId(ObjectGuid guid);
 
     // from BaseServer
     std::shared_ptr<Database> db() const override { return db_; }
@@ -53,4 +58,7 @@ private:
     std::unique_ptr<ItemTemplateMgr> itemTemplate_manager_;
     std::unordered_set<std::shared_ptr<GameSession>> sessions_;
     std::mutex sessions_mutex_;
+
+    // uint32_t player LowerId
+    std::unordered_map<ObjectGuid, std::shared_ptr<GameSession>> playerSessionMap_;
 };

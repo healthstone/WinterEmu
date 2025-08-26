@@ -11,6 +11,12 @@ void NHandlers::dispatch(std::shared_ptr<NodeSession> session, std::shared_ptr<N
         case NodeOpcodes::REL_TO_NODE_PING:
             MiscHandlers::handle_ping(session, p);
             break;
+        case NodeOpcodes::REL_TO_NODE_ADD_PLAYER:
+            PlayerHandlers::handle_add_player(session, p);
+            break;
+        case NodeOpcodes::REL_TO_NODE_DEL_PLAYER:
+            PlayerHandlers::handle_del_player(session, p);
+            break;
         case NodeOpcodes::REL_TO_NODE_WOWPACKET:
             PlayerHandlers::handleDispatchWoWPacket(session, p);
             break;

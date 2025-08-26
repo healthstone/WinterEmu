@@ -1,4 +1,6 @@
 #include "RelayServer.hpp"
+
+#include <utility>
 #include "GameSession/GameSession.hpp"
 #include "Logger.hpp"
 
@@ -92,6 +94,7 @@ void RelayServer::stop() {
         std::lock_guard<std::mutex> lock(sessions_mutex_);
         sessions_.clear();
     }
+    playerSessionMap_.clear();
 
     io_context_.stop();
 
@@ -155,4 +158,45 @@ void RelayServer::load_realm_by_id(uint32_t id) {
     } catch (const std::exception &ex) {
         Logger::get()->error("RelayServer::load_realm_by_id failed: {}", ex.what());
     }
+}
+
+void RelayServer::addSessionInPlayerMap(ObjectGuid guid, std::shared_ptr<GameSession> session) {
+    auto itr = playerSessionMap_.find(guid);
+    if (itr == playerSessionMap_.end()) {
+        session->setCurrentPlayerObjectGuid(guid);
+        playerSessionMap_[guid] = std::move(session);
+
+        NodeData nodeData;
+        nodeData.write_uint64_le(guid.GetRawValue());
+        NodePacket pkt(NodeOpcodes::REL_TO_NODE_ADD_PLAYER, nodeData);
+        get_node_manager()->notify_all_nodes(pkt);
+
+        Logger::get()->warn("[RelayServer::addSessionInPlayerMap] Player {} has been added in playerSessionMap", guid.ToString());
+    }
+    else
+        Logger::get()->error("[RelayServer::addSessionInPlayerMap] Player {} already exist in playerSessionMap", guid.ToString());
+}
+void RelayServer::removeSessionFromPlayerMap(ObjectGuid guid, std::shared_ptr<GameSession> session) {
+    auto itr = playerSessionMap_.find(guid);
+    if (itr != playerSessionMap_.end()) {
+        session->setCurrentPlayerObjectGuid(ObjectGuid::Empty);
+        playerSessionMap_.erase(guid);
+
+        NodeData nodeData;
+        nodeData.write_uint64_le(guid.GetRawValue());
+        NodePacket pkt(NodeOpcodes::REL_TO_NODE_DEL_PLAYER, nodeData);
+        get_node_manager()->notify_all_nodes(pkt);
+
+        Logger::get()->warn("[RelayServer::removeSessionFromPlayerMap] Player {} has been removed from playerSessionMap", guid.ToString());
+    }
+    else
+        Logger::get()->error("[RelayServer::removeSessionFromPlayerMap] Player {} doesn't exist in playerSessionMap", guid.ToString());
+}
+
+std::shared_ptr<GameSession> RelayServer::getSessionByPlayerId(ObjectGuid guid) {
+    auto itr = playerSessionMap_.find(guid);
+    if (itr != playerSessionMap_.end()) {
+        return itr->second;
+    }
+    return nullptr;
 }

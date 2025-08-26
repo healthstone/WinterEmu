@@ -43,6 +43,8 @@ void GameSession::close() {
     write_queue_.clear();
 
     if (server_) {
+        if (!getCurrentPlayerObjectGuid().IsEmpty())
+            server_->removeSessionFromPlayerMap(getCurrentPlayerObjectGuid(), shared_from_this());
         server_->remove_session(shared_from_this());
     }
 }
