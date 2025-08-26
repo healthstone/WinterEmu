@@ -9,7 +9,7 @@
 #include "src/game/enums/PlayerEnums.hpp"
 #include "src/game/Entity/PlayerInfo/PlayerInfo.hpp"
 
-/** CMSG_CHAR_ENUM **/
+
 boost::asio::awaitable<void>
 CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
     Logger::get()->debug("CharHandlers::handleCharacterEnum - CMSG_CHAR_ENUM");
@@ -163,7 +163,6 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
     session->send_packet(std::make_shared<WoWPacket>(pkt));
 }
 
-/** CMSG_CHAR_CREATE **/
 boost::asio::awaitable<void>
 CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, const std::shared_ptr<WoWPacket> &p) {
     auto log = Logger::get();

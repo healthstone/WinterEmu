@@ -7,9 +7,11 @@
 namespace CharHandlers {
     uint32_t constexpr MAX_CHARACTERS_PER_REALM = 10; // max supported by client in char enum
 
+    /** CMSG_CHAR_ENUM **/
     boost::asio::awaitable<void>
     handleCharacterEnum(std::shared_ptr<GameSession> session);
 
+    /** CMSG_CHAR_CREATE **/
     boost::asio::awaitable<void>
     handleCharacterCreate(std::shared_ptr<GameSession> session, const std::shared_ptr<WoWPacket> &p);
 

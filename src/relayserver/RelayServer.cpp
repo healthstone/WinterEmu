@@ -130,7 +130,7 @@ void RelayServer::init(unsigned int network_threads, uint32_t realmID) {
     // Подключаемся к нодам
     node_manager_ = std::make_unique<NodeManager>(io_context_);
     node_manager_->add_connectors(1, "127.0.0.1", 8086, network_threads);
-    //node_manager_->start_all();
+    node_manager_->start_all();
 
     Logger::get()->info("[RelayServer] Realm {} has been successfully started", realm_->Name);
 }

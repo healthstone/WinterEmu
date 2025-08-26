@@ -1,31 +1,22 @@
 #include "NHandlers.hpp"
 #include "utils/PacketUtils.hpp"
+#include "src/nodeserver/handlers/MiscHandlers/MiscHandlers.hpp"
+#include "src/nodeserver/handlers/PlayerHandlers/PlayerHandlers.hpp"
 
 using namespace NHandlers;
 
-void NHandlers::dispatch(const std::shared_ptr<NodeSession>& session, const std::shared_ptr<NodePacket> &p) {
+void NHandlers::dispatch(std::shared_ptr<NodeSession> session, std::shared_ptr<NodePacket> p) {
     NodeOpcodes opcode = p->opcode();
     switch (opcode) {
-        case NodeOpcodes::REL_TO_NODE_PING: handle_ping(session, p); break;
+        case NodeOpcodes::REL_TO_NODE_PING:
+            MiscHandlers::handle_ping(session, p);
+            break;
+        case NodeOpcodes::REL_TO_NODE_WOWPACKET:
+            PlayerHandlers::handleDispatchWoWPacket(session, p);
+            break;
         default:
             Logger::get()->warn("[NHandlers] Unknown opcode: {}", static_cast<uint16_t>(opcode));
             break;
     }
 }
 
-void NHandlers::handle_ping(const std::shared_ptr<NodeSession>& session, const std::shared_ptr<NodePacket>& p) {
-    // Читаем NodeData
-    if (p->node_data()) {
-        NodeData responseNodeData = p->node_data().value();
-        uint8_t received_nodeID = responseNodeData.read_uint8();
-        if (received_nodeID != session->_nodeID)
-            Logger::get()->warn("[NHandlers] received_nodeID={}, expected={}", received_nodeID, session->_nodeID);
-    }
-
-    NodeData replyData;
-    replyData.write_uint8(session->_nodeID);
-    NodePacket pong_packet(NodeOpcodes::NODE_TO_REL_PONG, replyData);
-
-    PacketUtils::send_packet_as<NodePacket>(session, pong_packet);
-    Logger::get()->trace("[NHandlers] Sent NODE_TO_REL_PONG");
-}

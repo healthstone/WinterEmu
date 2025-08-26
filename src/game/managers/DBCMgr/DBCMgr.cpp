@@ -18,7 +18,8 @@ void DBCMgr::initialize_for_relay() {
 }
 
 void DBCMgr::initialize_for_node() {
-    Logger::get()->info(">>> DBCMgr: initialized");
+    load_ChrClasses();
+    load_ChrRaces();
 }
 
 Team DBCMgr::teamForRace(uint8_t race)

@@ -5,7 +5,5 @@
 #include "packet/NodePacket.hpp"
 
 namespace NHandlers {
-    void dispatch(const std::shared_ptr<NodeSession>& session, const std::shared_ptr<NodePacket> &p);
-
-    void handle_ping(const std::shared_ptr<NodeSession>& session, const std::shared_ptr<NodePacket> &p);
+    void dispatch(std::shared_ptr<NodeSession> session, std::shared_ptr<NodePacket> p);
 }
