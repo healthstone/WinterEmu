@@ -4,6 +4,7 @@
 #include "src/relayserver/handlers/authsession/AuthHandlers.hpp"
 #include "src/relayserver/handlers/misc/MiscHandlers.hpp"
 #include "src/relayserver/handlers/character/CharHandlers.hpp"
+#include "src/relayserver/handlers/player/PlayerHandlers.hpp"
 
 void Handlers::dispatch(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p) {
     WoWOpcodes opcode = p->get_opcode();
@@ -62,6 +63,18 @@ void Handlers::dispatch(std::shared_ptr<GameSession> session, std::shared_ptr<Wo
         }
         case WoWOpcodes::CMSG_REALM_SPLIT: {
             MiscHandlers::handleRealmSplitOpcode(session, p);
+            break;
+        }
+        case WoWOpcodes::CMSG_SET_ACTIVE_VOICE_CHANNEL: {
+            MiscHandlers::handleActiveVoiceChannel(session, p);
+            break;
+        }
+        case WoWOpcodes::CMSG_CANCEL_TRADE: {
+            MiscHandlers::handleCancelTrade(session, p);
+            break;
+        }
+        case WoWOpcodes::CMSG_PLAYER_LOGIN: {
+            PlayerHandlers::handlePlayerLogin(session, p);
             break;
         }
         default:

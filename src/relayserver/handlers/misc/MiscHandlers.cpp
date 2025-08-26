@@ -130,7 +130,6 @@ MiscHandlers::handleUpdateAccountData(std::shared_ptr<GameSession> session, std:
     }
 }
 
-/** CMSG_REALM_SPLIT **/
 void MiscHandlers::handleRealmSplitOpcode(const std::shared_ptr<GameSession> &session, std::shared_ptr<WoWPacket> p) {
     Logger::get()->debug("MiscHandlers::handleRealmSplitOpcode - CMSG_REALM_SPLIT");
 
@@ -146,4 +145,15 @@ void MiscHandlers::handleRealmSplitOpcode(const std::shared_ptr<GameSession> &se
     // 0x2 realm SPLIT_PENDING (2)	Запланирован к объединению	Не создавайте здесь новых персонажей. Идите на сервер-приемник.
     pkt.write_string_nt_be(split_date);
     session->send_packet(std::make_shared<WoWPacket>(pkt));
+}
+
+void MiscHandlers::handleActiveVoiceChannel(const std::shared_ptr<GameSession> &session, std::shared_ptr<WoWPacket> p) {
+    Logger::get()->debug("MiscHandlers::handleActiveVoiceChannel - CMSG_SET_ACTIVE_VOICE_CHANNEL");
+    uint32_t unk1    = p->read_uint32_le();
+    std::string unk2 = p->read_string_nt_be();
+    Logger::get()->debug("MiscHandlers::handleActiveVoiceChannel : unk1={}, unk2={}", unk1, unk2);
+}
+
+void MiscHandlers::handleCancelTrade(const std::shared_ptr<GameSession> &session, std::shared_ptr<WoWPacket> /*p*/) {
+    Logger::get()->debug("MiscHandlers::handleCancelTrade - CMSG_CANCEL_TRADE");
 }
