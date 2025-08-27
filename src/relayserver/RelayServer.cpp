@@ -45,6 +45,8 @@ void RelayServer::start_accept() {
 void RelayServer::stop() {
     auto log = Logger::get();
 
+    schedule_update_realm(RealmFlags::REALM_FLAG_OFFLINE, 0.0f);
+
     if (dbc_manager_) {
         dbc_manager_->cleanUpBeforeDelete();
     }
@@ -135,6 +137,7 @@ void RelayServer::init(unsigned int network_threads, uint32_t realmID) {
     node_manager_->add_connectors(1, "127.0.0.1", 8086, network_threads);
     node_manager_->start_all();
 
+    schedule_update_realm(RealmFlags::REALM_FLAG_RECOMMENDED, 0.0f);
     Logger::get()->info("[RelayServer] Realm {} has been successfully started", realm_->Name);
 }
 
@@ -199,4 +202,38 @@ std::shared_ptr<GameSession> RelayServer::getSessionByPlayerId(ObjectGuid guid) 
         return itr->second;
     }
     return nullptr;
+}
+
+// Внутри RelayServer добавьте метод-обёртку:
+void RelayServer::schedule_update_realm(RealmFlags flags, float population) {
+    auto self = shared_from_this();
+    boost::asio::post(
+            io_context_,
+            [self, flags, population]() {
+                boost::asio::co_spawn(
+                        self->io_context_,
+                        [self, flags, population]() -> boost::asio::awaitable<void> {
+                            co_await self->updateRealm(flags, population);
+                        },
+                        boost::asio::detached
+                );
+            }
+    );
+}
+
+boost::asio::awaitable<void> RelayServer::updateRealm(RealmFlags flags, float population) {
+    realm_->Flags = flags;
+    realm_->PopulationLevel = population;
+
+    try {
+        PreparedStatement stmt("UPDATE_REALMLIST");
+        stmt.set_param(0, static_cast<uint8_t>(flags));
+        stmt.set_param(1, population);
+        stmt.set_param(2, realm_->Id);
+        co_await db()->execute_async_one<NothingRow>(stmt);
+        co_return;
+    } catch (const std::exception &ex) {
+        Logger::get()->error("[RelayServer::updateRealm] DB exception: {}", ex.what());
+        co_return;
+    }
 }

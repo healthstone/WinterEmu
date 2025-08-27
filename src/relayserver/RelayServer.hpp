@@ -34,6 +34,9 @@ public:
     void removeSessionFromPlayerMap(ObjectGuid guid, std::shared_ptr<GameSession> session);
     std::shared_ptr<GameSession> getSessionByPlayerId(ObjectGuid guid);
 
+    void schedule_update_realm(RealmFlags flags, float population);
+
+
     // from BaseServer
     std::shared_ptr<Database> db() const override { return db_; }
     DBCMgr* getDBCMgr() const override { return dbc_manager_.get(); }
@@ -49,6 +52,7 @@ private:
     boost::asio::io_context &io_context_;
     boost::asio::ip::tcp::acceptor acceptor_;
     const std::shared_ptr<Database> db_;
+    boost::asio::awaitable<void> updateRealm(RealmFlags flags, float population);
 
     std::unique_ptr<Realm> realm_;
     std::unique_ptr<NodeManager> node_manager_;
