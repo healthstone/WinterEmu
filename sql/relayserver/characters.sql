@@ -2,9 +2,9 @@ DROP TABLE IF EXISTS relay_server.characters;
 
 CREATE TABLE relay_server.characters
 (
-    guid                 SERIAL PRIMARY KEY,                          -- Изменено на SERIAL (uint32)
-    account              UUID     NOT NULL,                           -- Account Identifier
-    name                 VARCHAR(12) COLLATE "C" UNIQUE,              -- бинарное сравнение как utf8mb4_bin
+    guid                 SERIAL PRIMARY KEY,             -- Изменено на SERIAL (uint32)
+    account              UUID     NOT NULL,              -- Account Identifier
+    name                 VARCHAR(12) COLLATE "C" UNIQUE, -- бинарное сравнение как utf8mb4_bin
     race                 SMALLINT NOT NULL DEFAULT 0,
     class                SMALLINT NOT NULL DEFAULT 0,
     gender               SMALLINT NOT NULL DEFAULT 0,
@@ -22,7 +22,7 @@ CREATE TABLE relay_server.characters
     position_x           REAL     NOT NULL DEFAULT 0,
     position_y           REAL     NOT NULL DEFAULT 0,
     position_z           REAL     NOT NULL DEFAULT 0,
-    map                  SMALLINT NOT NULL DEFAULT 0,                 -- Map Identifier
+    map                  SMALLINT NOT NULL DEFAULT 0,    -- Map Identifier
     instance_id          INTEGER  NOT NULL DEFAULT 0,
     instance_mode_mask   SMALLINT NOT NULL DEFAULT 0,
     orientation          REAL     NOT NULL DEFAULT 0,
@@ -77,6 +77,7 @@ CREATE TABLE relay_server.characters
     grantableLevels      SMALLINT NOT NULL DEFAULT 0,
     deleteInfos_Account  UUID,
     deleteInfos_Name     VARCHAR(12),
+    istransfer           bool DEFAULT false NOT NULL,
     deleteDate           INTEGER
 );
 

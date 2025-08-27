@@ -11,24 +11,17 @@ PlayerHandlers::handlePlayerLogin(std::shared_ptr<GameSession> session, std::sha
         ObjectGuid playerGuid(guid);
         log->debug("PlayerHandlers::handlePlayerLogin - CMSG_PLAYER_LOGIN from {}", playerGuid.ToString());
 
-        sendCharacterError(session, CharacterLoginErrorReason::CHAR_LOGIN_NO_CHARACTER);
-        co_return;
-
-        if (!session->isLegitCharacterForAccount(playerGuid)) {
-            log->error("[PlayerHandlers::handlePlayerLogin] Account ({}) can't login with that character ({}).",
-                       session->getAccount()->username.value(), playerGuid.ToString());
-            sendCharacterError(session, CharacterLoginErrorReason::CHAR_LOGIN_NO_CHARACTER);
+        // Основные обязательные пакеты:
+        //SMSG_CHARACTER_LOGIN_FAILED (если возникли ошибки)
+        CharacterEnumRow const* character = checkCharacter(session, playerGuid);
+        if (!character)
             co_return;
-        }
 
         // Заносим в мапу игроков playerGuid
         session->server()->addSessionInPlayerMap(playerGuid, session);
 
-        // Основные обязательные пакеты:
-        //SMSG_CHARACTER_LOGIN_FAILED (если возникли ошибки)
         //SMSG_LOGIN_VERIFY_WORLD - координаты и карта персонажа
-        if (!sendLoginVerifyWorld(session, playerGuid))
-            co_return;
+        sendLoginVerifyWorld(session, character);
 
         //SMSG_ACCOUNT_DATA_TIMES - настройки аккаунта
         //SMSG_TUTORIAL_FLAGS - сохраненные tutorial-флаги
@@ -57,12 +50,12 @@ PlayerHandlers::handlePlayerLogin(std::shared_ptr<GameSession> session, std::sha
 
 
         // А теперь транслируем сам пакет
-        NodeData data;
-        data.write_uint64_le(guid);
-
-        NodePacket pkt(NodeOpcodes::REL_TO_NODE_WOWPACKET, data, *p);
-        auto nodeSession = session->server()->get_node_manager()->get_first_connector(1);
-        nodeSession->send_packet(pkt);
+//        NodeData data;
+//        data.write_uint64_le(guid);
+//
+//        NodePacket pkt(NodeOpcodes::REL_TO_NODE_WOWPACKET, data, *p);
+//        auto nodeSession = session->server()->get_node_manager()->get_first_connector(1);
+//        nodeSession->send_packet(pkt);
         co_return;
 
     } catch (const std::exception &ex) {
@@ -71,28 +64,51 @@ PlayerHandlers::handlePlayerLogin(std::shared_ptr<GameSession> session, std::sha
     }
 }
 
-bool PlayerHandlers::sendLoginVerifyWorld(const std::shared_ptr<GameSession> &session, ObjectGuid characterGuid) {
+CharacterEnumRow const* PlayerHandlers::checkCharacter(const std::shared_ptr<GameSession> &session, ObjectGuid characterGuid) {
+    auto log = Logger::get();
+
+    // Отбриваем, если игрок еще не завершил сессию
+    if (session->server()->getSessionByPlayerId(characterGuid)) {
+        sendCharacterError(session, CharacterLoginErrorReason::CHAR_LOGIN_DUPLICATE_CHARACTER);
+        return nullptr;
+    }
+
+    // Аккаунт должен иметь в своей мапе этого чара
     auto character = session->getCharacter(characterGuid);
-    if (character) {
-        WoWPacket pkt(WoWOpcodes::SMSG_LOGIN_VERIFY_WORLD);
-        pkt.write_int32_le(static_cast<int32_t>(character->m_map)); //int32 MapID = -1;
-        pkt.write_float_le(character->m_position_x);
-        pkt.write_float_le(character->m_position_y);
-        pkt.write_float_le(character->m_position_z);
-        pkt.write_float_le(character->m_orientation);
-        session->send_packet(std::make_shared<WoWPacket>(pkt));
-        return true;
-    }
-    else {
-        Logger::get()->error("[PlayerHandlers::sendLoginVerifyWorld] Account ({}) haven't character ({}). WTF!?",
-                   session->getAccount()->username.value(), characterGuid.ToString());
+    if (!character) {
+        Logger::get()->error("[PlayerHandlers::handlePlayerLogin]  Account ({}) can't login with that character ({})",
+                             session->getAccount()->username.value(), characterGuid.ToString());
         sendCharacterError(session, CharacterLoginErrorReason::CHAR_LOGIN_NO_CHARACTER);
-        return false;
+        return nullptr;
     }
+
+    // Отбриваем, если персонаж в процессе трансфера
+    if (character->m_isTransfer) {
+        sendCharacterError(session, CharacterLoginErrorReason::CHAR_LOGIN_LOCKED_FOR_TRANSFER);
+        return nullptr;
+    }
+
+    // Отбриваем, если персонаж забанен
+    if (character->banned_guid) {
+        sendCharacterError(session, CharacterLoginErrorReason::CHAR_LOGIN_LOCKED_BY_BILLING);
+        return nullptr;
+    }
+
+    return character;
 }
 
 void PlayerHandlers::sendCharacterError(const std::shared_ptr<GameSession> &session, CharacterLoginErrorReason errorReason) {
     WoWPacket pkt(WoWOpcodes::SMSG_CHARACTER_LOGIN_FAILED);
     pkt.write_uint8(static_cast<uint8_t>(errorReason));
+    session->send_packet(std::make_shared<WoWPacket>(pkt));
+}
+
+void PlayerHandlers::sendLoginVerifyWorld(const std::shared_ptr<GameSession> &session, CharacterEnumRow const* character) {
+    WoWPacket pkt(WoWOpcodes::SMSG_LOGIN_VERIFY_WORLD);
+    pkt.write_int32_le(static_cast<int32_t>(character->m_map)); //int32 MapID = -1;
+    pkt.write_float_le(character->m_position_x);
+    pkt.write_float_le(character->m_position_y);
+    pkt.write_float_le(character->m_position_z);
+    pkt.write_float_le(character->m_orientation);
     session->send_packet(std::make_shared<WoWPacket>(pkt));
 }

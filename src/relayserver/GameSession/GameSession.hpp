@@ -89,9 +89,6 @@ public:
     ObjectGuid getCurrentPlayerObjectGuid() const { return currentPlayerObjectGuid_; }
     void setCurrentPlayerObjectGuid(ObjectGuid value) { currentPlayerObjectGuid_ = value; }
 
-    bool isLegitCharacterForAccount(ObjectGuid playerGuid) {
-        return legitCharacters_.find(playerGuid) != legitCharacters_.end();
-    }
     void resetLegitCharacterForAccount() { legitCharacters_.clear(); }
     void addLegitCharacterForAccount(ObjectGuid guid, CharacterEnumRow character) {
         legitCharacters_[guid] = std::move(character);

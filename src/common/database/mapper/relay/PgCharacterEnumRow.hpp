@@ -30,6 +30,7 @@ struct CharacterEnumRow {
     float m_position_y;
     float m_position_z;
     float m_orientation;
+    bool m_isTransfer;
     std::optional<uint32_t> guildid;  // Изменено с UUID на uint32_t
     uint32_t m_playerFlags;
     uint16_t m_at_login;
@@ -64,6 +65,7 @@ struct PgRowMapper<CharacterEnumRow> {
         row.m_position_y = r["position_y"].as<float>();
         row.m_position_z = r["position_z"].as<float>();
         row.m_orientation = r["orientation"].as<float>();
+        row.m_isTransfer = r["istransfer"].as<bool>();
 
         row.m_equipmentCache = r["equipmentcache"].as<std::string>();
         row.m_playerFlags = r["playerflags"].as<uint32_t>();
