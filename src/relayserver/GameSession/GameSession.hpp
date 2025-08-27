@@ -21,6 +21,8 @@
 class RelayServer; // forward declaration
 
 #define GLOBAL_CACHE_MASK           0x15
+#define PER_CHARACTER_CACHE_MASK    0xEA
+
 struct AccountData
 {
     AccountData() : Time(0), Data("") { }
@@ -116,7 +118,7 @@ public:
     AccountData* getAccountData(AccountDataType type) { return &m_accountData[type]; }
     void sendAccountDataTimes(uint32_t mask);
     boost::asio::awaitable<void> setAccountData(AccountDataType type, time_t tm, std::string const& data);
-    boost::asio::awaitable<void> loadAccountData(uint32_t mask);
+    boost::asio::awaitable<void> loadAccountData(uint32_t mask, ObjectGuid characterGUID);
 
     /// Account cache
     void sendClientCacheVersion();

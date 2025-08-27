@@ -1,8 +1,6 @@
 #include "PlayerHandlers.hpp"
 #include "src/relayserver/Entity/NodeConnector/NodeConnector.hpp"
 
-#define PER_CHARACTER_CACHE_MASK    0xEA
-
 boost::asio::awaitable<void>
 PlayerHandlers::handlePlayerLogin(std::shared_ptr<GameSession> session, std::shared_ptr<WoWPacket> p) {
     auto log = Logger::get();
@@ -24,6 +22,9 @@ PlayerHandlers::handlePlayerLogin(std::shared_ptr<GameSession> session, std::sha
         sendLoginVerifyWorld(session, character);
 
         //SMSG_ACCOUNT_DATA_TIMES - настройки аккаунта
+        co_await session->loadAccountData(PER_CHARACTER_CACHE_MASK, playerGuid);
+        session->sendAccountDataTimes(PER_CHARACTER_CACHE_MASK);
+
         //SMSG_TUTORIAL_FLAGS - сохраненные tutorial-флаги
         //SMSG_INITIAL_SPELLS - список заклинаний
         //SMSG_ACTION_BUTTONS - панель способностей

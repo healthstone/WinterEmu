@@ -31,6 +31,7 @@
 #include "database/mapper/relay/PgAccountTutorial.hpp"
 #include "database/mapper/relay/PgAddon.hpp"
 #include "database/mapper/relay/PgBannedAddonRow.hpp"
+#include "database/mapper/relay/PgCharacterAccountData.hpp"
 #include "database/mapper/relay/PgCharacterEnumRow.hpp"
 #include "database/mapper/relay/PgPlayerCreateInfo.hpp"
 
@@ -422,6 +423,8 @@ private:
                                  "ON CONFLICT (guid, type) DO UPDATE SET "
                                  "time = EXCLUDED.time, data = EXCLUDED.data",
                                  relay_schema));
+        conn.prepare("SELECT_CHARACTER_ACCOUNT_DATA",
+                     fmt::format("SELECT guid, type, time, data FROM {}.character_account_data WHERE guid = $1", relay_schema));
 
         conn.prepare("SELECT_ACCOUNT_TUTORIALS",
                      fmt::format("SELECT account_id, tut0, tut1, tut2, tut3, tut4, tut5, tut6, tut7 FROM {}.account_tutorial WHERE account_id = $1", relay_schema));

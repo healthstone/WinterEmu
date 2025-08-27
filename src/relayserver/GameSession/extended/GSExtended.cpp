@@ -45,37 +45,72 @@ boost::asio::awaitable<void> GameSession::setAccountData(AccountDataType type, t
     }
 }
 
-boost::asio::awaitable<void> GameSession::loadAccountData(uint32_t mask) {
+boost::asio::awaitable<void> GameSession::loadAccountData(uint32_t mask, ObjectGuid characterGUID) {
     auto log = Logger::get();
     try {
         for (uint32_t i = 0; i < NUM_ACCOUNT_DATA_TYPES; ++i)
             if (mask & (1 << i))
                 m_accountData[i] = AccountData();
 
-        PreparedStatement stmt("SELECT_ACCOUNT_DATA");
-        stmt.set_param(0, getAccount()->id);
-        auto rows = co_await server()->db()->execute_async_many<AccountDataRow>(stmt);
-        if (!rows.empty()) {
-            for (const auto &row: rows) {
-                if (row.type >= NUM_ACCOUNT_DATA_TYPES)
-                {
-                    log->error("Table `{}` have invalid account data type ({}), ignore.",
-                               mask == GLOBAL_CACHE_MASK ? "account_data" : "character_account_data", row.type);
-                    continue;
-                }
+        switch (mask) {
+            case GLOBAL_CACHE_MASK: {
+                PreparedStatement stmt("SELECT_ACCOUNT_DATA");
+                stmt.set_param(0, getAccount()->id);
+                auto rows = co_await server()->db()->execute_async_many<AccountDataRow>(stmt);
+                if (!rows.empty()) {
+                    for (const auto &row: rows) {
+                        if (row.type >= NUM_ACCOUNT_DATA_TYPES)
+                        {
+                            log->error("Table `{}` have invalid account data type ({}), ignore.",
+                                       "account_data", row.type);
+                            continue;
+                        }
 
-                if ((mask & (1 << row.type)) == 0)
-                {
-                    log->error("Table `{}` have non appropriate for table account data type ({}), ignore.",
-                               mask == GLOBAL_CACHE_MASK ? "account_data" : "character_account_data", row.type);
-                    continue;
-                }
+                        if ((mask & (1 << row.type)) == 0)
+                        {
+                            log->error("Table `{}` have non appropriate for table account data type ({}), ignore.",
+                                       "account_data", row.type);
+                            continue;
+                        }
 
-                m_accountData[row.type].Time = time_t(row.time);
-                std::string data(reinterpret_cast<const char*>(row.data.data()), row.data.size());
-                m_accountData[row.type].Data = data;
+                        m_accountData[row.type].Time = time_t(row.time);
+                        std::string data(reinterpret_cast<const char*>(row.data.data()), row.data.size());
+                        m_accountData[row.type].Data = data;
+                    }
+                }
+                break;
             }
+            case PER_CHARACTER_CACHE_MASK: {
+                PreparedStatement stmt("SELECT_CHARACTER_ACCOUNT_DATA");
+                stmt.set_param(0, characterGUID.GetCounter());
+                auto rows = co_await server()->db()->execute_async_many<CharacterAccountData>(stmt);
+                if (!rows.empty()) {
+                    for (const auto &row: rows) {
+                        if (row.type >= NUM_ACCOUNT_DATA_TYPES)
+                        {
+                            log->error("Table `{}` have invalid account data type ({}), ignore.",
+                                       "character_account_data", row.type);
+                            continue;
+                        }
+
+                        if ((mask & (1 << row.type)) == 0)
+                        {
+                            log->error("Table `{}` have non appropriate for table account data type ({}), ignore.",
+                                       "character_account_data", row.type);
+                            continue;
+                        }
+
+                        m_accountData[row.type].Time = time_t(row.time);
+                        std::string data(reinterpret_cast<const char*>(row.data.data()), row.data.size());
+                        m_accountData[row.type].Data = data;
+                    }
+                }
+                break;
+            }
+            default:
+                break;
         }
+
         co_return;
 
     } catch (const std::exception &ex) {

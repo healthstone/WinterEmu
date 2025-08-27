@@ -34,7 +34,7 @@ AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared
         co_return;
     }
 
-    co_await session->loadAccountData(GLOBAL_CACHE_MASK);
+    co_await session->loadAccountData(GLOBAL_CACHE_MASK, ObjectGuid::Empty);
     co_await session->loadTutorialsData();
     //TODO
     //LoadInstanceTimeRestrictions(realmHolder.GetPreparedResult(AccountInfoQueryHolderPerRealm::INSTANCE_TIMES));
