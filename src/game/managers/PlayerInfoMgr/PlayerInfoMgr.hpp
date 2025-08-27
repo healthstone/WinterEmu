@@ -50,6 +50,7 @@ public:
 private:
     void load_playercreateinfo();
     void load_playercreateinfo_item();
+    void load_playercreateinfo_skills();
 
     void playerCreateInfoAddItemHelper(uint8_t race_, uint8_t class_, uint32_t itemId, int16_t count);
 

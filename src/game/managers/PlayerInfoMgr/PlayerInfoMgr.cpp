@@ -28,6 +28,7 @@ void PlayerInfoMgr::loadFromDB() {
 
     load_playercreateinfo();
     load_playercreateinfo_item();
+    load_playercreateinfo_skills();
 }
 
 void PlayerInfoMgr::load_playercreateinfo() {
@@ -148,6 +149,73 @@ void PlayerInfoMgr::load_playercreateinfo_item() {
     }
     catch (const std::exception &ex) {
         log->error("[PlayerInfoMgr::load_playercreateinfo_item] failed: {}", ex.what());
+    }
+}
+
+void PlayerInfoMgr::load_playercreateinfo_skills() {
+    auto log = Logger::get();
+    try {
+        auto dbcMgr = server_->getDBCMgr();
+        uint32_t count = 0;
+        uint32_t oldMSTime = getMSTime();
+        auto stmt = PreparedStatement("SELECT_PLAYER_CREATE_INFO_SKILLS");
+        auto rows = server_->db()->execute_sync_many<PlayerCreateInfoSkillRow>(stmt);
+
+        for (const auto &row: rows) {
+            PlayerCreateInfoSkill skill;
+            skill.SkillId = row.skill;
+            skill.Rank = row.rank;
+
+            if (skill.Rank >= MAX_SKILL_STEP)
+            {
+                log->error("[PlayerInfoMgr::load_playercreateinfo_skills] Skill rank value {} set for skill {} raceMask {} classMask {} is too high, max allowed value is {}",
+                           skill.Rank, skill.SkillId, row.racemask, row.classmask, MAX_SKILL_STEP);
+                continue;
+            }
+
+            if (row.racemask != 0 && !(row.racemask & RACEMASK_ALL_PLAYABLE))
+            {
+                log->error("[PlayerInfoMgr::load_playercreateinfo_skills] Wrong race mask {} in `playercreateinfo_skills` table, ignoring.", row.racemask);
+                continue;
+            }
+
+            if (row.classmask != 0 && !(row.classmask & CLASSMASK_ALL_PLAYABLE))
+            {
+                log->error("[PlayerInfoMgr::load_playercreateinfo_skills] Wrong class mask {} in `playercreateinfo_skills` table, ignoring.", row.classmask);
+                continue;
+            }
+
+            if (!dbcMgr->getSkillLineDBC(skill.SkillId)) {
+                log->error("[PlayerInfoMgr::load_playercreateinfo_skills] Wrong skill id {} in `playercreateinfo_skills` table, ignoring.", skill.SkillId);
+                continue;
+            }
+
+            for (uint8_t raceIndex = RACE_HUMAN; raceIndex < MAX_RACES; ++raceIndex)
+            {
+                if (row.racemask == 0 || ((1 << (raceIndex - 1)) & row.racemask))
+                {
+                    for (uint8_t classIndex = CLASS_WARRIOR; classIndex < MAX_CLASSES; ++classIndex)
+                    {
+                        if (row.classmask == 0 || ((1 << (classIndex - 1)) & row.classmask))
+                        {
+                            if (!dbcMgr->getSkillRaceClassInfo(skill.SkillId, raceIndex, classIndex))
+                                continue;
+
+                            if (auto& info = _playerInfo[raceIndex][classIndex])
+                            {
+                                info->skills.push_back(skill);
+                                ++count;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        log->info(">>> PlayerInfoMgr: loaded {} playercreateinfo_item in {} ms",
+                  count, GetMSTimeDiffToNow(oldMSTime));
+    }
+    catch (const std::exception &ex) {
+        log->error("[PlayerInfoMgr::load_playercreateinfo_skills] failed: {}", ex.what());
     }
 }
 

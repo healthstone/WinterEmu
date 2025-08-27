@@ -8,27 +8,26 @@ DBCMgr::~DBCMgr() {
 }
 
 void DBCMgr::cleanUpBeforeDelete() {
+    // Сначала чистим мультимапы и вторичные контейнеры
+    _charStartOutfitByTripple.clear();
+    _skillRaceClassInfoBySkill.clear();
+
+    // Потом уже сами основные мапы
     _chrClassesMap.clear();
     _chrRacesMap.clear();
-
-    _charStartOutfitByTripple.clear();
     _charStartOutfitMap.clear();
+    _skillRaceClassInfoMap.clear();
+    _skillLineMap.clear();
 }
 
-void DBCMgr::initialize_for_relay() {
+void DBCMgr::initialize() {
     load_ChrClasses();
     load_ChrRaces();
     load_CharStartOutfit();
+    load_SkillRaceClassInfo();
+    load_SkillLine();
 
     initialize_Additional_Data();
-}
-
-void DBCMgr::initialize_for_node() {
-    load_ChrClasses();
-    load_ChrRaces();
-    //load_CharStartOutfit();
-
-    //initialize_Additional_Data();
 }
 
 Team DBCMgr::teamForRace(uint8_t race)
@@ -170,8 +169,77 @@ void DBCMgr::load_CharStartOutfit() {
     }
 }
 
+void DBCMgr::load_SkillRaceClassInfo() {
+    auto log = Logger::get();
+    _skillRaceClassInfoMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SKILLRACECLASSINFO");
+        auto rows = server_->db()->execute_sync_many<DbcSkillRaceClassInfo>(stmt);
+        for (const auto &row: rows) {
+            SkillRaceClassInfoDBC srci;
+            srci.ID = row.ID;
+            srci.SkillID     = row.SkillID;
+            srci.RaceMask    = row.RaceMask;
+            srci.ClassMask   = row.ClassMask;
+            srci.Flags       = row.Flags;
+            srci.SkillTierID = row.SkillTierID;
+
+            _skillRaceClassInfoMap[row.ID] = srci;
+        }
+        log->info(">>> DBCMgr: loaded {} SkillRaceClassInfo in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SkillRaceClassInfo failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SkillLine() {
+    auto log = Logger::get();
+    _skillLineMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SKILLLINE");
+        auto rows = server_->db()->execute_sync_many<DbcSkillLine>(stmt);
+        for (const auto &row: rows) {
+            SkillLineDBC sl;
+            sl.ID = row.ID;
+            sl.CategoryID = row.CategoryID;
+
+            // DisplayName
+            sl.DisplayName[LOCALE_enUS] = row.DisplayName_Lang_enUS.value_or("");
+            sl.DisplayName[LOCALE_enGB] = row.DisplayName_Lang_enGB.value_or("");
+            sl.DisplayName[LOCALE_koKR] = row.DisplayName_Lang_koKR.value_or("");
+            sl.DisplayName[LOCALE_frFR] = row.DisplayName_Lang_frFR.value_or("");
+            sl.DisplayName[LOCALE_deDE] = row.DisplayName_Lang_deDE.value_or("");
+            sl.DisplayName[LOCALE_enCN] = row.DisplayName_Lang_enCN.value_or("");
+            sl.DisplayName[LOCALE_zhCN] = row.DisplayName_Lang_zhCN.value_or("");
+            sl.DisplayName[LOCALE_enTW] = row.DisplayName_Lang_enTW.value_or("");
+            sl.DisplayName[LOCALE_zhTW] = row.DisplayName_Lang_zhTW.value_or("");
+            sl.DisplayName[LOCALE_esES] = row.DisplayName_Lang_esES.value_or("");
+            sl.DisplayName[LOCALE_esMX] = row.DisplayName_Lang_esMX.value_or("");
+            sl.DisplayName[LOCALE_ruRU] = row.DisplayName_Lang_ruRU.value_or("");
+            sl.DisplayName[LOCALE_ptPT] = row.DisplayName_Lang_ptPT.value_or("");
+            sl.DisplayName[LOCALE_ptBR] = row.DisplayName_Lang_ptBR.value_or("");
+            sl.DisplayName[LOCALE_itIT] = row.DisplayName_Lang_itIT.value_or("");
+
+            sl.SpellIconID = row.SpellIconID;
+            sl.CanLink     = row.CanLink;
+
+            _skillLineMap[row.ID] = sl;
+        }
+        log->info(">>> DBCMgr: loaded {} SkillLine in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SkillLine failed: {}", ex.what());
+    }
+}
+
 void DBCMgr::initialize_Additional_Data() {
     handle_CharStartOutfitByTripple();
+    handle_SkillRaceClassInfo();
 }
 
 void DBCMgr::handle_CharStartOutfitByTripple() {
@@ -179,5 +247,14 @@ void DBCMgr::handle_CharStartOutfitByTripple() {
     {
         if (CharStartOutfitDBC const* entry = &csoID.second)
             _charStartOutfitByTripple[CharStartOutfitKey(entry->RaceID, entry->ClassID, entry->SexID)] = entry;
+    }
+}
+
+void DBCMgr::handle_SkillRaceClassInfo() {
+    for (const auto& srciID : _skillRaceClassInfoMap)
+    {
+        if (SkillRaceClassInfoDBC const* entry = &srciID.second)
+            if (getSkillLineDBC(entry->SkillID))
+                _skillRaceClassInfoBySkill.emplace(entry->SkillID, entry);
     }
 }

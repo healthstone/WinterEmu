@@ -11,10 +11,16 @@
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CharStartOutfitDBC> CharStartOutfitDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
 // CharStartOutfitByTripple
 typedef std::tuple<uint8_t, uint8_t, uint8_t> CharStartOutfitKey;
 typedef std::map<CharStartOutfitKey, CharStartOutfitDBC const*> CharStartOutfitByTripple;
+
+// SkillRaceClassInfoBounds
+typedef std::unordered_multimap<uint32_t, SkillRaceClassInfoDBC const*> SkillRaceClassInfoMap;
+typedef std::pair<SkillRaceClassInfoMap::iterator, SkillRaceClassInfoMap::iterator> SkillRaceClassInfoBounds;
 
 class BaseServer;
 
@@ -22,8 +28,7 @@ class DBCMgr {
 public:
     explicit DBCMgr(std::shared_ptr<BaseServer> server) : server_(std::move(server)) {}
 
-    void initialize_for_relay();
-    void initialize_for_node();
+    void initialize();
 
     ~DBCMgr();
 
@@ -75,21 +80,50 @@ public:
         return nullptr;
     }
 
+    SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
+    {
+        SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
+        for (auto itr = bounds.first; itr != bounds.second; ++itr)
+        {
+            if (itr->second->RaceMask && !(itr->second->RaceMask & (1 << (race - 1))))
+                continue;
+            if (itr->second->ClassMask && !(itr->second->ClassMask & (1 << (class_ - 1))))
+                continue;
+
+            return itr->second;
+        }
+        return nullptr;
+    }
+
+    SkillLineDBCMap const& getSkillLineDBCMap() const { return _skillLineMap; }
+    SkillLineDBC const* getSkillLineDBC(uint32_t ID)
+    {
+        auto itr = _skillLineMap.find(ID);
+        if (itr != _skillLineMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
 private:
-    void load_ChrClasses();     // load ChrClasses.dbc
-    void load_ChrRaces();       // load ChrRaces.dbc
-    void load_CharStartOutfit();// load CharStartOutfit.dbc
+    void load_ChrClasses();         // load ChrClasses.dbc
+    void load_ChrRaces();           // load ChrRaces.dbc
+    void load_CharStartOutfit();    // load CharStartOutfit.dbc
+    void load_SkillRaceClassInfo(); // load SkillRaceClassInfo.dbc
+    void load_SkillLine();          // load SkillLine.dbc
 
     std::shared_ptr<BaseServer> server_;
 
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;
     CharStartOutfitDBCMap _charStartOutfitMap;
+    SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
+    SkillLineDBCMap _skillLineMap;
 
     // Handle others containers
     void initialize_Additional_Data();
     void handle_CharStartOutfitByTripple();
-
+    void handle_SkillRaceClassInfo();
 
     CharStartOutfitByTripple _charStartOutfitByTripple;
+    SkillRaceClassInfoMap _skillRaceClassInfoBySkill;
 };

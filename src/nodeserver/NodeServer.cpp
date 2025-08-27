@@ -106,11 +106,11 @@ void NodeServer::log_session_count() {
 void NodeServer::init() {
     // Загружаем различные данные
     dbc_manager_ = std::make_unique<DBCMgr>(shared_from_this());
-    dbc_manager_->initialize_for_node();
-
-    playerInfo_manager_ = std::make_unique<PlayerInfoMgr>(shared_from_this());
-    playerInfo_manager_->loadFromDB();
+    dbc_manager_->initialize();
 
     itemTemplate_manager_ = std::make_unique<ItemTemplateMgr>(shared_from_this());
     itemTemplate_manager_->loadFromDB();
+
+    playerInfo_manager_ = std::make_unique<PlayerInfoMgr>(shared_from_this());
+    playerInfo_manager_->loadFromDB();
 }

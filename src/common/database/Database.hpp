@@ -35,10 +35,13 @@
 #include "database/mapper/relay/PgCharacterEnumRow.hpp"
 #include "database/mapper/relay/PgPlayerCreateInfo.hpp"
 #include "database/mapper/relay/PgPlayerCreateInfoItem.hpp"
+#include "database/mapper/relay/PgPlayerCreateInfoSkills.hpp"
 
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
+#include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
+#include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
 #include "database/mapper/world/PgItemTemplate.hpp"
 #include "PreparedStatement.hpp"
@@ -477,6 +480,9 @@ private:
                      fmt::format("SELECT race, class, map, zone, position_x, position_y, position_z, orientation FROM {}.playercreateinfo", relay_schema));
         conn.prepare("SELECT_PLAYER_CREATE_INFO_ITEM",
                      fmt::format("SELECT race, class, itemid, amount FROM {}.playercreateinfo_item", relay_schema));
+        conn.prepare("SELECT_PLAYER_CREATE_INFO_SKILLS",
+                     fmt::format("SELECT racemask, classmask, skill, rank, comment FROM {}.playercreateinfo_skills", relay_schema));
+
     }
 
     void prepareDBCSchema(pqxx::connection &conn) {
@@ -552,6 +558,34 @@ private:
                                  "inventorytype_19, inventorytype_20, inventorytype_21, inventorytype_22, inventorytype_23, inventorytype_24 "
                                  "FROM {}.dbc_charstartoutfit",
                                  dbc_schema));
+
+        conn.prepare("SELECT_DBC_SKILLRACECLASSINFO",
+                     fmt::format("SELECT "
+                                 "id, skillid, racemask, classmask, "
+                                 "flags, minlevel, skilltierid, skillcostindex "
+                                 "FROM {}.dbc_skillraceclassinfo",
+                                 dbc_schema));
+
+        conn.prepare("SELECT_DBC_SKILLLINE",
+                     fmt::format("SELECT "
+                                 "id, categoryid, skillcostsid, "
+                                 "displayname_lang_enus, displayname_lang_engb, displayname_lang_kokr, displayname_lang_frfr, displayname_lang_dede, "
+                                 "displayname_lang_encn, displayname_lang_zhcn, displayname_lang_entw, displayname_lang_zhtw, "
+                                 "displayname_lang_eses, displayname_lang_esmx, displayname_lang_ruru, displayname_lang_ptpt, "
+                                 "displayname_lang_ptbr, displayname_lang_itit, displayname_lang_unk, displayname_lang_mask, "
+                                 "description_lang_enus, description_lang_engb, description_lang_kokr, description_lang_frfr, description_lang_dede, "
+                                 "description_lang_encn, description_lang_zhcn, description_lang_entw, description_lang_zhtw, "
+                                 "description_lang_eses, description_lang_esmx, description_lang_ruru, description_lang_ptpt, "
+                                 "description_lang_ptbr, description_lang_itit, description_lang_unk, description_lang_mask, "
+                                 "spelliconid, "
+                                 "alternateverb_lang_enus, alternateverb_lang_engb, alternateverb_lang_kokr, alternateverb_lang_frfr, alternateverb_lang_dede, "
+                                 "alternateverb_lang_encn, alternateverb_lang_zhcn, alternateverb_lang_entw, alternateverb_lang_zhtw, "
+                                 "alternateverb_lang_eses, alternateverb_lang_esmx, alternateverb_lang_ruru, alternateverb_lang_ptpt, "
+                                 "alternateverb_lang_ptbr, alternateverb_lang_itit, alternateverb_lang_unk, alternateverb_lang_mask, "
+                                 "canlink "
+                                 "FROM {}.dbc_skillline",
+                                 dbc_schema));
+
 
     }
 
