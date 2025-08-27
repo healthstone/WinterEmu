@@ -400,6 +400,8 @@ private:
                      fmt::format("UPDATE {}.realmlist SET flag = $1, population = $2 WHERE id = $3", auth_schema));
         conn.prepare("INSERT_REALM_CHARACTERS",
                      fmt::format("INSERT INTO {}.realmcharacters (realmid, acctid, numchars) VALUES ($1, $2, $3)", auth_schema));
+        conn.prepare("UPDATE_REALM_CHARACTERS",
+                     fmt::format("UPDATE {}.realmcharacters SET numchars = $1 WHERE acctid = $2", auth_schema));
     }
 
     void prepareRelaySchema(pqxx::connection &conn) {

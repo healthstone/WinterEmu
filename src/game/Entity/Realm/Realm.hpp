@@ -23,6 +23,13 @@ struct Realm {
     RealmFlags Flags = RealmFlags::REALM_FLAG_NONE;
     uint8_t Timezone = 0;
     AccountTypes AllowedSecurityLevel = AccountTypes::SEC_PLAYER;
+
+    /**
+     * 0 - 0.5   - Low
+     * 0.5 - 1.0 - Medium
+     * 1.0 - 2.0 - High
+     * >= 2.0    - Full
+     */
     float PopulationLevel = 0.0f;
 
     [[nodiscard]]

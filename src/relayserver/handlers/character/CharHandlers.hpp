@@ -24,4 +24,5 @@ namespace CharHandlers {
     boost::asio::awaitable<uint64_t> fetchUsernameCountFromDB(std::shared_ptr<GameSession> session, const std::string &charName);
 
     boost::asio::awaitable<void> handleInsertCharacter(std::shared_ptr<GameSession> session, const CharCreateData &ccd, PlayerInfo const* playerInfo);
+    boost::asio::awaitable<void> handleUpdateRealmCharacters(std::shared_ptr<GameSession> session, uint8_t futureCharactersCount);
 }

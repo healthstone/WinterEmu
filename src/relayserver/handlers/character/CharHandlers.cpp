@@ -290,6 +290,7 @@ CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, const 
     }
 
     co_await handleInsertCharacter(session, ccd.value(), info);
+    co_await handleUpdateRealmCharacters(session, session->getCharactersCountOnRealm() + 1);
     sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_SUCCESS);
     co_return;
 }
@@ -474,6 +475,19 @@ CharHandlers::handleInsertCharacter(std::shared_ptr<GameSession> session, const 
         co_return;
     } catch (const std::exception &ex) {
         Logger::get()->error("[CharHandlers::handleInsertCharacter] DB exception: {}", ex.what());
+        co_return;
+    }
+}
+
+boost::asio::awaitable<void> CharHandlers::handleUpdateRealmCharacters(std::shared_ptr<GameSession> session, uint8_t futureCharactersCount) {
+    try {
+        PreparedStatement stmt("UPDATE_REALM_CHARACTERS");
+        stmt.set_param(0, futureCharactersCount);
+        stmt.set_param(1, session->getAccount()->id);
+        co_await session->server()->db()->execute_async_one<NothingRow>(stmt);
+        co_return;
+    } catch (const std::exception &ex) {
+        Logger::get()->error("[CharHandlers::handleUpdateRealmCharacters] DB exception: {}", ex.what());
         co_return;
     }
 }

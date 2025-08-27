@@ -137,7 +137,7 @@ void RelayServer::init(unsigned int network_threads, uint32_t realmID) {
     node_manager_->add_connectors(1, "127.0.0.1", 8086, network_threads);
     node_manager_->start_all();
 
-    schedule_update_realm(RealmFlags::REALM_FLAG_RECOMMENDED, 0.0f);
+    schedule_update_realm(RealmFlags::REALM_FLAG_RECOMMENDED, 1.0f);
     Logger::get()->info("[RelayServer] Realm {} has been successfully started", realm_->Name);
 }
 
