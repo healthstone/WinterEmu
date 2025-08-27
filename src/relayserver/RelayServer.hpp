@@ -41,12 +41,12 @@ public:
     std::shared_ptr<Database> db() const override { return db_; }
     DBCMgr* getDBCMgr() const override { return dbc_manager_.get(); }
     PlayerInfoMgr* getPlayerInfoMgr() const override { return playerInfo_manager_.get(); }
+    ItemTemplateMgr* getItemTemplateMgr() const override { return itemTemplate_manager_.get(); }
 
     // own ptr
     Realm* getRealm() const { return realm_.get(); }
     NodeManager* get_node_manager() const  { return node_manager_.get(); }
     AddonMgr* getAddonMgr() const { return addon_manager_.get(); }
-    ItemTemplateMgr* getItemTemplateMgr() const { return itemTemplate_manager_.get(); }
 
 private:
     boost::asio::io_context &io_context_;

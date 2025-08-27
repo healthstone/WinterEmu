@@ -43,6 +43,18 @@ void NodeServer::start_accept() {
 void NodeServer::stop() {
     auto log = Logger::get();
 
+    if (dbc_manager_) {
+        dbc_manager_->cleanUpBeforeDelete();
+    }
+
+    if (playerInfo_manager_) {
+        playerInfo_manager_->cleanUpBeforeDelete();
+    }
+
+    if (itemTemplate_manager_) {
+        itemTemplate_manager_->cleanUpBeforeDelete();
+    }
+
     boost::system::error_code ec;
     acceptor_.cancel(ec);
     if (ec && ec != boost::asio::error::operation_aborted && ec != boost::asio::error::eof) {
@@ -98,4 +110,7 @@ void NodeServer::init() {
 
     playerInfo_manager_ = std::make_unique<PlayerInfoMgr>(shared_from_this());
     playerInfo_manager_->loadFromDB();
+
+    itemTemplate_manager_ = std::make_unique<ItemTemplateMgr>(shared_from_this());
+    itemTemplate_manager_->loadFromDB();
 }

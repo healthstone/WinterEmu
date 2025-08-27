@@ -34,6 +34,7 @@
 #include "database/mapper/relay/PgCharacterAccountData.hpp"
 #include "database/mapper/relay/PgCharacterEnumRow.hpp"
 #include "database/mapper/relay/PgPlayerCreateInfo.hpp"
+#include "database/mapper/relay/PgPlayerCreateInfoItem.hpp"
 
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
@@ -472,6 +473,8 @@ private:
 
         conn.prepare("SELECT_PLAYER_CREATE_INFO",
                      fmt::format("SELECT race, class, map, zone, position_x, position_y, position_z, orientation FROM {}.playercreateinfo", relay_schema));
+        conn.prepare("SELECT_PLAYER_CREATE_INFO_ITEM",
+                     fmt::format("SELECT race, class, itemid, amount FROM {}.playercreateinfo_item", relay_schema));
     }
 
     void prepareDBCSchema(pqxx::connection &conn) {
