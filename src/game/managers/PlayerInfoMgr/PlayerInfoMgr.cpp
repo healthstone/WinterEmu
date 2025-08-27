@@ -160,27 +160,28 @@ void PlayerInfoMgr::playerCreateInfoAddItemHelper(uint8_t race_, uint8_t class_,
     else
     {
         auto log = Logger::get();
+        auto dbcMgr = server_->getDBCMgr();
         if (count < -1)
             log->error("[PlayerInfoMgr::playerCreateInfoAddItemHelper] Invalid count {} specified on item {} be removed from original player create info (use -1)!", count, itemId);
 
-//        for (uint8_t gender = 0; gender < static_cast<uint8_t>(Gender::GENDER_NONE); ++gender)
-//        {
-//            if (CharStartOutfitEntry const* entry = GetCharStartOutfitEntry(race_, class_, gender))
-//            {
-//                bool found = false;
-//                for (uint8 x = 0; x < MAX_OUTFIT_ITEMS; ++x)
-//                {
-//                    if (entry->ItemID[x] > 0 && uint32(entry->ItemID[x]) == itemId)
-//                    {
-//                        found = true;
-//                        const_cast<CharStartOutfitEntry*>(entry)->ItemID[x] = 0;
-//                        break;
-//                    }
-//                }
-//
-//                if (!found)
-//                    log->error("[PlayerInfoMgr::playerCreateInfoAddItemHelper] Item {} specified to be removed from original create info not found in dbc!", itemId);
-//            }
-//        }
+        for (uint8_t gender = 0; gender < static_cast<uint8_t>(Gender::GENDER_NONE); ++gender)
+        {
+            if (CharStartOutfitDBC const* entry = dbcMgr->getCharStartOutfitDBC(race_, class_, gender))
+            {
+                bool found = false;
+                for (uint8_t x = 0; x < MAX_OUTFIT_ITEMS; ++x)
+                {
+                    if (entry->ItemID[x] > 0 && uint32_t(entry->ItemID[x]) == itemId)
+                    {
+                        found = true;
+                        const_cast<CharStartOutfitDBC*>(entry)->ItemID[x] = 0;
+                        break;
+                    }
+                }
+
+                if (!found)
+                    log->error("[PlayerInfoMgr::playerCreateInfoAddItemHelper] Item {} specified to be removed from original create info not found in dbc!", itemId);
+            }
+        }
     }
 }

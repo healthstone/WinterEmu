@@ -10,16 +10,25 @@ DBCMgr::~DBCMgr() {
 void DBCMgr::cleanUpBeforeDelete() {
     _chrClassesMap.clear();
     _chrRacesMap.clear();
+
+    _charStartOutfitByTripple.clear();
+    _charStartOutfitMap.clear();
 }
 
 void DBCMgr::initialize_for_relay() {
     load_ChrClasses();
     load_ChrRaces();
+    load_CharStartOutfit();
+
+    initialize_Additional_Data();
 }
 
 void DBCMgr::initialize_for_node() {
     load_ChrClasses();
     load_ChrRaces();
+    //load_CharStartOutfit();
+
+    //initialize_Additional_Data();
 }
 
 Team DBCMgr::teamForRace(uint8_t race)
@@ -126,11 +135,49 @@ void DBCMgr::load_ChrRaces() {
 
             _chrRacesMap[cr.ID] = cr;
         }
-
         log->info(">>> DBCMgr: loaded {} ChrRaces in {} ms",
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
 
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_ChrRaces failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_CharStartOutfit() {
+    auto log = Logger::get();
+    _charStartOutfitMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_CHARSTARTOUTFIT");
+        auto rows = server_->db()->execute_sync_many<DbcCharStartOutfit>(stmt);
+        for (const auto &row: rows) {
+            CharStartOutfitDBC cso;
+            cso.ID      = row.ID;
+            cso.RaceID  = row.RaceID;
+            cso.ClassID = row.ClassID;
+            cso.SexID   = row.SexID;
+
+            for (uint8_t i = 0; i < MAX_OUTFIT_ITEMS; i++)
+                cso.ItemID[i] = row.ItemID[i];
+
+            _charStartOutfitMap[row.ID] = cso;
+        }
+        log->info(">>> DBCMgr: loaded {} CharStartOutfit in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_CharStartOutfit failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::initialize_Additional_Data() {
+    handle_CharStartOutfitByTripple();
+}
+
+void DBCMgr::handle_CharStartOutfitByTripple() {
+    for (const auto& csoID : _charStartOutfitMap)
+    {
+        if (CharStartOutfitDBC const* entry = &csoID.second)
+            _charStartOutfitByTripple[CharStartOutfitKey(entry->RaceID, entry->ClassID, entry->SexID)] = entry;
     }
 }
