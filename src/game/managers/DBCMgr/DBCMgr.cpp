@@ -118,7 +118,7 @@ void DBCMgr::load_AchievementCriteria() {
             achc.AdditionalRequirements[0].Type = row.StartEvent;
             achc.AdditionalRequirements[0].Asset = row.StartAsset;
             achc.AdditionalRequirements[1].Type = row.FailEvent;
-            achc.AdditionalRequirements[1].Asset = row.FailEvent;
+            achc.AdditionalRequirements[1].Asset = row.FailAsset;
 
             // Локализованные описания
             achc.name[LOCALE_enUS] = row.DescriptionLang_enUS.value_or("");
