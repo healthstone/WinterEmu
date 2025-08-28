@@ -32,14 +32,14 @@ struct Account {
     std::optional<std::chrono::system_clock::time_point> last_login;
     std::optional<uint8_t> online;
     std::optional<uint8_t> expansion;
-    std::optional<int64_t> mutetime;
+    std::optional<uint32_t> mutetime;
     std::optional<std::string> mutereason;
     std::optional<std::string> muteby;
     std::optional<uint8_t> locale;
     std::optional<std::string> os;
     std::optional<int16_t> timezone_offset;
     std::optional<uint32_t> recruiter;
-    std::optional<int64_t> coins;
+    std::optional<uint32_t> coins;
 };
 
 template<>
@@ -47,83 +47,51 @@ struct PgRowMapper<Account> {
     static Account map(const pqxx::row &r) {
         Account row;
 
-        // Парсим UUID
+        // UUID
         std::string id_str = r["id"].as<std::string>();
         try {
             boost::uuids::string_generator gen;
             row.id = gen(id_str);
-        } catch (const std::exception &e) {
+        } catch (...) {
             throw std::runtime_error("PgRowMapper: invalid UUID string in 'id' field: " + id_str);
         }
 
-        // Обрабатываем строковые поля
-        if (!r["username"].is_null()) row.username = r["username"].as<std::string>();
-        if (!r["email"].is_null()) row.email = r["email"].as<std::string>();
-        if (!r["reg_mail"].is_null()) row.reg_mail = r["reg_mail"].as<std::string>();
-        if (!r["last_ip"].is_null()) row.last_ip = r["last_ip"].as<std::string>();
-        if (!r["last_attempt_ip"].is_null()) row.last_attempt_ip = r["last_attempt_ip"].as<std::string>();
-        if (!r["lock_country"].is_null()) row.lock_country = r["lock_country"].as<std::string>();
-        if (!r["mutereason"].is_null()) row.mutereason = r["mutereason"].as<std::string>();
-        if (!r["muteby"].is_null()) row.muteby = r["muteby"].as<std::string>();
-        if (!r["os"].is_null()) row.os = r["os"].as<std::string>();
+        // строковые
+        row.username        = get_optional_string(r, "username");
+        row.email           = get_optional_string(r, "email");
+        row.reg_mail        = get_optional_string(r, "reg_mail");
+        row.last_ip         = get_optional_string(r, "last_ip");
+        row.last_attempt_ip = get_optional_string(r, "last_attempt_ip");
+        row.lock_country    = get_optional_string(r, "lock_country");
+        row.mutereason      = get_optional_string(r, "mutereason");
+        row.muteby          = get_optional_string(r, "muteby");
+        row.os              = get_optional_string(r, "os");
 
-        // Обрабатываем бинарные поля
-        if (!r["salt"].is_null()) {
-            pqxx::binarystring salt_bin(r["salt"]);
-            if (salt_bin.size() != 32)
-                throw std::runtime_error("PgRowMapper: Invalid salt size, expected 32 bytes");
-            std::array<uint8_t, 32> salt_arr{};
-            std::copy_n(salt_bin.begin(), 32, salt_arr.begin());
-            row.salt = salt_arr;
-        }
+        // бинарные
+        row.salt             = map_binary_fixed<32>(r, "salt");
+        row.verifier         = map_binary_fixed<32>(r, "verifier");
+        row.session_key_auth = map_binary_fixed<40>(r, "session_key_auth");
+        row.session_key_bnet = map_binary_var(r, "session_key_bnet");
+        row.totp_secret      = map_binary_var(r, "totp_secret");
 
-        if (!r["verifier"].is_null()) {
-            pqxx::binarystring verifier_bin(r["verifier"]);
-            if (verifier_bin.size() != 32)
-                throw std::runtime_error("PgRowMapper: Invalid verifier size, expected 32 bytes");
-            std::array<uint8_t, 32> verifier_arr{};
-            std::copy_n(verifier_bin.begin(), 32, verifier_arr.begin());
-            row.verifier = verifier_arr;
-        }
-
-        if (!r["session_key_auth"].is_null()) {
-            pqxx::binarystring session_key_bin(r["session_key_auth"]);
-            if (session_key_bin.size() != 40)
-                throw std::runtime_error("PgRowMapper: Invalid session_key_auth size, expected 40 bytes");
-            std::array<uint8_t, 40> session_key_arr{};
-            std::copy_n(session_key_bin.begin(), 40, session_key_arr.begin());
-            row.session_key_auth = session_key_arr;
-        }
-
-        if (!r["session_key_bnet"].is_null()) {
-            pqxx::binarystring session_key_bnet_bin(r["session_key_bnet"]);
-            std::vector<uint8_t> session_key_bnet_vec(session_key_bnet_bin.begin(), session_key_bnet_bin.end());
-            row.session_key_bnet = session_key_bnet_vec;
-        }
-
-        if (!r["totp_secret"].is_null()) {
-            pqxx::binarystring totp_secret_bin(r["totp_secret"]);
-            std::vector<uint8_t> totp_secret_vec(totp_secret_bin.begin(), totp_secret_bin.end());
-            row.totp_secret = totp_secret_vec;
-        }
-
-        // Обрабатываем временные метки
+        // временные
         if (!r["joindate"].is_null())
             row.joindate = TimeUtils::parse_pg_timestamp_optional(r["joindate"].as<std::string>());
-
         if (!r["last_login"].is_null())
             row.last_login = TimeUtils::parse_pg_timestamp_optional(r["last_login"].as<std::string>());
 
-        // Обрабатываем числовые поля
-        if (!r["failed_logins"].is_null()) row.failed_logins = r["failed_logins"].as<uint32_t>();
-        if (!r["locked"].is_null()) row.locked = static_cast<uint8_t>(r["locked"].as<int>());
-        if (!r["online"].is_null()) row.online = static_cast<uint8_t>(r["online"].as<int>());
-        if (!r["expansion"].is_null()) row.expansion = static_cast<uint8_t>(r["expansion"].as<int>());
-        if (!r["mutetime"].is_null()) row.mutetime = r["mutetime"].as<int64_t>();
-        if (!r["locale"].is_null()) row.locale = static_cast<uint8_t>(r["locale"].as<int>());
-        if (!r["timezone_offset"].is_null()) row.timezone_offset = r["timezone_offset"].as<int16_t>();
-        if (!r["recruiter"].is_null()) row.recruiter = r["recruiter"].as<uint32_t>();
-        if (!r["coins"].is_null()) row.coins = r["coins"].as<int64_t>();
+        // числовые
+        row.failed_logins   = get_optional_number<uint32_t>(r, "failed_logins");
+
+        //row.RaceID   = static_cast<uint8_t>(get_optional_number<int16_t>(r, "raceid").value_or(0));
+        row.locked          = static_cast<uint8_t>(get_optional_number<int>(r, "locked").value_or(0));
+        row.online          = static_cast<uint8_t>(get_optional_number<int>(r, "online").value_or(0));
+        row.expansion       = static_cast<uint8_t>(get_optional_number<int>(r, "expansion").value_or(0));
+        row.mutetime        = get_optional_number<uint32_t>(r, "mutetime");
+        row.locale          = static_cast<uint8_t>(get_optional_number<int>(r, "locale").value_or(0));
+        row.timezone_offset = get_optional_number<int16_t>(r, "timezone_offset");
+        row.recruiter       = get_optional_number<uint32_t>(r, "recruiter");
+        row.coins           = get_optional_number<uint32_t>(r, "coins");
 
         return row;
     }

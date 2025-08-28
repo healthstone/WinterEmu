@@ -25,12 +25,13 @@ template<>
 struct PgRowMapper<PlayerCreateInfoSkillRow> {
     static PlayerCreateInfoSkillRow map(const pqxx::row& r) {
         PlayerCreateInfoSkillRow row;
+
         row.racemask  = r["racemask"].as<int16_t>();
         row.classmask = r["classmask"].as<int16_t>();
         row.skill     = r["skill"].as<int16_t>();
         row.rank      = r["rank"].as<int16_t>();
-        if (!r["comment"].is_null())
-            row.comment = r["comment"].as<std::string>();
+        row.comment   = get_optional_string(r, "comment");
+
         return row;
     }
 };

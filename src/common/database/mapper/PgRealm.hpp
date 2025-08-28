@@ -33,11 +33,11 @@ struct PgRowMapper<RealmRow> {
         RealmRow row;
 
         row.id = r["id"].as<uint32_t>();
-        row.name = r["name"].as<std::string>();
-        row.address = r["address"].as<std::string>();
-        row.localAddress = r["local_address"].as<std::string>();
-        row.localSubnetMask = r["local_subnet_mask"].as<std::string>();
-        row.port = static_cast<uint16_t>(r["port"].as<int>());
+        row.name = get_optional_string(r, "name").value_or("");
+        row.address = get_optional_string(r, "address").value_or("");
+        row.localAddress = get_optional_string(r, "local_address").value_or("");
+        row.localSubnetMask = get_optional_string(r, "local_subnet_mask").value_or("");
+        row.port = r["port"].as<uint16_t>();
         row.icon = static_cast<uint8_t>(r["icon"].as<int>());
         row.flag = static_cast<uint8_t>(r["flag"].as<int>());
         row.timezone = static_cast<uint8_t>(r["timezone"].as<int>());
@@ -48,6 +48,3 @@ struct PgRowMapper<RealmRow> {
         return row;
     }
 };
-
-
-

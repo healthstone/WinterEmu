@@ -88,10 +88,6 @@ struct DbcAchievement {
 
 template<>
 struct PgRowMapper<DbcAchievement> {
-    // вспомогательная функция для безопасного извлечения optional<string>
-    static std::optional<std::string> get_optional_string(const pqxx::row& r, const std::string& col) {
-        return r[col].is_null() ? std::optional<std::string>{} : std::optional<std::string>{r[col].as<std::string>()};
-    }
 
     static DbcAchievement map(const pqxx::row& r) {
         DbcAchievement row;

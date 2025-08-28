@@ -23,7 +23,7 @@ struct PgRowMapper<RealmCharacters> {
     static RealmCharacters map(const pqxx::row& r) {
         RealmCharacters row;
         row.realmid = r["realmid"].as<uint32_t>();
-        row.numchars = static_cast<uint16_t>(r["numchars"].as<int>());
+        row.numchars = r["numchars"].as<uint16_t>();
         return row;
     }
 };

@@ -24,7 +24,7 @@ struct PgRowMapper<AccountDataRow> {
     static AccountDataRow map(const pqxx::row& r) {
         AccountDataRow row;
 
-        // Парсинг UUID account_id (оставляем UUID)
+        // Парсинг UUID account_id
         std::string account_id_str = r["account_id"].as<std::string>();
         try {
             boost::uuids::string_generator gen;
@@ -33,17 +33,15 @@ struct PgRowMapper<AccountDataRow> {
             throw std::runtime_error("PgRowMapper: invalid UUID string in 'account_id' field: " + account_id_str);
         }
 
-        // Тип данных (0-7)
+        // Тип данных
         row.type = static_cast<uint8_t>(r["type"].as<int>());
 
         // Временная метка
         row.time = r["time"].as<uint32_t>();
 
-        // Бинарные данные
-        if (!r["data"].is_null()) {
-            pqxx::binarystring data_bin(r["data"]);
-            row.data = std::vector<uint8_t>(data_bin.data(), data_bin.data() + data_bin.size());
-        }
+        // Бинарные данные через утилиту
+        auto data_opt = map_binary_var(r, "data");
+        row.data = data_opt.value_or(std::vector<uint8_t>{});
 
         return row;
     }

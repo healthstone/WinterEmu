@@ -26,7 +26,7 @@ struct PgRowMapper<PlayerCreateInfoItemRow> {
         row.race = static_cast<uint8_t>(r["race"].as<int>());
         row.class_ = static_cast<uint8_t>(r["class"].as<int>());
         row.itemid = r["itemid"].as<uint32_t>();
-        row.amount = static_cast<int16_t>(r["amount"].as<int>());
+        row.amount = r["amount"].as<int16_t>();
         return row;
     }
 };

@@ -99,92 +99,86 @@ struct PgRowMapper<DbcChrRaces> {
     static DbcChrRaces map(const pqxx::row& r) {
         DbcChrRaces row;
 
+        // Числовые поля
         row.ID = r["id"].as<uint32_t>();
         row.Flags = r["flags"].as<uint32_t>();
         row.FactionID = r["factionid"].as<uint32_t>();
         row.ExplorationSoundID = r["explorationsoundid"].as<uint32_t>();
         row.MaleDisplayId = r["maledisplayid"].as<uint32_t>();
         row.FemaleDisplayId = r["femaledisplayid"].as<uint32_t>();
-
-        // Обработка optional строковых полей
-        if (!r["clientprefix"].is_null()) row.ClientPrefix = r["clientprefix"].as<std::string>();
-
         row.BaseLanguage = r["baselanguage"].as<uint32_t>();
         row.CreatureType = r["creaturetype"].as<uint32_t>();
         row.ResSicknessSpellID = r["ressicknessspellid"].as<uint32_t>();
         row.SplashSoundID = r["splashsoundid"].as<uint32_t>();
-
-        if (!r["clientfilestring"].is_null()) row.ClientFilestring = r["clientfilestring"].as<std::string>();
-
         row.CinematicSequenceID = r["cinematicsequenceid"].as<uint32_t>();
         row.Alliance = r["alliance"].as<uint32_t>();
+        row.Name_Lang_Mask = r["name_lang_mask"].as<uint32_t>();
+        row.Name_Female_Lang_Mask = r["name_female_lang_mask"].as<uint32_t>();
+        row.Name_Male_Lang_Mask = r["name_male_lang_mask"].as<uint32_t>();
+        row.Required_Expansion = r["required_expansion"].as<uint32_t>();
+
+        // Optional строковые поля через QueryResults.hpp
+        row.ClientPrefix = get_optional_string(r, "clientprefix");
+        row.ClientFilestring = get_optional_string(r, "clientfilestring");
 
         // Name fields
-        if (!r["name_lang_enus"].is_null()) row.Name_Lang_enUS = r["name_lang_enus"].as<std::string>();
-        if (!r["name_lang_engb"].is_null()) row.Name_Lang_enGB = r["name_lang_engb"].as<std::string>();
-        if (!r["name_lang_kokr"].is_null()) row.Name_Lang_koKR = r["name_lang_kokr"].as<std::string>();
-        if (!r["name_lang_frfr"].is_null()) row.Name_Lang_frFR = r["name_lang_frfr"].as<std::string>();
-        if (!r["name_lang_dede"].is_null()) row.Name_Lang_deDE = r["name_lang_dede"].as<std::string>();
-        if (!r["name_lang_encn"].is_null()) row.Name_Lang_enCN = r["name_lang_encn"].as<std::string>();
-        if (!r["name_lang_zhcn"].is_null()) row.Name_Lang_zhCN = r["name_lang_zhcn"].as<std::string>();
-        if (!r["name_lang_entw"].is_null()) row.Name_Lang_enTW = r["name_lang_entw"].as<std::string>();
-        if (!r["name_lang_zhtw"].is_null()) row.Name_Lang_zhTW = r["name_lang_zhtw"].as<std::string>();
-        if (!r["name_lang_eses"].is_null()) row.Name_Lang_esES = r["name_lang_eses"].as<std::string>();
-        if (!r["name_lang_esmx"].is_null()) row.Name_Lang_esMX = r["name_lang_esmx"].as<std::string>();
-        if (!r["name_lang_ruru"].is_null()) row.Name_Lang_ruRU = r["name_lang_ruru"].as<std::string>();
-        if (!r["name_lang_ptpt"].is_null()) row.Name_Lang_ptPT = r["name_lang_ptpt"].as<std::string>();
-        if (!r["name_lang_ptbr"].is_null()) row.Name_Lang_ptBR = r["name_lang_ptbr"].as<std::string>();
-        if (!r["name_lang_itit"].is_null()) row.Name_Lang_itIT = r["name_lang_itit"].as<std::string>();
-        if (!r["name_lang_unk"].is_null()) row.Name_Lang_Unk = r["name_lang_unk"].as<std::string>();
+        row.Name_Lang_enUS = get_optional_string(r, "name_lang_enus");
+        row.Name_Lang_enGB = get_optional_string(r, "name_lang_engb");
+        row.Name_Lang_koKR = get_optional_string(r, "name_lang_kokr");
+        row.Name_Lang_frFR = get_optional_string(r, "name_lang_frfr");
+        row.Name_Lang_deDE = get_optional_string(r, "name_lang_dede");
+        row.Name_Lang_enCN = get_optional_string(r, "name_lang_encn");
+        row.Name_Lang_zhCN = get_optional_string(r, "name_lang_zhcn");
+        row.Name_Lang_enTW = get_optional_string(r, "name_lang_entw");
+        row.Name_Lang_zhTW = get_optional_string(r, "name_lang_zhtw");
+        row.Name_Lang_esES = get_optional_string(r, "name_lang_eses");
+        row.Name_Lang_esMX = get_optional_string(r, "name_lang_esmx");
+        row.Name_Lang_ruRU = get_optional_string(r, "name_lang_ruru");
+        row.Name_Lang_ptPT = get_optional_string(r, "name_lang_ptpt");
+        row.Name_Lang_ptBR = get_optional_string(r, "name_lang_ptbr");
+        row.Name_Lang_itIT = get_optional_string(r, "name_lang_itit");
+        row.Name_Lang_Unk = get_optional_string(r, "name_lang_unk");
 
-        row.Name_Lang_Mask = r["name_lang_mask"].as<uint32_t>();
+        // Female names
+        row.Name_Female_Lang_enUS = get_optional_string(r, "name_female_lang_enus");
+        row.Name_Female_Lang_enGB = get_optional_string(r, "name_female_lang_engb");
+        row.Name_Female_Lang_koKR = get_optional_string(r, "name_female_lang_kokr");
+        row.Name_Female_Lang_frFR = get_optional_string(r, "name_female_lang_frfr");
+        row.Name_Female_Lang_deDE = get_optional_string(r, "name_female_lang_dede");
+        row.Name_Female_Lang_enCN = get_optional_string(r, "name_female_lang_encn");
+        row.Name_Female_Lang_zhCN = get_optional_string(r, "name_female_lang_zhcn");
+        row.Name_Female_Lang_enTW = get_optional_string(r, "name_female_lang_entw");
+        row.Name_Female_Lang_zhTW = get_optional_string(r, "name_female_lang_zhtw");
+        row.Name_Female_Lang_esES = get_optional_string(r, "name_female_lang_eses");
+        row.Name_Female_Lang_esMX = get_optional_string(r, "name_female_lang_esmx");
+        row.Name_Female_Lang_ruRU = get_optional_string(r, "name_female_lang_ruru");
+        row.Name_Female_Lang_ptPT = get_optional_string(r, "name_female_lang_ptpt");
+        row.Name_Female_Lang_ptBR = get_optional_string(r, "name_female_lang_ptbr");
+        row.Name_Female_Lang_itIT = get_optional_string(r, "name_female_lang_itit");
+        row.Name_Female_Lang_Unk = get_optional_string(r, "name_female_lang_unk");
 
-        // Female name fields
-        if (!r["name_female_lang_enus"].is_null()) row.Name_Female_Lang_enUS = r["name_female_lang_enus"].as<std::string>();
-        if (!r["name_female_lang_engb"].is_null()) row.Name_Female_Lang_enGB = r["name_female_lang_engb"].as<std::string>();
-        if (!r["name_female_lang_kokr"].is_null()) row.Name_Female_Lang_koKR = r["name_female_lang_kokr"].as<std::string>();
-        if (!r["name_female_lang_frfr"].is_null()) row.Name_Female_Lang_frFR = r["name_female_lang_frfr"].as<std::string>();
-        if (!r["name_female_lang_dede"].is_null()) row.Name_Female_Lang_deDE = r["name_female_lang_dede"].as<std::string>();
-        if (!r["name_female_lang_encn"].is_null()) row.Name_Female_Lang_enCN = r["name_female_lang_encn"].as<std::string>();
-        if (!r["name_female_lang_zhcn"].is_null()) row.Name_Female_Lang_zhCN = r["name_female_lang_zhcn"].as<std::string>();
-        if (!r["name_female_lang_entw"].is_null()) row.Name_Female_Lang_enTW = r["name_female_lang_entw"].as<std::string>();
-        if (!r["name_female_lang_zhtw"].is_null()) row.Name_Female_Lang_zhTW = r["name_female_lang_zhtw"].as<std::string>();
-        if (!r["name_female_lang_eses"].is_null()) row.Name_Female_Lang_esES = r["name_female_lang_eses"].as<std::string>();
-        if (!r["name_female_lang_esmx"].is_null()) row.Name_Female_Lang_esMX = r["name_female_lang_esmx"].as<std::string>();
-        if (!r["name_female_lang_ruru"].is_null()) row.Name_Female_Lang_ruRU = r["name_female_lang_ruru"].as<std::string>();
-        if (!r["name_female_lang_ptpt"].is_null()) row.Name_Female_Lang_ptPT = r["name_female_lang_ptpt"].as<std::string>();
-        if (!r["name_female_lang_ptbr"].is_null()) row.Name_Female_Lang_ptBR = r["name_female_lang_ptbr"].as<std::string>();
-        if (!r["name_female_lang_itit"].is_null()) row.Name_Female_Lang_itIT = r["name_female_lang_itit"].as<std::string>();
-        if (!r["name_female_lang_unk"].is_null()) row.Name_Female_Lang_Unk = r["name_female_lang_unk"].as<std::string>();
-
-        row.Name_Female_Lang_Mask = r["name_female_lang_mask"].as<uint32_t>();
-
-        // Male name fields
-        if (!r["name_male_lang_enus"].is_null()) row.Name_Male_Lang_enUS = r["name_male_lang_enus"].as<std::string>();
-        if (!r["name_male_lang_engb"].is_null()) row.Name_Male_Lang_enGB = r["name_male_lang_engb"].as<std::string>();
-        if (!r["name_male_lang_kokr"].is_null()) row.Name_Male_Lang_koKR = r["name_male_lang_kokr"].as<std::string>();
-        if (!r["name_male_lang_frfr"].is_null()) row.Name_Male_Lang_frFR = r["name_male_lang_frfr"].as<std::string>();
-        if (!r["name_male_lang_dede"].is_null()) row.Name_Male_Lang_deDE = r["name_male_lang_dede"].as<std::string>();
-        if (!r["name_male_lang_encn"].is_null()) row.Name_Male_Lang_enCN = r["name_male_lang_encn"].as<std::string>();
-        if (!r["name_male_lang_zhcn"].is_null()) row.Name_Male_Lang_zhCN = r["name_male_lang_zhcn"].as<std::string>();
-        if (!r["name_male_lang_entw"].is_null()) row.Name_Male_Lang_enTW = r["name_male_lang_entw"].as<std::string>();
-        if (!r["name_male_lang_zhtw"].is_null()) row.Name_Male_Lang_zhTW = r["name_male_lang_zhtw"].as<std::string>();
-        if (!r["name_male_lang_eses"].is_null()) row.Name_Male_Lang_esES = r["name_male_lang_eses"].as<std::string>();
-        if (!r["name_male_lang_esmx"].is_null()) row.Name_Male_Lang_esMX = r["name_male_lang_esmx"].as<std::string>();
-        if (!r["name_male_lang_ruru"].is_null()) row.Name_Male_Lang_ruRU = r["name_male_lang_ruru"].as<std::string>();
-        if (!r["name_male_lang_ptpt"].is_null()) row.Name_Male_Lang_ptPT = r["name_male_lang_ptpt"].as<std::string>();
-        if (!r["name_male_lang_ptbr"].is_null()) row.Name_Male_Lang_ptBR = r["name_male_lang_ptbr"].as<std::string>();
-        if (!r["name_male_lang_itit"].is_null()) row.Name_Male_Lang_itIT = r["name_male_lang_itit"].as<std::string>();
-        if (!r["name_male_lang_unk"].is_null()) row.Name_Male_Lang_Unk = r["name_male_lang_unk"].as<std::string>();
-
-        row.Name_Male_Lang_Mask = r["name_male_lang_mask"].as<uint32_t>();
+        // Male names
+        row.Name_Male_Lang_enUS = get_optional_string(r, "name_male_lang_enus");
+        row.Name_Male_Lang_enGB = get_optional_string(r, "name_male_lang_engb");
+        row.Name_Male_Lang_koKR = get_optional_string(r, "name_male_lang_kokr");
+        row.Name_Male_Lang_frFR = get_optional_string(r, "name_male_lang_frfr");
+        row.Name_Male_Lang_deDE = get_optional_string(r, "name_male_lang_dede");
+        row.Name_Male_Lang_enCN = get_optional_string(r, "name_male_lang_encn");
+        row.Name_Male_Lang_zhCN = get_optional_string(r, "name_male_lang_zhcn");
+        row.Name_Male_Lang_enTW = get_optional_string(r, "name_male_lang_entw");
+        row.Name_Male_Lang_zhTW = get_optional_string(r, "name_male_lang_zhtw");
+        row.Name_Male_Lang_esES = get_optional_string(r, "name_male_lang_eses");
+        row.Name_Male_Lang_esMX = get_optional_string(r, "name_male_lang_esmx");
+        row.Name_Male_Lang_ruRU = get_optional_string(r, "name_male_lang_ruru");
+        row.Name_Male_Lang_ptPT = get_optional_string(r, "name_male_lang_ptpt");
+        row.Name_Male_Lang_ptBR = get_optional_string(r, "name_male_lang_ptbr");
+        row.Name_Male_Lang_itIT = get_optional_string(r, "name_male_lang_itit");
+        row.Name_Male_Lang_Unk = get_optional_string(r, "name_male_lang_unk");
 
         // Customization fields
-        if (!r["facialhaircustomization_1"].is_null()) row.FacialHairCustomization_1 = r["facialhaircustomization_1"].as<std::string>();
-        if (!r["facialhaircustomization_2"].is_null()) row.FacialHairCustomization_2 = r["facialhaircustomization_2"].as<std::string>();
-        if (!r["haircustomization"].is_null()) row.HairCustomization = r["haircustomization"].as<std::string>();
-
-        row.Required_Expansion = r["required_expansion"].as<uint32_t>();
+        row.FacialHairCustomization_1 = get_optional_string(r, "facialhaircustomization_1");
+        row.FacialHairCustomization_2 = get_optional_string(r, "facialhaircustomization_2");
+        row.HairCustomization = get_optional_string(r, "haircustomization");
 
         return row;
     }

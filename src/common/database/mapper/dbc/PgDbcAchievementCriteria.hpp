@@ -46,10 +46,6 @@ struct DbcAchievementCriteria {
 
 template<>
 struct PgRowMapper<DbcAchievementCriteria> {
-    static std::optional<std::string> get_optional_string(const pqxx::row& r, const std::string& col) {
-        return r[col].is_null() ? std::optional<std::string>{} : std::optional<std::string>{r[col].as<std::string>()};
-    }
-
     static DbcAchievementCriteria map(const pqxx::row& r) {
         DbcAchievementCriteria row;
 

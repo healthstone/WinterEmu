@@ -23,13 +23,16 @@ template<>
 struct PgRowMapper<BuildExeHash> {
     static BuildExeHash map(const pqxx::row& r) {
         BuildExeHash row;
-        row.build = r["build"].as<uint32_t>();
+
+        // обычные поля
+        row.build    = r["build"].as<uint32_t>();
         row.platform = r["platform"].as<std::string>();
 
-        pqxx::binarystring hash_bin(r["executableHash"]);
-        if (hash_bin.size() != row.executableHash.size())
-            throw std::runtime_error("PgRowMapper: Invalid executableHash size, expected 20 bytes");
-        std::copy_n(hash_bin.begin(), hash_bin.size(), row.executableHash.begin());
+        // бинарное поле фиксированного размера (20 байт)
+        auto hash_opt = map_binary_fixed<20>(r, "executableHash");
+        if (!hash_opt)
+            throw std::runtime_error("PgRowMapper: executableHash is null");
+        row.executableHash = *hash_opt;
 
         return row;
     }

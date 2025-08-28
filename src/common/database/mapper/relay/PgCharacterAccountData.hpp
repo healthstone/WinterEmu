@@ -24,20 +24,18 @@ struct PgRowMapper<CharacterAccountData> {
     static CharacterAccountData map(const pqxx::row& r) {
         CharacterAccountData row;
 
-        // GUID персонажа (теперь uint32_t)
+        // GUID персонажа
         row.guid = r["guid"].as<uint32_t>();
 
-        // Тип данных (0-7)
+        // Тип данных
         row.type = static_cast<uint8_t>(r["type"].as<int>());
 
         // Временная метка
         row.time = r["time"].as<uint32_t>();
 
-        // Бинарные данные
-        if (!r["data"].is_null()) {
-            pqxx::binarystring data_bin(r["data"]);
-            row.data = std::vector<uint8_t>(data_bin.data(), data_bin.data() + data_bin.size());
-        }
+        // Бинарные данные через утилиту
+        auto data_opt = map_binary_var(r, "data");
+        row.data = data_opt.value_or(std::vector<uint8_t>{});
 
         return row;
     }
