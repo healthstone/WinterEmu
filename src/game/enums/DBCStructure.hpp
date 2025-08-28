@@ -1299,8 +1299,8 @@ struct SkillLineAbilityDBC {
 struct SkillRaceClassInfoDBC {
     uint32_t ID;                                              // 0
     uint32_t SkillID;                                         // 1
-    uint32_t RaceMask;                                        // 2
-    uint32_t ClassMask;                                       // 3
+    int32_t RaceMask;                                         // 2
+    int32_t ClassMask;                                        // 3
     uint32_t Flags;                                           // 4
     //uint32_t MinLevel;                                      // 5
     uint32_t SkillTierID;                                     // 6

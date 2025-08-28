@@ -27,14 +27,14 @@ struct PgRowMapper<ItemTemplate> {
         item.Name1 = row["name"].as<std::string>();
         item.DisplayInfoID = row["displayid"].as<uint32_t>();
         item.Quality = static_cast<uint8_t>(row["quality"].as<int>());
-        item.Flags = row["flags"].as<uint32_t>();
+        item.Flags = row["flags"].as<int32_t>();
         item.Flags2 = row["flagsextra"].as<uint32_t>();
         item.BuyCount = row["buycount"].as<uint32_t>();
         item.BuyPrice = row["buyprice"].as<int32_t>();
         item.SellPrice = row["sellprice"].as<uint32_t>();
         item.InventoryType = static_cast<uint8_t>(row["inventorytype"].as<int>());
-        item.AllowableClass = row["allowableclass"].as<uint32_t>();
-        item.AllowableRace = row["allowablerace"].as<uint32_t>();
+        item.AllowableClass = row["allowableclass"].as<int32_t>();
+        item.AllowableRace = row["allowablerace"].as<int32_t>();
         item.ItemLevel = row["itemlevel"].as<uint32_t>();
         item.RequiredLevel = row["requiredlevel"].as<uint32_t>();
         item.RequiredSkill = row["requiredskill"].as<uint32_t>();
@@ -101,7 +101,7 @@ struct PgRowMapper<ItemTemplate> {
         }
 
         item.Bonding = row["bonding"].as<uint32_t>();
-        item.Description = get_optional_string(row, "description").value_or("");
+        item.Description = row["description"].as<std::string>();
         item.PageText = row["pagetext"].as<uint32_t>();
         item.LanguageID = row["languageid"].as<uint32_t>();
         item.PageMaterial = row["pagematerial"].as<uint32_t>();
@@ -129,7 +129,7 @@ struct PgRowMapper<ItemTemplate> {
 
         item.socketBonus = row["socketbonus"].as<uint32_t>();
         item.GemProperties = row["gemproperties"].as<uint32_t>();
-        item.RequiredDisenchantSkill = row["requireddisenchantskill"].as<uint32_t>();
+        item.RequiredDisenchantSkill = row["requireddisenchantskill"].as<int32_t>();
         item.ArmorDamageModifier = row["armordamagemodifier"].as<float>();
         item.Duration = row["duration"].as<uint32_t>();
         item.ItemLimitCategory = row["itemlimitcategory"].as<uint32_t>();
@@ -140,7 +140,7 @@ struct PgRowMapper<ItemTemplate> {
         item.MinMoneyLoot = row["minmoneyloot"].as<uint32_t>();
         item.MaxMoneyLoot = row["maxmoneyloot"].as<uint32_t>();
         item.FlagsCu = row["flagscustom"].as<uint32_t>();
-        item.VerifiedBuild = get_optional_number<uint32_t>(row, "verifiedbuild").value_or(0);
+        item.VerifiedBuild = get_optional_number<int32_t>(row, "verifiedbuild").value_or(0);
 
         return item;
     }

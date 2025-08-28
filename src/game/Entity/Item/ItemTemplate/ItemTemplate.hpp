@@ -45,14 +45,14 @@ struct ItemTemplate {
     std::string Name1;
     uint32_t DisplayInfoID;                                   // id from ItemDisplayInfo.dbc
     uint8_t Quality;
-    uint32_t Flags;
+    int32_t Flags;
     uint32_t Flags2;
     uint32_t BuyCount;
     int32_t BuyPrice;
     uint32_t SellPrice;
     uint8_t InventoryType;
-    uint32_t AllowableClass;
-    uint32_t AllowableRace;
+    int32_t AllowableClass;
+    int32_t AllowableRace;
     uint32_t ItemLevel;
     uint32_t RequiredLevel;
     uint32_t RequiredSkill;                                   // id from SkillLine.dbc
@@ -102,7 +102,7 @@ struct ItemTemplate {
     std::array <_Socket, MAX_ITEM_PROTO_SOCKETS> Socket;
     uint32_t socketBonus;                                     // id from SpellItemEnchantment.dbc
     uint32_t GemProperties;                                   // id from GemProperties.dbc
-    uint32_t RequiredDisenchantSkill;
+    int32_t RequiredDisenchantSkill;
     float ArmorDamageModifier;
     uint32_t Duration;
     uint32_t ItemLimitCategory;                               // id from ItemLimitCategory.dbc
@@ -113,7 +113,7 @@ struct ItemTemplate {
     uint32_t MinMoneyLoot;
     uint32_t MaxMoneyLoot;
     uint32_t FlagsCu;
-    uint32_t VerifiedBuild;
+    int32_t VerifiedBuild;
 
     // helpers
     bool CanChangeEquipStateInCombat() const;
