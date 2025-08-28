@@ -38,6 +38,7 @@
 #include "database/mapper/relay/PgPlayerCreateInfoSkills.hpp"
 
 #include "database/mapper/dbc/PgDbcAchievement.hpp"
+#include "database/mapper/dbc/PgDbcAchievementCriteria.hpp"
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
@@ -610,7 +611,19 @@ private:
                      )
         );
 
-
+        conn.prepare("SELECT_DBC_ACHIEVEMENT_CRITERIA",
+                     fmt::format(
+                             "SELECT "
+                             "id, achievement_id, \"type\", asset_id, quantity, start_event, start_asset, fail_event, fail_asset, "
+                             "description_lang_enus, description_lang_engb, description_lang_kokr, description_lang_frfr, description_lang_dede, "
+                             "description_lang_encn, description_lang_zhcn, description_lang_entw, description_lang_zhtw, "
+                             "description_lang_eses, description_lang_esmx, description_lang_ruru, description_lang_ptpt, "
+                             "description_lang_ptbr, description_lang_itit, description_lang_unk, description_lang_mask, "
+                             "flags, timer_start_event, timer_asset_id, timer_time, ui_order "
+                             "FROM {}.dbc_achievement_criteria",
+                             dbc_schema
+                     )
+        );
     }
 
     void prepareWorldSchema(pqxx::connection &conn) {

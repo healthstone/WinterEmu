@@ -14,6 +14,7 @@ void DBCMgr::cleanUpBeforeDelete() {
 
     // Потом уже сами основные мапы
     _achievementMap.clear();
+    _achievementCriteriaMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _charStartOutfitMap.clear();
@@ -23,6 +24,7 @@ void DBCMgr::cleanUpBeforeDelete() {
 
 void DBCMgr::initialize() {
     load_Achievement();
+    load_AchievementCriteria();
     load_ChrClasses();
     load_ChrRaces();
     load_CharStartOutfit();
@@ -52,7 +54,7 @@ Team DBCMgr::teamForRace(uint8_t race)
 
 void DBCMgr::load_Achievement() {
     auto log = Logger::get();
-    _chrClassesMap.clear();
+    _achievementMap.clear();
     uint32_t oldMSTime = getMSTime();
 
     try {
@@ -93,6 +95,60 @@ void DBCMgr::load_Achievement() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_Achievement failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_AchievementCriteria() {
+    auto log = Logger::get();
+    _achievementCriteriaMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try{
+        auto stmt = PreparedStatement("SELECT_DBC_ACHIEVEMENT_CRITERIA");
+        auto rows = server_->db()->execute_sync_many<DbcAchievementCriteria>(stmt);
+        for (const auto &row: rows) {
+            AchievementCriteriaDBC achc;
+            achc.ID                  = row.ID;
+            achc.AchievementID       = row.AchievementId;
+            achc.Type                = row.Type;
+
+            achc.Asset.ID            = row.AssetId;
+            achc.Quantity            = row.Quantity;
+
+            achc.AdditionalRequirements[0].Type = row.StartEvent;
+            achc.AdditionalRequirements[0].Asset = row.StartAsset;
+            achc.AdditionalRequirements[1].Type = row.FailEvent;
+            achc.AdditionalRequirements[1].Asset = row.FailEvent;
+
+            // Локализованные описания
+            achc.name[LOCALE_enUS] = row.DescriptionLang_enUS.value_or("");
+            achc.name[LOCALE_enGB] = row.DescriptionLang_enGB.value_or("");
+            achc.name[LOCALE_koKR] = row.DescriptionLang_koKR.value_or("");
+            achc.name[LOCALE_frFR] = row.DescriptionLang_frFR.value_or("");
+            achc.name[LOCALE_deDE] = row.DescriptionLang_deDE.value_or("");
+            achc.name[LOCALE_enCN] = row.DescriptionLang_enCN.value_or("");
+            achc.name[LOCALE_zhCN] = row.DescriptionLang_zhCN.value_or("");
+            achc.name[LOCALE_enTW] = row.DescriptionLang_enTW.value_or("");
+            achc.name[LOCALE_zhTW] = row.DescriptionLang_zhTW.value_or("");
+            achc.name[LOCALE_esES] = row.DescriptionLang_esES.value_or("");
+            achc.name[LOCALE_esMX] = row.DescriptionLang_esMX.value_or("");
+            achc.name[LOCALE_ruRU] = row.DescriptionLang_ruRU.value_or("");
+            achc.name[LOCALE_ptPT] = row.DescriptionLang_ptPT.value_or("");
+            achc.name[LOCALE_ptBR] = row.DescriptionLang_ptBR.value_or("");
+            achc.name[LOCALE_itIT] = row.DescriptionLang_itIT.value_or("");
+
+            // Прочие поля
+            achc.Flags      = row.Flags;
+            achc.StartEvent = row.TimerStartEvent;
+            achc.StartAsset = row.TimerAssetId;
+            achc.StartTimer = row.TimerTime;
+
+            _achievementCriteriaMap[row.ID] = achc;
+        }
+        log->info(">>> DBCMgr: loaded {} AchievementCriteria in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_AchievementCriteria failed: {}", ex.what());
     }
 }
 

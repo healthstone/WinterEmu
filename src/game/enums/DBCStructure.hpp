@@ -143,7 +143,7 @@ struct AchievementCriteriaDBC {
         uint32_t Asset;
     } AdditionalRequirements[MAX_CRITERIA_REQUIREMENTS];    // 5-8
 
-    std::array<char const *, 16> name[TOTAL_LOCALES];        // 9-17
+    std::string name[TOTAL_LOCALES];                          // 9-17
     //uint32_t Description_lang_mask;                         // 25
     uint32_t Flags;                                           // 26
     uint32_t StartEvent;                                      // 27 AchievementCriteriaTimedTypes
