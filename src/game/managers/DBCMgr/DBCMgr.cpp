@@ -13,6 +13,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _skillRaceClassInfoBySkill.clear();
 
     // Потом уже сами основные мапы
+    _achievementMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _charStartOutfitMap.clear();
@@ -21,6 +22,7 @@ void DBCMgr::cleanUpBeforeDelete() {
 }
 
 void DBCMgr::initialize() {
+    load_Achievement();
     load_ChrClasses();
     load_ChrRaces();
     load_CharStartOutfit();
@@ -46,6 +48,52 @@ Team DBCMgr::teamForRace(uint8_t race)
         log->error("DBCMgr::teamForRace: Race ({}) not found in DBC: wrong DBC files?", race);
 
     return Team::ALLIANCE;
+}
+
+void DBCMgr::load_Achievement() {
+    auto log = Logger::get();
+    _chrClassesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_ACHIEVEMENT");
+        auto rows = server_->db()->execute_sync_many<DbcAchievement>(stmt);
+        for (const auto &row: rows) {
+            AchievementDBC ach;
+            ach.ID              = row.ID;
+            ach.Faction         = row.Faction;
+            ach.InstanceID      = row.InstanceID;
+
+            // Title
+            ach.Title[LOCALE_enUS] = row.Title_Lang_enUS.value_or("");
+            ach.Title[LOCALE_enGB] = row.Title_Lang_enGB.value_or("");
+            ach.Title[LOCALE_koKR] = row.Title_Lang_koKR.value_or("");
+            ach.Title[LOCALE_frFR] = row.Title_Lang_frFR.value_or("");
+            ach.Title[LOCALE_deDE] = row.Title_Lang_deDE.value_or("");
+            ach.Title[LOCALE_enCN] = row.Title_Lang_enCN.value_or("");
+            ach.Title[LOCALE_zhCN] = row.Title_Lang_zhCN.value_or("");
+            ach.Title[LOCALE_enTW] = row.Title_Lang_enTW.value_or("");
+            ach.Title[LOCALE_zhTW] = row.Title_Lang_zhTW.value_or("");
+            ach.Title[LOCALE_esES] = row.Title_Lang_esES.value_or("");
+            ach.Title[LOCALE_esMX] = row.Title_Lang_esMX.value_or("");
+            ach.Title[LOCALE_ruRU] = row.Title_Lang_ruRU.value_or("");
+            ach.Title[LOCALE_ptPT] = row.Title_Lang_ptPT.value_or("");
+            ach.Title[LOCALE_ptBR] = row.Title_Lang_ptBR.value_or("");
+            ach.Title[LOCALE_itIT] = row.Title_Lang_itIT.value_or("");
+
+            ach.Category        = row.Category;
+            ach.Points          = row.Points;
+            ach.Flags           = row.Flags;
+            ach.MinimumCriteria = row.Minimum_Criteria;
+            ach.SharesCriteria  = row.Shares_Criteria;
+
+            _achievementMap[row.ID] = ach;
+        }
+        log->info(">>> DBCMgr: loaded {} Achievement in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_Achievement failed: {}", ex.what());
+    }
 }
 
 void DBCMgr::load_ChrClasses() {

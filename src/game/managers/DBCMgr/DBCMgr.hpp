@@ -8,6 +8,7 @@
 #include "src/game/enums/DBCStructure.hpp"
 #include "src/game/enums/Team.hpp"
 
+typedef std::unordered_map<uint32_t /*ID*/, AchievementDBC> AchievementDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CharStartOutfitDBC> CharStartOutfitDBCMap;
@@ -38,7 +39,15 @@ public:
     Team teamForRace(uint8_t race);
 
     // Base functions
-
+    AchievementDBCMap const& GetAchievementDBCMap() const { return _achievementMap; }
+    uint32_t GetAchievementDBCSize() { return _achievementMap.size(); }
+    AchievementDBC const* GetAchievementDBC(uint32_t id) const
+    {
+        auto itr = _achievementMap.find(id);
+        if (itr != _achievementMap.end())
+            return &itr->second;
+        return nullptr;
+    }
     ChrClassesDBC const* getChrClassesDBC(uint32_t id)
     {
         auto itr = _chrClassesMap.find(id);
@@ -105,6 +114,7 @@ public:
     }
 
 private:
+    void load_Achievement();        // load Achievement.dbc
     void load_ChrClasses();         // load ChrClasses.dbc
     void load_ChrRaces();           // load ChrRaces.dbc
     void load_CharStartOutfit();    // load CharStartOutfit.dbc
@@ -113,6 +123,7 @@ private:
 
     std::shared_ptr<BaseServer> server_;
 
+    AchievementDBCMap _achievementMap;
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;
     CharStartOutfitDBCMap _charStartOutfitMap;

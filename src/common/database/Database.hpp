@@ -37,6 +37,7 @@
 #include "database/mapper/relay/PgPlayerCreateInfoItem.hpp"
 #include "database/mapper/relay/PgPlayerCreateInfoSkills.hpp"
 
+#include "database/mapper/dbc/PgDbcAchievement.hpp"
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
@@ -585,6 +586,29 @@ private:
                                  "canlink "
                                  "FROM {}.dbc_skillline",
                                  dbc_schema));
+
+        conn.prepare("SELECT_DBC_ACHIEVEMENT",
+                     fmt::format(
+                             "SELECT "
+                             "id, faction, instance_id, supercedes, "
+                             "title_lang_enus, title_lang_engb, title_lang_kokr, title_lang_frfr, title_lang_dede, "
+                             "title_lang_encn, title_lang_zhcn, title_lang_entw, title_lang_zhtw, "
+                             "title_lang_eses, title_lang_esmx, title_lang_ruru, title_lang_ptpt, "
+                             "title_lang_ptbr, title_lang_itit, title_lang_unk, title_lang_mask, "
+                             "description_lang_enus, description_lang_engb, description_lang_kokr, description_lang_frfr, description_lang_dede, "
+                             "description_lang_encn, description_lang_zhcn, description_lang_entw, description_lang_zhtw, "
+                             "description_lang_eses, description_lang_esmx, description_lang_ruru, description_lang_ptpt, "
+                             "description_lang_ptbr, description_lang_itit, description_lang_unk, description_lang_mask, "
+                             "category, points, ui_order, flags, iconid, "
+                             "reward_lang_enus, reward_lang_engb, reward_lang_kokr, reward_lang_frfr, reward_lang_dede, "
+                             "reward_lang_encn, reward_lang_zhcn, reward_lang_entw, reward_lang_zhtw, "
+                             "reward_lang_eses, reward_lang_esmx, reward_lang_ruru, reward_lang_ptpt, "
+                             "reward_lang_ptbr, reward_lang_itit, reward_lang_unk, reward_lang_mask, "
+                             "minimum_criteria, shares_criteria "
+                             "FROM {}.dbc_achievement",
+                             dbc_schema
+                     )
+        );
 
 
     }

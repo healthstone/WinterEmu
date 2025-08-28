@@ -15,7 +15,7 @@ struct AchievementDBC {
     int32_t Faction;                                          // 1 -1=all, 0=horde, 1=alliance
     int32_t InstanceID;                                       // 2 -1=none
     //uint32_t Supercedes;                                    // 3 its Achievement parent (can`t start while parent uncomplete, use its Criteria if don`t have own, use its progress on begin)
-    std::array<char const *, 16> Title[TOTAL_LOCALES];        // 12
+    std::string Title[TOTAL_LOCALES];                         // 12
     //uint32_t Title_lang_mask;                               // 20
     //char const* Description[16];                            // 21-36
     //uint32_t Description_lang_mask;                         // 37

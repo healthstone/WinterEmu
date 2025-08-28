@@ -35,7 +35,7 @@ struct DbcSkillLine {
     std::optional<std::string> DisplayName_Lang_ptBR;
     std::optional<std::string> DisplayName_Lang_itIT;
     std::optional<std::string> DisplayName_Lang_Unk;
-    uint64_t DisplayName_Lang_Mask;
+    uint32_t DisplayName_Lang_Mask;
 
     // Description
     std::optional<std::string> Description_Lang_enUS;
@@ -54,7 +54,7 @@ struct DbcSkillLine {
     std::optional<std::string> Description_Lang_ptBR;
     std::optional<std::string> Description_Lang_itIT;
     std::optional<std::string> Description_Lang_Unk;
-    uint64_t Description_Lang_Mask;
+    uint32_t Description_Lang_Mask;
 
     uint32_t SpellIconID;
 
@@ -75,7 +75,7 @@ struct DbcSkillLine {
     std::optional<std::string> AlternateVerb_Lang_ptBR;
     std::optional<std::string> AlternateVerb_Lang_itIT;
     std::optional<std::string> AlternateVerb_Lang_Unk;
-    uint64_t AlternateVerb_Lang_Mask;
+    uint32_t AlternateVerb_Lang_Mask;
 
     uint32_t CanLink;
 };
@@ -85,9 +85,9 @@ struct PgRowMapper<DbcSkillLine> {
     static DbcSkillLine map(const pqxx::row& r) {
         DbcSkillLine row;
 
-        row.ID = static_cast<uint32_t>(r["id"].as<int32_t>());
+        row.ID = r["id"].as<uint32_t>();
         row.CategoryID = r["categoryid"].as<int32_t>();
-        row.SkillCostsID = static_cast<uint32_t>(r["skillcostsid"].as<int32_t>());
+        row.SkillCostsID = r["skillcostsid"].as<uint32_t>();
 
         auto getOptString = [&r](const char* col) -> std::optional<std::string> {
             return r[col].is_null() ? std::nullopt : std::optional<std::string>{r[col].as<std::string>()};
@@ -110,7 +110,7 @@ struct PgRowMapper<DbcSkillLine> {
         row.DisplayName_Lang_ptBR = getOptString("displayname_lang_ptbr");
         row.DisplayName_Lang_itIT = getOptString("displayname_lang_itit");
         row.DisplayName_Lang_Unk = getOptString("displayname_lang_unk");
-        row.DisplayName_Lang_Mask = static_cast<uint64_t>(r["displayname_lang_mask"].as<int64_t>());
+        row.DisplayName_Lang_Mask = r["displayname_lang_mask"].as<uint32_t>();
 
         // Description
         row.Description_Lang_enUS = getOptString("description_lang_enus");
@@ -129,9 +129,9 @@ struct PgRowMapper<DbcSkillLine> {
         row.Description_Lang_ptBR = getOptString("description_lang_ptbr");
         row.Description_Lang_itIT = getOptString("description_lang_itit");
         row.Description_Lang_Unk = getOptString("description_lang_unk");
-        row.Description_Lang_Mask = static_cast<uint64_t>(r["description_lang_mask"].as<int64_t>());
+        row.Description_Lang_Mask = r["description_lang_mask"].as<uint32_t>();
 
-        row.SpellIconID = static_cast<uint32_t>(r["spelliconid"].as<int32_t>());
+        row.SpellIconID = r["spelliconid"].as<int32_t>();
 
         // AlternateVerb
         row.AlternateVerb_Lang_enUS = getOptString("alternateverb_lang_enus");
@@ -150,9 +150,9 @@ struct PgRowMapper<DbcSkillLine> {
         row.AlternateVerb_Lang_ptBR = getOptString("alternateverb_lang_ptbr");
         row.AlternateVerb_Lang_itIT = getOptString("alternateverb_lang_itit");
         row.AlternateVerb_Lang_Unk = getOptString("alternateverb_lang_unk");
-        row.AlternateVerb_Lang_Mask = static_cast<uint64_t>(r["alternateverb_lang_mask"].as<int64_t>());
+        row.AlternateVerb_Lang_Mask = r["alternateverb_lang_mask"].as<uint32_t>();
 
-        row.CanLink = static_cast<uint32_t>(r["canlink"].as<int32_t>());
+        row.CanLink = r["canlink"].as<uint32_t>();
 
         return row;
     }
