@@ -11,6 +11,7 @@
 typedef std::unordered_map<uint32_t /*ID*/, AchievementDBC> AchievementDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, AchievementCriteriaDBC> AchievementCriteriaDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, AreaTableDBC> AreaTableDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, AreaGroupDBC> AreaGroupDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CharStartOutfitDBC> CharStartOutfitDBCMap;
@@ -69,6 +70,14 @@ public:
         return nullptr;
     }
 
+    AreaGroupDBC const* getAreaGroupDBC(uint32_t id) const
+    {
+        auto itr = _areaGroupMap.find(id);
+        if (itr != _areaGroupMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     ChrClassesDBC const* getChrClassesDBC(uint32_t id)
     {
         auto itr = _chrClassesMap.find(id);
@@ -77,7 +86,7 @@ public:
         return nullptr;
     }
 
-    char const* getChrClassName(uint8_t class_, uint8_t locale)
+    char const* getChrClassName(uint8_t class_, LocaleConstant locale)
     {
         auto itr = _chrClassesMap.find(class_);
         if (itr != _chrClassesMap.end())
@@ -93,7 +102,7 @@ public:
         return nullptr;
     }
 
-    char const* getRaceName(uint8_t race, uint8_t locale)
+    char const* getRaceName(uint8_t race, LocaleConstant locale)
     {
         auto itr = _chrRacesMap.find(race);
         if (itr != _chrRacesMap.end())
@@ -138,6 +147,7 @@ private:
     void load_Achievement();        // load Achievement.dbc
     void load_AchievementCriteria();// load Achievement_Criteria.dbc
     void load_AreaTable();          // load AreaTable.dbc
+    void load_AreaGroup();          // load AreaGroup.dbc
     void load_ChrClasses();         // load ChrClasses.dbc
     void load_ChrRaces();           // load ChrRaces.dbc
     void load_CharStartOutfit();    // load CharStartOutfit.dbc
@@ -149,6 +159,7 @@ private:
     AchievementDBCMap _achievementMap;
     AchievementCriteriaDBCMap _achievementCriteriaMap;
     AreaTableDBCMap _areaTableMap;
+    AreaGroupDBCMap _areaGroupMap;
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;
     CharStartOutfitDBCMap _charStartOutfitMap;

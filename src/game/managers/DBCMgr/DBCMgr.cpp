@@ -16,6 +16,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _achievementMap.clear();
     _achievementCriteriaMap.clear();
     _areaTableMap.clear();
+    _areaGroupMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _charStartOutfitMap.clear();
@@ -27,6 +28,7 @@ void DBCMgr::initialize() {
     load_Achievement();
     load_AchievementCriteria();
     load_AreaTable();
+    load_AreaGroup();
     load_ChrClasses();
     load_ChrRaces();
     load_CharStartOutfit();
@@ -199,6 +201,35 @@ void DBCMgr::load_AreaTable() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_AreaTable failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_AreaGroup() {
+    auto log = Logger::get();
+    _areaGroupMap.clear();
+    uint32_t oldMSTime = getMSTime();
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_AREAGROUP");
+        auto rows = server_->db()->execute_sync_many<DbcAreaGroup>(stmt);
+        for (const auto &row: rows) {
+            AreaGroupDBC ag;
+            ag.ID = row.ID;
+
+            // Копируем все AreaID
+            ag.AreaID[0] = row.AreaID_1;
+            ag.AreaID[1] = row.AreaID_2;
+            ag.AreaID[2] = row.AreaID_3;
+            ag.AreaID[3] = row.AreaID_4;
+            ag.AreaID[4] = row.AreaID_5;
+            ag.AreaID[5] = row.AreaID_6;
+
+            ag.NextAreaID = row.NextAreaID;
+            _areaGroupMap[row.ID] = ag;
+        }
+        log->info(">>> DBCMgr: loaded {} AreaGroup in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_AreaGroup failed: {}", ex.what());
     }
 }
 

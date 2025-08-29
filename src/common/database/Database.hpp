@@ -40,6 +40,7 @@
 #include "database/mapper/dbc/PgDbcAchievement.hpp"
 #include "database/mapper/dbc/PgDbcAchievementCriteria.hpp"
 #include "database/mapper/dbc/PgDbcAreaTable.hpp"
+#include "database/mapper/dbc/PgDbcAreaGroup.hpp"
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
@@ -491,6 +492,67 @@ private:
     void prepareDBCSchema(pqxx::connection &conn) {
         std::string dbc_schema = std::getenv("DBC_SCHEMA") ? std::string(std::getenv("DBC_SCHEMA")) : "dbc";
 
+        conn.prepare("SELECT_DBC_ACHIEVEMENT",
+                     fmt::format(
+                             "SELECT "
+                             "id, faction, instance_id, supercedes, "
+                             "title_lang_enus, title_lang_engb, title_lang_kokr, title_lang_frfr, title_lang_dede, "
+                             "title_lang_encn, title_lang_zhcn, title_lang_entw, title_lang_zhtw, "
+                             "title_lang_eses, title_lang_esmx, title_lang_ruru, title_lang_ptpt, "
+                             "title_lang_ptbr, title_lang_itit, title_lang_unk, title_lang_mask, "
+                             "description_lang_enus, description_lang_engb, description_lang_kokr, description_lang_frfr, description_lang_dede, "
+                             "description_lang_encn, description_lang_zhcn, description_lang_entw, description_lang_zhtw, "
+                             "description_lang_eses, description_lang_esmx, description_lang_ruru, description_lang_ptpt, "
+                             "description_lang_ptbr, description_lang_itit, description_lang_unk, description_lang_mask, "
+                             "category, points, ui_order, flags, iconid, "
+                             "reward_lang_enus, reward_lang_engb, reward_lang_kokr, reward_lang_frfr, reward_lang_dede, "
+                             "reward_lang_encn, reward_lang_zhcn, reward_lang_entw, reward_lang_zhtw, "
+                             "reward_lang_eses, reward_lang_esmx, reward_lang_ruru, reward_lang_ptpt, "
+                             "reward_lang_ptbr, reward_lang_itit, reward_lang_unk, reward_lang_mask, "
+                             "minimum_criteria, shares_criteria "
+                             "FROM {}.dbc_achievement",
+                             dbc_schema
+                     )
+        );
+        conn.prepare("SELECT_DBC_ACHIEVEMENT_CRITERIA",
+                     fmt::format(
+                             "SELECT "
+                             "id, achievement_id, \"type\", asset_id, quantity, start_event, start_asset, fail_event, fail_asset, "
+                             "description_lang_enus, description_lang_engb, description_lang_kokr, description_lang_frfr, description_lang_dede, "
+                             "description_lang_encn, description_lang_zhcn, description_lang_entw, description_lang_zhtw, "
+                             "description_lang_eses, description_lang_esmx, description_lang_ruru, description_lang_ptpt, "
+                             "description_lang_ptbr, description_lang_itit, description_lang_unk, description_lang_mask, "
+                             "flags, timer_start_event, timer_asset_id, timer_time, ui_order "
+                             "FROM {}.dbc_achievement_criteria",
+                             dbc_schema
+                     )
+        );
+        conn.prepare("SELECT_DBC_AREATABLE",
+                     fmt::format(
+                             "SELECT "
+                             "id, continent_id, parent_area_id, "
+                             "area_bit, flags, sound_provider_pref, "
+                             "sound_provider_pref_underwater, ambience_id, zone_music, "
+                             "intro_sound, exploration_level, area_name_lang_enus, "
+                             "area_name_lang_engb, area_name_lang_kokr, area_name_lang_frfr, "
+                             "area_name_lang_dede, area_name_lang_encn, area_name_lang_zhcn, "
+                             "area_name_lang_entw, area_name_lang_zhtw, area_name_lang_eses, "
+                             "area_name_lang_esmx, area_name_lang_ruru, area_name_lang_ptpt, "
+                             "area_name_lang_ptbr, area_name_lang_itit, area_name_lang_unk, "
+                             "area_name_lang_mask, faction_group_mask, liquid_type_id_1, "
+                             "liquid_type_id_2, liquid_type_id_3, liquid_type_id_4, "
+                             "min_elevation, ambient_multiplier, lightid "
+                             "FROM {}.dbc_areatable",
+                             dbc_schema
+                     )
+        );
+        conn.prepare("SELECT_DBC_AREAGROUP",
+                     fmt::format(
+                             "SELECT id, areaid_1, areaid_2, areaid_3, areaid_4, areaid_5, areaid_6, nextareaid "
+                             "FROM {}.dbc_areagroup",
+                             dbc_schema
+                     )
+        );
         conn.prepare("SELECT_DBC_CHRCLASSES",
                      fmt::format("SELECT "
                                  "id, field01, displaypower, petnametoken, "
@@ -508,7 +570,6 @@ private:
                                  "name_male_lang_unk, name_male_lang_mask, "
                                  "filename, spellclassset, flags, cinematicsequenceid, required_expansion "
                                  "FROM {}.dbc_chrclasses", dbc_schema));
-
         conn.prepare("SELECT_DBC_CHRRACES",
                      fmt::format("SELECT "
                                  "id, flags, factionid, explorationsoundid, "
@@ -543,7 +604,6 @@ private:
                                  "facialhaircustomization_1, facialhaircustomization_2, "
                                  "haircustomization, required_expansion "
                                  "FROM {}.dbc_chrraces", dbc_schema));
-
         conn.prepare("SELECT_DBC_CHARSTARTOUTFIT",
                      fmt::format("SELECT "
                                  "id, raceid, classid, sexid, outfitid, "
@@ -561,14 +621,12 @@ private:
                                  "inventorytype_19, inventorytype_20, inventorytype_21, inventorytype_22, inventorytype_23, inventorytype_24 "
                                  "FROM {}.dbc_charstartoutfit",
                                  dbc_schema));
-
         conn.prepare("SELECT_DBC_SKILLRACECLASSINFO",
                      fmt::format("SELECT "
                                  "id, skillid, racemask, classmask, "
                                  "flags, minlevel, skilltierid, skillcostindex "
                                  "FROM {}.dbc_skillraceclassinfo",
                                  dbc_schema));
-
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "
@@ -588,65 +646,6 @@ private:
                                  "canlink "
                                  "FROM {}.dbc_skillline",
                                  dbc_schema));
-
-        conn.prepare("SELECT_DBC_ACHIEVEMENT",
-                     fmt::format(
-                             "SELECT "
-                             "id, faction, instance_id, supercedes, "
-                             "title_lang_enus, title_lang_engb, title_lang_kokr, title_lang_frfr, title_lang_dede, "
-                             "title_lang_encn, title_lang_zhcn, title_lang_entw, title_lang_zhtw, "
-                             "title_lang_eses, title_lang_esmx, title_lang_ruru, title_lang_ptpt, "
-                             "title_lang_ptbr, title_lang_itit, title_lang_unk, title_lang_mask, "
-                             "description_lang_enus, description_lang_engb, description_lang_kokr, description_lang_frfr, description_lang_dede, "
-                             "description_lang_encn, description_lang_zhcn, description_lang_entw, description_lang_zhtw, "
-                             "description_lang_eses, description_lang_esmx, description_lang_ruru, description_lang_ptpt, "
-                             "description_lang_ptbr, description_lang_itit, description_lang_unk, description_lang_mask, "
-                             "category, points, ui_order, flags, iconid, "
-                             "reward_lang_enus, reward_lang_engb, reward_lang_kokr, reward_lang_frfr, reward_lang_dede, "
-                             "reward_lang_encn, reward_lang_zhcn, reward_lang_entw, reward_lang_zhtw, "
-                             "reward_lang_eses, reward_lang_esmx, reward_lang_ruru, reward_lang_ptpt, "
-                             "reward_lang_ptbr, reward_lang_itit, reward_lang_unk, reward_lang_mask, "
-                             "minimum_criteria, shares_criteria "
-                             "FROM {}.dbc_achievement",
-                             dbc_schema
-                     )
-        );
-
-        conn.prepare("SELECT_DBC_ACHIEVEMENT_CRITERIA",
-                     fmt::format(
-                             "SELECT "
-                             "id, achievement_id, \"type\", asset_id, quantity, start_event, start_asset, fail_event, fail_asset, "
-                             "description_lang_enus, description_lang_engb, description_lang_kokr, description_lang_frfr, description_lang_dede, "
-                             "description_lang_encn, description_lang_zhcn, description_lang_entw, description_lang_zhtw, "
-                             "description_lang_eses, description_lang_esmx, description_lang_ruru, description_lang_ptpt, "
-                             "description_lang_ptbr, description_lang_itit, description_lang_unk, description_lang_mask, "
-                             "flags, timer_start_event, timer_asset_id, timer_time, ui_order "
-                             "FROM {}.dbc_achievement_criteria",
-                             dbc_schema
-                     )
-        );
-
-        conn.prepare("SELECT_DBC_AREATABLE",
-                     fmt::format(
-                             "SELECT "
-                             "id, continent_id, parent_area_id, "
-                             "area_bit, flags, sound_provider_pref, "
-                             "sound_provider_pref_underwater, ambience_id, zone_music, "
-                             "intro_sound, exploration_level, area_name_lang_enus, "
-                             "area_name_lang_engb, area_name_lang_kokr, area_name_lang_frfr, "
-                             "area_name_lang_dede, area_name_lang_encn, area_name_lang_zhcn, "
-                             "area_name_lang_entw, area_name_lang_zhtw, area_name_lang_eses, "
-                             "area_name_lang_esmx, area_name_lang_ruru, area_name_lang_ptpt, "
-                             "area_name_lang_ptbr, area_name_lang_itit, area_name_lang_unk, "
-                             "area_name_lang_mask, faction_group_mask, liquid_type_id_1, "
-                             "liquid_type_id_2, liquid_type_id_3, liquid_type_id_4, "
-                             "min_elevation, ambient_multiplier, lightid "
-                             "FROM {}.dbc_areatable",
-                             dbc_schema
-                     )
-        );
-
-
     }
 
     void prepareWorldSchema(pqxx::connection &conn) {
