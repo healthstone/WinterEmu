@@ -39,6 +39,7 @@
 
 #include "database/mapper/dbc/PgDbcAchievement.hpp"
 #include "database/mapper/dbc/PgDbcAchievementCriteria.hpp"
+#include "database/mapper/dbc/PgDbcAreaTable.hpp"
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
@@ -624,6 +625,28 @@ private:
                              dbc_schema
                      )
         );
+
+        conn.prepare("SELECT_DBC_AREATABLE",
+                     fmt::format(
+                             "SELECT "
+                             "id, continent_id, parent_area_id, "
+                             "area_bit, flags, sound_provider_pref, "
+                             "sound_provider_pref_underwater, ambience_id, zone_music, "
+                             "intro_sound, exploration_level, area_name_lang_enus, "
+                             "area_name_lang_engb, area_name_lang_kokr, area_name_lang_frfr, "
+                             "area_name_lang_dede, area_name_lang_encn, area_name_lang_zhcn, "
+                             "area_name_lang_entw, area_name_lang_zhtw, area_name_lang_eses, "
+                             "area_name_lang_esmx, area_name_lang_ruru, area_name_lang_ptpt, "
+                             "area_name_lang_ptbr, area_name_lang_itit, area_name_lang_unk, "
+                             "area_name_lang_mask, faction_group_mask, liquid_type_id_1, "
+                             "liquid_type_id_2, liquid_type_id_3, liquid_type_id_4, "
+                             "min_elevation, ambient_multiplier, lightid "
+                             "FROM {}.dbc_areatable",
+                             dbc_schema
+                     )
+        );
+
+
     }
 
     void prepareWorldSchema(pqxx::connection &conn) {

@@ -10,6 +10,7 @@
 
 typedef std::unordered_map<uint32_t /*ID*/, AchievementDBC> AchievementDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, AchievementCriteriaDBC> AchievementCriteriaDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, AreaTableDBC> AreaTableDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CharStartOutfitDBC> CharStartOutfitDBCMap;
@@ -58,6 +59,16 @@ public:
             return &itr->second;
         return nullptr;
     }
+
+    AreaTableDBCMap const& getAreaTableDBCMap() const { return _areaTableMap; }
+    AreaTableDBC const* getAreaTableDBC(uint32_t id) const
+    {
+        auto itr = _areaTableMap.find(id);
+        if (itr != _areaTableMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     ChrClassesDBC const* getChrClassesDBC(uint32_t id)
     {
         auto itr = _chrClassesMap.find(id);
@@ -126,6 +137,7 @@ public:
 private:
     void load_Achievement();        // load Achievement.dbc
     void load_AchievementCriteria();// load Achievement_Criteria.dbc
+    void load_AreaTable();          // load AreaTable.dbc
     void load_ChrClasses();         // load ChrClasses.dbc
     void load_ChrRaces();           // load ChrRaces.dbc
     void load_CharStartOutfit();    // load CharStartOutfit.dbc
@@ -136,6 +148,7 @@ private:
 
     AchievementDBCMap _achievementMap;
     AchievementCriteriaDBCMap _achievementCriteriaMap;
+    AreaTableDBCMap _areaTableMap;
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;
     CharStartOutfitDBCMap _charStartOutfitMap;

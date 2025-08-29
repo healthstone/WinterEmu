@@ -15,6 +15,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     // Потом уже сами основные мапы
     _achievementMap.clear();
     _achievementCriteriaMap.clear();
+    _areaTableMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _charStartOutfitMap.clear();
@@ -25,6 +26,7 @@ void DBCMgr::cleanUpBeforeDelete() {
 void DBCMgr::initialize() {
     load_Achievement();
     load_AchievementCriteria();
+    load_AreaTable();
     load_ChrClasses();
     load_ChrRaces();
     load_CharStartOutfit();
@@ -152,6 +154,54 @@ void DBCMgr::load_AchievementCriteria() {
     }
 }
 
+void DBCMgr::load_AreaTable() {
+    auto log = Logger::get();
+    _areaTableMap.clear();
+    uint32_t oldMSTime = getMSTime();
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_AREATABLE");
+        auto rows = server_->db()->execute_sync_many<DbcAreaTable>(stmt);
+        for (const auto &row: rows) {
+            AreaTableDBC at;
+            at.ID               = row.ID;
+            at.ContinentID      = row.ContinentID;
+            at.ParentAreaID     = row.ParentAreaID;
+            at.AreaBit          = row.AreaBit;
+            at.Flags            = row.Flags;
+            at.ExplorationLevel = row.ExplorationLevel;
+
+            // локализованные имена
+            at.AreaName[LOCALE_enUS] = row.AreaName_Lang_enUS.value_or("");
+            at.AreaName[LOCALE_enGB] = row.AreaName_Lang_enGB.value_or("");
+            at.AreaName[LOCALE_koKR] = row.AreaName_Lang_koKR.value_or("");
+            at.AreaName[LOCALE_frFR] = row.AreaName_Lang_frFR.value_or("");
+            at.AreaName[LOCALE_deDE] = row.AreaName_Lang_deDE.value_or("");
+            at.AreaName[LOCALE_enCN] = row.AreaName_Lang_enCN.value_or("");
+            at.AreaName[LOCALE_zhCN] = row.AreaName_Lang_zhCN.value_or("");
+            at.AreaName[LOCALE_enTW] = row.AreaName_Lang_enTW.value_or("");
+            at.AreaName[LOCALE_zhTW] = row.AreaName_Lang_zhTW.value_or("");
+            at.AreaName[LOCALE_esES] = row.AreaName_Lang_esES.value_or("");
+            at.AreaName[LOCALE_esMX] = row.AreaName_Lang_esMX.value_or("");
+            at.AreaName[LOCALE_ruRU] = row.AreaName_Lang_ruRU.value_or("");
+            at.AreaName[LOCALE_ptPT] = row.AreaName_Lang_ptPT.value_or("");
+            at.AreaName[LOCALE_ptBR] = row.AreaName_Lang_ptBR.value_or("");
+            at.AreaName[LOCALE_itIT] = row.AreaName_Lang_itIT.value_or("");
+
+            at.FactionGroupMask = row.FactionGroupMask;
+            at.LiquidTypeID[0]  = row.LiquidTypeID_1;
+            at.LiquidTypeID[1]  = row.LiquidTypeID_2;
+            at.LiquidTypeID[2]  = row.LiquidTypeID_3;
+            at.LiquidTypeID[3]  = row.LiquidTypeID_4;
+
+            _areaTableMap[row.ID] = at;
+        }
+        log->info(">>> DBCMgr: loaded {} AreaTable in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_AreaTable failed: {}", ex.what());
+    }
+}
+
 void DBCMgr::load_ChrClasses() {
     auto log = Logger::get();
     _chrClassesMap.clear();
@@ -166,21 +216,22 @@ void DBCMgr::load_ChrClasses() {
             cc.DisplayPower = row.DisplayPower;
 
             // Заполняем локализованные названия
-            if (row.Name_Lang_enUS.has_value()) cc.Name[LOCALE_enUS] = *row.Name_Lang_enUS;
-            if (row.Name_Lang_enGB.has_value()) cc.Name[LOCALE_enGB] = *row.Name_Lang_enGB;
-            if (row.Name_Lang_koKR.has_value()) cc.Name[LOCALE_koKR] = *row.Name_Lang_koKR;
-            if (row.Name_Lang_frFR.has_value()) cc.Name[LOCALE_frFR] = *row.Name_Lang_frFR;
-            if (row.Name_Lang_deDE.has_value()) cc.Name[LOCALE_deDE] = *row.Name_Lang_deDE;
-            if (row.Name_Lang_enCN.has_value()) cc.Name[LOCALE_enCN] = *row.Name_Lang_enCN;
-            if (row.Name_Lang_zhCN.has_value()) cc.Name[LOCALE_zhCN] = *row.Name_Lang_zhCN;
-            if (row.Name_Lang_enTW.has_value()) cc.Name[LOCALE_enTW] = *row.Name_Lang_enTW;
-            if (row.Name_Lang_zhTW.has_value()) cc.Name[LOCALE_zhTW] = *row.Name_Lang_zhTW;
-            if (row.Name_Lang_esES.has_value()) cc.Name[LOCALE_esES] = *row.Name_Lang_esES;
-            if (row.Name_Lang_esMX.has_value()) cc.Name[LOCALE_esMX] = *row.Name_Lang_esMX;
-            if (row.Name_Lang_ruRU.has_value()) cc.Name[LOCALE_ruRU] = *row.Name_Lang_ruRU;
-            if (row.Name_Lang_ptPT.has_value()) cc.Name[LOCALE_ptPT] = *row.Name_Lang_ptPT;
-            if (row.Name_Lang_ptBR.has_value()) cc.Name[LOCALE_ptBR] = *row.Name_Lang_ptBR;
-            if (row.Name_Lang_itIT.has_value()) cc.Name[LOCALE_itIT] = *row.Name_Lang_itIT;
+            cc.Name[LOCALE_enUS] = row.Name_Lang_enUS.value_or("");
+            cc.Name[LOCALE_enGB] = row.Name_Lang_enGB.value_or("");
+            cc.Name[LOCALE_koKR] = row.Name_Lang_koKR.value_or("");
+            cc.Name[LOCALE_frFR] = row.Name_Lang_frFR.value_or("");
+            cc.Name[LOCALE_deDE] = row.Name_Lang_deDE.value_or("");
+            cc.Name[LOCALE_enCN] = row.Name_Lang_enCN.value_or("");
+            cc.Name[LOCALE_zhCN] = row.Name_Lang_zhCN.value_or("");
+            cc.Name[LOCALE_enTW] = row.Name_Lang_enTW.value_or("");
+            cc.Name[LOCALE_zhTW] = row.Name_Lang_zhTW.value_or("");
+            cc.Name[LOCALE_esES] = row.Name_Lang_esES.value_or("");
+            cc.Name[LOCALE_esMX] = row.Name_Lang_esMX.value_or("");
+            cc.Name[LOCALE_ruRU] = row.Name_Lang_ruRU.value_or("");
+            cc.Name[LOCALE_ptPT] = row.Name_Lang_ptPT.value_or("");
+            cc.Name[LOCALE_ptBR] = row.Name_Lang_ptBR.value_or("");
+            cc.Name[LOCALE_itIT] = row.Name_Lang_itIT.value_or("");
+
 
             cc.SpellClassSet = row.SpellClassSet;
             cc.CinematicSequenceID = row.CinematicSequenceID;
@@ -218,21 +269,21 @@ void DBCMgr::load_ChrRaces() {
             cr.Alliance            = row.Alliance;
 
             // Заполняем локализованные названия
-            if (row.Name_Lang_enUS.has_value()) cr.Name[LOCALE_enUS] = *row.Name_Lang_enUS;
-            if (row.Name_Lang_enGB.has_value()) cr.Name[LOCALE_enGB] = *row.Name_Lang_enGB;
-            if (row.Name_Lang_koKR.has_value()) cr.Name[LOCALE_koKR] = *row.Name_Lang_koKR;
-            if (row.Name_Lang_frFR.has_value()) cr.Name[LOCALE_frFR] = *row.Name_Lang_frFR;
-            if (row.Name_Lang_deDE.has_value()) cr.Name[LOCALE_deDE] = *row.Name_Lang_deDE;
-            if (row.Name_Lang_enCN.has_value()) cr.Name[LOCALE_enCN] = *row.Name_Lang_enCN;
-            if (row.Name_Lang_zhCN.has_value()) cr.Name[LOCALE_zhCN] = *row.Name_Lang_zhCN;
-            if (row.Name_Lang_enTW.has_value()) cr.Name[LOCALE_enTW] = *row.Name_Lang_enTW;
-            if (row.Name_Lang_zhTW.has_value()) cr.Name[LOCALE_zhTW] = *row.Name_Lang_zhTW;
-            if (row.Name_Lang_esES.has_value()) cr.Name[LOCALE_esES] = *row.Name_Lang_esES;
-            if (row.Name_Lang_esMX.has_value()) cr.Name[LOCALE_esMX] = *row.Name_Lang_esMX;
-            if (row.Name_Lang_ruRU.has_value()) cr.Name[LOCALE_ruRU] = *row.Name_Lang_ruRU;
-            if (row.Name_Lang_ptPT.has_value()) cr.Name[LOCALE_ptPT] = *row.Name_Lang_ptPT;
-            if (row.Name_Lang_ptBR.has_value()) cr.Name[LOCALE_ptBR] = *row.Name_Lang_ptBR;
-            if (row.Name_Lang_itIT.has_value()) cr.Name[LOCALE_itIT] = *row.Name_Lang_itIT;
+            cr.Name[LOCALE_enUS] = row.Name_Lang_enUS.value_or("");
+            cr.Name[LOCALE_enGB] = row.Name_Lang_enGB.value_or("");
+            cr.Name[LOCALE_koKR] = row.Name_Lang_koKR.value_or("");
+            cr.Name[LOCALE_frFR] = row.Name_Lang_frFR.value_or("");
+            cr.Name[LOCALE_deDE] = row.Name_Lang_deDE.value_or("");
+            cr.Name[LOCALE_enCN] = row.Name_Lang_enCN.value_or("");
+            cr.Name[LOCALE_zhCN] = row.Name_Lang_zhCN.value_or("");
+            cr.Name[LOCALE_enTW] = row.Name_Lang_enTW.value_or("");
+            cr.Name[LOCALE_zhTW] = row.Name_Lang_zhTW.value_or("");
+            cr.Name[LOCALE_esES] = row.Name_Lang_esES.value_or("");
+            cr.Name[LOCALE_esMX] = row.Name_Lang_esMX.value_or("");
+            cr.Name[LOCALE_ruRU] = row.Name_Lang_ruRU.value_or("");
+            cr.Name[LOCALE_ptPT] = row.Name_Lang_ptPT.value_or("");
+            cr.Name[LOCALE_ptBR] = row.Name_Lang_ptBR.value_or("");
+            cr.Name[LOCALE_itIT] = row.Name_Lang_itIT.value_or("");
 
             cr.RequiredExpansion = row.Required_Expansion;
 
