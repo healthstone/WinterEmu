@@ -43,6 +43,7 @@
 #include "database/mapper/dbc/PgDbcAreaGroup.hpp"
 #include "database/mapper/dbc/PgDbcAreaTrigger.hpp"
 #include "database/mapper/dbc/PgDbcAuctionHouse.hpp"
+#include "database/mapper/dbc/PgDbcBankBagSlotPrices.hpp"
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
@@ -573,6 +574,9 @@ private:
                                          "FROM {}.dbc_auctionhouse",
                                          dbc_schema
                                  )
+        );
+        conn.prepare("SELECT_DBC_BANKBAGSLOTPRICES",
+                     fmt::format("SELECT id, cost FROM {}.dbc_bankbagslotprices", dbc_schema)
         );
         conn.prepare("SELECT_DBC_CHRCLASSES",
                      fmt::format("SELECT "

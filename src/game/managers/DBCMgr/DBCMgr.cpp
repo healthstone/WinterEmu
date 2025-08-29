@@ -20,6 +20,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _areaPOIMap.clear();
     _areaTriggerMap.clear();
     _auctionHouseMap.clear();
+    _bankBagSlotPricesMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _charStartOutfitMap.clear();
@@ -35,6 +36,7 @@ void DBCMgr::initialize() {
     load_AreaPOI();
     load_AreaTrigger();
     load_AuctionHouse();
+    load_BankBagSlotPrices();
     load_ChrClasses();
     load_ChrRaces();
     load_CharStartOutfit();
@@ -294,6 +296,28 @@ void DBCMgr::load_AuctionHouse() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_AuctionHouse failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_BankBagSlotPrices() {
+    auto log = Logger::get();
+    _bankBagSlotPricesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_BANKBAGSLOTPRICES");
+        auto rows = server_->db()->execute_sync_many<DbcBankBagSlotPrices>(stmt);
+        for (const auto &row: rows) {
+            BankBagSlotPricesDBC bsp;
+            bsp.ID   = row.ID;
+            bsp.Cost = row.Cost;
+
+            _bankBagSlotPricesMap[row.ID] = bsp;
+        }
+        log->info(">>> DBCMgr: loaded {} BankBagSlotPrices in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_BankBagSlotPrices failed: {}", ex.what());
     }
 }
 
