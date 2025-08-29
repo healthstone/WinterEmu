@@ -17,6 +17,8 @@ void DBCMgr::cleanUpBeforeDelete() {
     _achievementCriteriaMap.clear();
     _areaTableMap.clear();
     _areaGroupMap.clear();
+    _areaPOIMap.clear();
+    _areaTriggerMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _charStartOutfitMap.clear();
@@ -29,6 +31,8 @@ void DBCMgr::initialize() {
     load_AchievementCriteria();
     load_AreaTable();
     load_AreaGroup();
+    load_AreaPOI();
+    load_AreaTrigger();
     load_ChrClasses();
     load_ChrRaces();
     load_CharStartOutfit();
@@ -230,6 +234,40 @@ void DBCMgr::load_AreaGroup() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_AreaGroup failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_AreaPOI() {
+    //TODO нужна ли эта таблица?, в TC не используется
+}
+
+void DBCMgr::load_AreaTrigger() {
+    auto log = Logger::get();
+    _areaTriggerMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_AREATRIGGER");
+        auto rows = server_->db()->execute_sync_many<DbcAreaTrigger>(stmt);
+        for (const auto &row: rows) {
+            AreaTriggerDBC at;
+            at.ID          = row.ID;
+            at.ContinentID = row.ContinentID;
+            at.Pos.X       = row.X;
+            at.Pos.Y       = row.Y;
+            at.Pos.Z       = row.Z;
+            at.Radius      = row.Radius;
+            at.BoxLength   = row.BoxLength;
+            at.BoxWidth    = row.BoxWidth;
+            at.BoxHeight   = row.BoxHeight;
+            at.BoxYaw      = row.BoxYaw;
+
+            _areaTriggerMap[row.ID] = at;
+        }
+        log->info(">>> DBCMgr: loaded {} AreaTrigger in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_AreaTrigger failed: {}", ex.what());
     }
 }
 

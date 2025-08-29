@@ -12,6 +12,8 @@ typedef std::unordered_map<uint32_t /*ID*/, AchievementDBC> AchievementDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, AchievementCriteriaDBC> AchievementCriteriaDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, AreaTableDBC> AreaTableDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, AreaGroupDBC> AreaGroupDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, AreaPOIDBC> AreaPOIDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, AreaTriggerDBC> AreaTriggerDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CharStartOutfitDBC> CharStartOutfitDBCMap;
@@ -74,6 +76,22 @@ public:
     {
         auto itr = _areaGroupMap.find(id);
         if (itr != _areaGroupMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    AreaPOIDBC const* getAreaPOIDBC(uint32_t id) const
+    {
+        auto itr = _areaPOIMap.find(id);
+        if (itr != _areaPOIMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    AreaTriggerDBC const* getAreaTriggerDBC(uint32_t id) const
+    {
+        auto itr = _areaTriggerMap.find(id);
+        if (itr != _areaTriggerMap.end())
             return &itr->second;
         return nullptr;
     }
@@ -148,6 +166,8 @@ private:
     void load_AchievementCriteria();// load Achievement_Criteria.dbc
     void load_AreaTable();          // load AreaTable.dbc
     void load_AreaGroup();          // load AreaGroup.dbc
+    void load_AreaPOI();            // load AreaPOI.dbc  (NOT USED)
+    void load_AreaTrigger();        // load AreaTrigger.dbc
     void load_ChrClasses();         // load ChrClasses.dbc
     void load_ChrRaces();           // load ChrRaces.dbc
     void load_CharStartOutfit();    // load CharStartOutfit.dbc
@@ -160,6 +180,8 @@ private:
     AchievementCriteriaDBCMap _achievementCriteriaMap;
     AreaTableDBCMap _areaTableMap;
     AreaGroupDBCMap _areaGroupMap;
+    AreaPOIDBCMap _areaPOIMap;
+    AreaTriggerDBCMap _areaTriggerMap;
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;
     CharStartOutfitDBCMap _charStartOutfitMap;

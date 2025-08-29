@@ -41,6 +41,7 @@
 #include "database/mapper/dbc/PgDbcAchievementCriteria.hpp"
 #include "database/mapper/dbc/PgDbcAreaTable.hpp"
 #include "database/mapper/dbc/PgDbcAreaGroup.hpp"
+#include "database/mapper/dbc/PgDbcAreaTrigger.hpp"
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
@@ -550,6 +551,13 @@ private:
                      fmt::format(
                              "SELECT id, areaid_1, areaid_2, areaid_3, areaid_4, areaid_5, areaid_6, nextareaid "
                              "FROM {}.dbc_areagroup",
+                             dbc_schema
+                     )
+        );
+        conn.prepare("SELECT_DBC_AREATRIGGER",
+                     fmt::format(
+                             "SELECT id, continent_id, x, y, z, radius, box_length, box_width, box_height, box_yaw "
+                             "FROM {}.dbc_areatrigger",
                              dbc_schema
                      )
         );
