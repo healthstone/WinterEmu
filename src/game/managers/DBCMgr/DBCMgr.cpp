@@ -19,6 +19,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _areaGroupMap.clear();
     _areaPOIMap.clear();
     _areaTriggerMap.clear();
+    _auctionHouseMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _charStartOutfitMap.clear();
@@ -33,6 +34,7 @@ void DBCMgr::initialize() {
     load_AreaGroup();
     load_AreaPOI();
     load_AreaTrigger();
+    load_AuctionHouse();
     load_ChrClasses();
     load_ChrRaces();
     load_CharStartOutfit();
@@ -268,6 +270,30 @@ void DBCMgr::load_AreaTrigger() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_AreaTrigger failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_AuctionHouse() {
+    auto log = Logger::get();
+    _auctionHouseMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_AUCTIONHOUSE");
+        auto rows = server_->db()->execute_sync_many<DbcAuctionHouse>(stmt);
+        for (const auto &row: rows) {
+            AuctionHouseDBC ah;
+            ah.ID              = row.ID;
+            ah.FactionID       = row.FactionID;
+            ah.DepositRate     = row.DepositRate;
+            ah.ConsignmentRate = row.ConsignmentRate;
+
+            _auctionHouseMap[row.ID] = ah;
+        }
+        log->info(">>> DBCMgr: loaded {} AuctionHouse in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_AuctionHouse failed: {}", ex.what());
     }
 }
 

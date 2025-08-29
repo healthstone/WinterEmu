@@ -14,6 +14,7 @@ typedef std::unordered_map<uint32_t /*ID*/, AreaTableDBC> AreaTableDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, AreaGroupDBC> AreaGroupDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, AreaPOIDBC> AreaPOIDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, AreaTriggerDBC> AreaTriggerDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, AuctionHouseDBC> AuctionHouseDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CharStartOutfitDBC> CharStartOutfitDBCMap;
@@ -96,6 +97,14 @@ public:
         return nullptr;
     }
 
+    AuctionHouseDBC const* getAuctionHouseDBC(uint32_t id) const
+    {
+        auto itr = _auctionHouseMap.find(id);
+        if (itr != _auctionHouseMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     ChrClassesDBC const* getChrClassesDBC(uint32_t id)
     {
         auto itr = _chrClassesMap.find(id);
@@ -168,6 +177,7 @@ private:
     void load_AreaGroup();          // load AreaGroup.dbc
     void load_AreaPOI();            // load AreaPOI.dbc  (NOT USED)
     void load_AreaTrigger();        // load AreaTrigger.dbc
+    void load_AuctionHouse();
     void load_ChrClasses();         // load ChrClasses.dbc
     void load_ChrRaces();           // load ChrRaces.dbc
     void load_CharStartOutfit();    // load CharStartOutfit.dbc
@@ -182,6 +192,7 @@ private:
     AreaGroupDBCMap _areaGroupMap;
     AreaPOIDBCMap _areaPOIMap;
     AreaTriggerDBCMap _areaTriggerMap;
+    AuctionHouseDBCMap _auctionHouseMap;
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;
     CharStartOutfitDBCMap _charStartOutfitMap;

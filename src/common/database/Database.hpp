@@ -42,6 +42,7 @@
 #include "database/mapper/dbc/PgDbcAreaTable.hpp"
 #include "database/mapper/dbc/PgDbcAreaGroup.hpp"
 #include "database/mapper/dbc/PgDbcAreaTrigger.hpp"
+#include "database/mapper/dbc/PgDbcAuctionHouse.hpp"
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
@@ -560,6 +561,18 @@ private:
                              "FROM {}.dbc_areatrigger",
                              dbc_schema
                      )
+        );
+        conn.prepare("SELECT_DBC_AUCTIONHOUSE",
+                                 fmt::format(
+                                         "SELECT id, faction_id, deposit_rate, consignment_rate, "
+                                         "name_lang_enus, name_lang_engb, name_lang_kokr, name_lang_frfr, "
+                                         "name_lang_dede, name_lang_encn, name_lang_zhcn, name_lang_entw, "
+                                         "name_lang_zhtw, name_lang_eses, name_lang_esmx, name_lang_ruru, "
+                                         "name_lang_ptpt, name_lang_ptbr, name_lang_itit, name_lang_unk, "
+                                         "name_lang_mask "
+                                         "FROM {}.dbc_auctionhouse",
+                                         dbc_schema
+                                 )
         );
         conn.prepare("SELECT_DBC_CHRCLASSES",
                      fmt::format("SELECT "
