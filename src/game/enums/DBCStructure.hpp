@@ -263,8 +263,8 @@ struct BarberShopStyleDBC {
     //uint32_t Description[16];                               // 19-34, all empty
     //uint32_t Description_lang_mask;                         // 35
     //float CostModifier;                                     // 36
-    uint32_t Race;                                            // 37
-    uint32_t Sex;                                             // 38
+    uint8_t Race;                                             // 37
+    uint8_t Sex;                                              // 38
     uint32_t Data;                                            // 39 real ID to hair/facial hair
 };
 

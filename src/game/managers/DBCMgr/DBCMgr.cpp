@@ -22,6 +22,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _auctionHouseMap.clear();
     _bankBagSlotPricesMap.clear();
     _bannedAddonsMap.clear();
+    _barberShopStyleMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _charStartOutfitMap.clear();
@@ -41,6 +42,7 @@ void DBCMgr::initialize() {
     load_AuctionHouse();
     load_BankBagSlotPrices();
     load_BannedAddOns();
+    load_BarberShopStyle();
     load_ChrClasses();
     load_ChrRaces();
     load_CharStartOutfit();
@@ -352,6 +354,31 @@ void DBCMgr::load_BannedAddOns() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_BannedAddOns failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_BarberShopStyle() {
+    auto log = Logger::get();
+    _barberShopStyleMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_BARBERSHOPSTYLE");
+        auto rows = server_->db()->execute_sync_many<DbcBarberShopStyle>(stmt);
+        for (const auto &row: rows) {
+            BarberShopStyleDBC bs;
+            bs.ID   = row.ID;
+            bs.Type = row.Type;
+            bs.Race = row.Race;
+            bs.Sex  = row.Sex;
+            bs.Data = row.Data;
+
+            _barberShopStyleMap[row.ID] = bs;
+        }
+        log->info(">>> DBCMgr: loaded {} BarberShopStyle in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_BarberShopStyle failed: {}", ex.what());
     }
 }
 

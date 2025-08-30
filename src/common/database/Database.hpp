@@ -45,6 +45,7 @@
 #include "database/mapper/dbc/PgDbcAuctionHouse.hpp"
 #include "database/mapper/dbc/PgDbcBankBagSlotPrices.hpp"
 #include "database/mapper/dbc/PgDbcBannedAddons.hpp"
+#include "database/mapper/dbc/PgDbcBarberShopStyle.hpp"
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
@@ -585,6 +586,25 @@ private:
                         "SELECT id, namemd5_1, namemd5_2, namemd5_3, namemd5_4, "
                         "versionmd5_1, versionmd5_2, versionmd5_3, versionmd5_4, lastmodified, flags "
                         "FROM {}.dbc_bannedaddons",
+                        dbc_schema
+                )
+        );
+        conn.prepare(
+                "SELECT_DBC_BARBERSHOPSTYLE",
+                fmt::format(
+                        "SELECT id, type, "
+                        "displayname_lang_enus, displayname_lang_engb, displayname_lang_kokr, displayname_lang_frfr, "
+                        "displayname_lang_dede, displayname_lang_encn, displayname_lang_zhcn, displayname_lang_entw, "
+                        "displayname_lang_zhtw, displayname_lang_eses, displayname_lang_esmx, displayname_lang_ruru, "
+                        "displayname_lang_ptpt, displayname_lang_ptbr, displayname_lang_itit, displayname_lang_unk, "
+                        "displayname_lang_mask, "
+                        "description_lang_enus, description_lang_engb, description_lang_kokr, description_lang_frfr, "
+                        "description_lang_dede, description_lang_encn, description_lang_zhcn, description_lang_entw, "
+                        "description_lang_zhtw, description_lang_eses, description_lang_esmx, description_lang_ruru, "
+                        "description_lang_ptpt, description_lang_ptbr, description_lang_itit, description_lang_unk, "
+                        "description_lang_mask, "
+                        "cost_modifier, race, sex, data "
+                        "FROM {}.dbc_barbershopstyle",
                         dbc_schema
                 )
         );
