@@ -10,6 +10,7 @@ DBCMgr::~DBCMgr() {
 void DBCMgr::cleanUpBeforeDelete() {
     // Сначала чистим мультимапы и вторичные контейнеры
     _characterFacialHairStylesByTripple.clear();
+    _charSectionsByPenta.clear();
     _charStartOutfitByTripple.clear();
     _skillRaceClassInfoBySkill.clear();
 
@@ -26,6 +27,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _barberShopStyleMap.clear();
     _battlemasterListMap.clear();
     _characterFacialHairStyleMap.clear();
+    _charSectionMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _charStartOutfitMap.clear();
@@ -48,6 +50,7 @@ void DBCMgr::initialize() {
     load_BarberShopStyle();
     load_BattlemasterList();
     load_CharacterFacialHairStyles();
+    load_CharSections();
     load_ChrClasses();
     load_ChrRaces();
     load_CharStartOutfit();
@@ -444,6 +447,33 @@ void DBCMgr::load_CharacterFacialHairStyles() {
     }
 }
 
+void DBCMgr::load_CharSections() {
+    auto log = Logger::get();
+    _charSectionMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_CHARSECTIONS");
+        auto rows = server_->db()->execute_sync_many<DbcCharSections>(stmt);
+        for (const auto &row: rows) {
+            CharSectionsDBC cs;
+            cs.ID             = row.id;
+            cs.RaceID         = row.raceid;
+            cs.SexID          = row.sexid;
+            cs.BaseSection    = row.basesection;
+            cs.Flags          = row.flags;
+            cs.VariationIndex = row.variationindex;
+            cs.ColorIndex     = row.colorindex;
+
+            _charSectionMap[row.id] = cs;
+        }
+        log->info(">>> DBCMgr: loaded {} CharSections in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_CharSections failed: {}", ex.what());
+    }
+}
+
 void DBCMgr::load_ChrClasses() {
     auto log = Logger::get();
     _chrClassesMap.clear();
@@ -636,16 +666,24 @@ void DBCMgr::load_SkillLine() {
 
 void DBCMgr::initialize_Additional_Data() {
     handle_CharacterFacialHairStylesByTripple();
+    handle_CharSectionsByPenta();
     handle_CharStartOutfitByTripple();
     handle_SkillRaceClassInfo();
 }
 
-void DBCMgr::handle_CharacterFacialHairStylesByTripple()
-{
+void DBCMgr::handle_CharacterFacialHairStylesByTripple() {
     for (const auto& cfhsID : _characterFacialHairStyleMap)
     {
         if (CharacterFacialHairStylesDBC const* entry = &cfhsID.second)
             _characterFacialHairStylesByTripple[CharacterFacialHairStylesKey(entry->RaceID, entry->SexID, entry->VariationID)] = entry;
+    }
+}
+
+void DBCMgr::handle_CharSectionsByPenta() {
+    for (const auto& csID : _charSectionMap)
+    {
+        if (CharSectionsDBC const* entry = &csID.second)
+            _charSectionsByPenta[CharSectionsKey(entry->RaceID, CharSectionType(entry->BaseSection), entry->SexID, entry->VariationIndex, entry->ColorIndex)] = entry;
     }
 }
 
