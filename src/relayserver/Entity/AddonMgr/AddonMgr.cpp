@@ -17,6 +17,7 @@ void AddonMgr::loadFromDB() {
     bannedAddonsVector_.clear();
 
     auto log = Logger::get();
+    uint32_t dbcHighestID = server_->getDBCMgr()->getBannedAddOnsHighestID();
     try {
         uint32_t oldMSTime1 = getMSTime();
 
@@ -33,7 +34,7 @@ void AddonMgr::loadFromDB() {
         auto rows2 = server_->db()->execute_sync_many<BannedAddonRow>(stmt2);
         for (const auto &row: rows2) {
             BannedAddon banned;
-            banned.Id = row.id;
+            banned.Id = row.id + dbcHighestID;
             banned.Timestamp = row.timestamp;
             banned.NameMD5 = Crypto::MD5::GetDigestOf(row.name);
             banned.VersionMD5 = Crypto::MD5::GetDigestOf(row.version);

@@ -21,11 +21,14 @@ void DBCMgr::cleanUpBeforeDelete() {
     _areaTriggerMap.clear();
     _auctionHouseMap.clear();
     _bankBagSlotPricesMap.clear();
+    _bannedAddonsMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _charStartOutfitMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
+
+    _bannedAddonsHighestID = 0;
 }
 
 void DBCMgr::initialize() {
@@ -37,6 +40,7 @@ void DBCMgr::initialize() {
     load_AreaTrigger();
     load_AuctionHouse();
     load_BankBagSlotPrices();
+    load_BannedAddOns();
     load_ChrClasses();
     load_ChrRaces();
     load_CharStartOutfit();
@@ -318,6 +322,36 @@ void DBCMgr::load_BankBagSlotPrices() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_BankBagSlotPrices failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_BannedAddOns() {
+    auto log = Logger::get();
+    _bannedAddonsMap.clear();
+    _bannedAddonsHighestID = 0;
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_BANNEDADDONS");
+        auto rows = server_->db()->execute_sync_many<DbcBannedAddons>(stmt);
+        for (const auto &row: rows) {
+            BannedAddOnsDBC ba;
+            ba.ID = row.ID;
+
+            _bannedAddonsMap[row.ID] = ba;
+
+            if (_bannedAddonsHighestID)
+            {
+                if (_bannedAddonsHighestID < row.ID)
+                    _bannedAddonsHighestID = row.ID;
+            }
+            else
+                _bannedAddonsHighestID = row.ID;
+        }
+        log->info(">>> DBCMgr: loaded {} BannedAddOns in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_BannedAddOns failed: {}", ex.what());
     }
 }
 

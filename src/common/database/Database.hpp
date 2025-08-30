@@ -44,6 +44,7 @@
 #include "database/mapper/dbc/PgDbcAreaTrigger.hpp"
 #include "database/mapper/dbc/PgDbcAuctionHouse.hpp"
 #include "database/mapper/dbc/PgDbcBankBagSlotPrices.hpp"
+#include "database/mapper/dbc/PgDbcBannedAddons.hpp"
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
@@ -578,6 +579,16 @@ private:
         conn.prepare("SELECT_DBC_BANKBAGSLOTPRICES",
                      fmt::format("SELECT id, cost FROM {}.dbc_bankbagslotprices", dbc_schema)
         );
+        conn.prepare(
+                "SELECT_DBC_BANNEDADDONS",
+                fmt::format(
+                        "SELECT id, namemd5_1, namemd5_2, namemd5_3, namemd5_4, "
+                        "versionmd5_1, versionmd5_2, versionmd5_3, versionmd5_4, lastmodified, flags "
+                        "FROM {}.dbc_bannedaddons",
+                        dbc_schema
+                )
+        );
+
         conn.prepare("SELECT_DBC_CHRCLASSES",
                      fmt::format("SELECT "
                                  "id, field01, displaypower, petnametoken, "

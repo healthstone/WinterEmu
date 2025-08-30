@@ -16,6 +16,7 @@ typedef std::unordered_map<uint32_t /*ID*/, AreaPOIDBC> AreaPOIDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, AreaTriggerDBC> AreaTriggerDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, AuctionHouseDBC> AuctionHouseDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, BankBagSlotPricesDBC> BankBagSlotPricesDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, BannedAddOnsDBC> BannedAddOnsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CharStartOutfitDBC> CharStartOutfitDBCMap;
@@ -114,6 +115,15 @@ public:
         return nullptr;
     }
 
+    uint32_t getBannedAddOnsHighestID() const { return _bannedAddonsHighestID; }
+    BannedAddOnsDBC const* getBannedAddOnsDBC(uint32_t id) const
+    {
+        auto itr = _bannedAddonsMap.find(id);
+        if (itr != _bannedAddonsMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     ChrClassesDBC const* getChrClassesDBC(uint32_t id)
     {
         auto itr = _chrClassesMap.find(id);
@@ -188,6 +198,7 @@ private:
     void load_AreaTrigger();        // load AreaTrigger.dbc
     void load_AuctionHouse();       // load AuctionHouse.dbc
     void load_BankBagSlotPrices();  // load BankBagSlotPrices.dbc
+    void load_BannedAddOns();       // load BannedAddOns.dbc
     void load_ChrClasses();         // load ChrClasses.dbc
     void load_ChrRaces();           // load ChrRaces.dbc
     void load_CharStartOutfit();    // load CharStartOutfit.dbc
@@ -204,11 +215,14 @@ private:
     AreaTriggerDBCMap _areaTriggerMap;
     AuctionHouseDBCMap _auctionHouseMap;
     BankBagSlotPricesDBCMap _bankBagSlotPricesMap;
+    BannedAddOnsDBCMap _bannedAddonsMap;
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;
     CharStartOutfitDBCMap _charStartOutfitMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
+
+    uint32_t _bannedAddonsHighestID;
 
     // Handle others containers
     void initialize_Additional_Data();
