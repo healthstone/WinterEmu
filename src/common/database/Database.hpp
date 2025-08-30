@@ -46,6 +46,7 @@
 #include "database/mapper/dbc/PgDbcBankBagSlotPrices.hpp"
 #include "database/mapper/dbc/PgDbcBannedAddons.hpp"
 #include "database/mapper/dbc/PgDbcBarberShopStyle.hpp"
+#include "database/mapper/dbc/PgDbcBattleMasterList.hpp"
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
@@ -605,6 +606,20 @@ private:
                         "description_lang_mask, "
                         "cost_modifier, race, sex, data "
                         "FROM {}.dbc_barbershopstyle",
+                        dbc_schema
+                )
+        );
+        conn.prepare(
+                "SELECT_DBC_BATTLEMASTERLIST",
+                fmt::format(
+                        "SELECT id, mapid_1, mapid_2, mapid_3, mapid_4, mapid_5, mapid_6, mapid_7, mapid_8, "
+                        "instance_type, groups_allowed, "
+                        "name_lang_enus, name_lang_engb, name_lang_kokr, name_lang_frfr, name_lang_dede, "
+                        "name_lang_encn, name_lang_zhcn, name_lang_entw, name_lang_zhtw, name_lang_eses, "
+                        "name_lang_esmx, name_lang_ruru, name_lang_ptpt, name_lang_ptbr, name_lang_itit, "
+                        "name_lang_unk, name_lang_mask, "
+                        "max_group_size, holiday_worldstate, minlevel, maxlevel "
+                        "FROM {}.dbc_battlemasterlist",
                         dbc_schema
                 )
         );

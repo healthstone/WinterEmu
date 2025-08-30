@@ -23,6 +23,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _bankBagSlotPricesMap.clear();
     _bannedAddonsMap.clear();
     _barberShopStyleMap.clear();
+    _battlemasterListMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _charStartOutfitMap.clear();
@@ -43,6 +44,7 @@ void DBCMgr::initialize() {
     load_BankBagSlotPrices();
     load_BannedAddOns();
     load_BarberShopStyle();
+    load_BattlemasterList();
     load_ChrClasses();
     load_ChrRaces();
     load_CharStartOutfit();
@@ -379,6 +381,39 @@ void DBCMgr::load_BarberShopStyle() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_BarberShopStyle failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_BattlemasterList() {
+    auto log = Logger::get();
+    _battlemasterListMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_BATTLEMASTERLIST");
+        auto rows = server_->db()->execute_sync_many<DbcBattleMasterList>(stmt);
+        for (const auto &row: rows) {
+            BattlemasterListDBC bl;
+
+            bl.ID           = row.id;
+            bl.MapID[0]     = row.mapid_1;
+            bl.MapID[1]     = row.mapid_2;
+            bl.MapID[2]     = row.mapid_3;
+            bl.MapID[3]     = row.mapid_4;
+            bl.MapID[4]     = row.mapid_5;
+            bl.MapID[5]     = row.mapid_6;
+            bl.MapID[6]     = row.mapid_7;
+            bl.MapID[7]     = row.mapid_8;
+            bl.InstanceType = row.instance_type;
+            bl.MaxGroupSize      = row.max_group_size;
+            bl.HolidayWorldState = row.holiday_worldstate;
+
+            _battlemasterListMap[bl.ID] = bl;
+        }
+        log->info(">>> DBCMgr: loaded {} BattlemasterList in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_BattlemasterList failed: {}", ex.what());
     }
 }
 

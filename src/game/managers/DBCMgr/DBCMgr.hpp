@@ -18,6 +18,7 @@ typedef std::unordered_map<uint32_t /*ID*/, AuctionHouseDBC> AuctionHouseDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, BankBagSlotPricesDBC> BankBagSlotPricesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, BannedAddOnsDBC> BannedAddOnsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, BarberShopStyleDBC> BarberShopStyleDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, BattlemasterListDBC> BattlemasterListDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CharStartOutfitDBC> CharStartOutfitDBCMap;
@@ -133,6 +134,15 @@ public:
         return nullptr;
     }
 
+    BattlemasterListDBCMap const& getBattlemasterListDBCMap() const { return _battlemasterListMap; }
+    BattlemasterListDBC const* getBattlemasterListDBC(uint32_t id) const
+    {
+        auto itr = _battlemasterListMap.find(id);
+        if (itr != _battlemasterListMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     ChrClassesDBC const* getChrClassesDBC(uint32_t id)
     {
         auto itr = _chrClassesMap.find(id);
@@ -209,6 +219,7 @@ private:
     void load_BankBagSlotPrices();  // load BankBagSlotPrices.dbc
     void load_BannedAddOns();       // load BannedAddOns.dbc
     void load_BarberShopStyle();    // load BarberShopStyle.dbc
+    void load_BattlemasterList();   // load BattlemasterList.dbc
     void load_ChrClasses();         // load ChrClasses.dbc
     void load_ChrRaces();           // load ChrRaces.dbc
     void load_CharStartOutfit();    // load CharStartOutfit.dbc
@@ -227,6 +238,7 @@ private:
     BankBagSlotPricesDBCMap _bankBagSlotPricesMap;
     BannedAddOnsDBCMap _bannedAddonsMap;
     BarberShopStyleDBCMap _barberShopStyleMap;
+    BattlemasterListDBCMap _battlemasterListMap;
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;
     CharStartOutfitDBCMap _charStartOutfitMap;
