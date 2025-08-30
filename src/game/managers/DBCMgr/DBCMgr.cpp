@@ -9,6 +9,7 @@ DBCMgr::~DBCMgr() {
 
 void DBCMgr::cleanUpBeforeDelete() {
     // Сначала чистим мультимапы и вторичные контейнеры
+    _characterFacialHairStylesByTripple.clear();
     _charStartOutfitByTripple.clear();
     _skillRaceClassInfoBySkill.clear();
 
@@ -24,6 +25,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _bannedAddonsMap.clear();
     _barberShopStyleMap.clear();
     _battlemasterListMap.clear();
+    _characterFacialHairStyleMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _charStartOutfitMap.clear();
@@ -45,6 +47,7 @@ void DBCMgr::initialize() {
     load_BannedAddOns();
     load_BarberShopStyle();
     load_BattlemasterList();
+    load_CharacterFacialHairStyles();
     load_ChrClasses();
     load_ChrRaces();
     load_CharStartOutfit();
@@ -417,6 +420,30 @@ void DBCMgr::load_BattlemasterList() {
     }
 }
 
+void DBCMgr::load_CharacterFacialHairStyles() {
+    auto log = Logger::get();
+    _characterFacialHairStyleMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_CHARACTERFACIALHAIRSTYLES");
+        auto rows = server_->db()->execute_sync_many<DbcCharacterFacialHairstyles>(stmt);
+        for (const auto &row: rows) {
+            CharacterFacialHairStylesDBC cfhs;
+            cfhs.ID          = row.id;
+            cfhs.RaceID      = row.raceid;
+            cfhs.SexID       = row.sexid;
+            cfhs.VariationID = row.variationid;
+
+            _characterFacialHairStyleMap[row.id] = cfhs;
+        }
+        log->info(">>> DBCMgr: loaded {} CharacterFacialHairStyles in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_CharacterFacialHairStyles failed: {}", ex.what());
+    }
+}
+
 void DBCMgr::load_ChrClasses() {
     auto log = Logger::get();
     _chrClassesMap.clear();
@@ -608,8 +635,18 @@ void DBCMgr::load_SkillLine() {
 }
 
 void DBCMgr::initialize_Additional_Data() {
+    handle_CharacterFacialHairStylesByTripple();
     handle_CharStartOutfitByTripple();
     handle_SkillRaceClassInfo();
+}
+
+void DBCMgr::handle_CharacterFacialHairStylesByTripple()
+{
+    for (const auto& cfhsID : _characterFacialHairStyleMap)
+    {
+        if (CharacterFacialHairStylesDBC const* entry = &cfhsID.second)
+            _characterFacialHairStylesByTripple[CharacterFacialHairStylesKey(entry->RaceID, entry->SexID, entry->VariationID)] = entry;
+    }
 }
 
 void DBCMgr::handle_CharStartOutfitByTripple() {

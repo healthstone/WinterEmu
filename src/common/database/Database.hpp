@@ -47,6 +47,7 @@
 #include "database/mapper/dbc/PgDbcBannedAddons.hpp"
 #include "database/mapper/dbc/PgDbcBarberShopStyle.hpp"
 #include "database/mapper/dbc/PgDbcBattleMasterList.hpp"
+#include "database/mapper/dbc/PgDbcCharacterFacialHairstyles.hpp"
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
@@ -620,6 +621,15 @@ private:
                         "name_lang_unk, name_lang_mask, "
                         "max_group_size, holiday_worldstate, minlevel, maxlevel "
                         "FROM {}.dbc_battlemasterlist",
+                        dbc_schema
+                )
+        );
+        conn.prepare(
+                "SELECT_DBC_CHARACTERFACIALHAIRSTYLES",
+                fmt::format(
+                        "SELECT id, raceid, sexid, variationid, "
+                        "geoset_1, geoset_2, geoset_3, geoset_4, geoset_5 "
+                        "FROM {}.dbc_characterfacialhairstyles",
                         dbc_schema
                 )
         );

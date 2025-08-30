@@ -19,11 +19,17 @@ typedef std::unordered_map<uint32_t /*ID*/, BankBagSlotPricesDBC> BankBagSlotPri
 typedef std::unordered_map<uint32_t /*ID*/, BannedAddOnsDBC> BannedAddOnsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, BarberShopStyleDBC> BarberShopStyleDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, BattlemasterListDBC> BattlemasterListDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, CharacterFacialHairStylesDBC> CharacterFacialHairStylesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CharStartOutfitDBC> CharStartOutfitDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
+
+// tuples for the Fastest search by more indexes
+// CharacterFacialHairStylesByTripple
+typedef std::tuple<uint8_t, uint8_t, uint8_t> CharacterFacialHairStylesKey;
+typedef std::map<CharacterFacialHairStylesKey, CharacterFacialHairStylesDBC const*> CharacterFacialHairStylesByTripple;
 
 // CharStartOutfitByTripple
 typedef std::tuple<uint8_t, uint8_t, uint8_t> CharStartOutfitKey;
@@ -143,6 +149,14 @@ public:
         return nullptr;
     }
 
+    CharacterFacialHairStylesDBC const* getCharFacialHairDBC(uint8_t race, uint8_t gender, uint8_t facialHairID)
+    {
+        auto i = _characterFacialHairStylesByTripple.find(CharacterFacialHairStylesKey(race, gender, facialHairID));
+        if (i != _characterFacialHairStylesByTripple.end())
+            return i->second;
+        return nullptr;
+    }
+
     ChrClassesDBC const* getChrClassesDBC(uint32_t id)
     {
         auto itr = _chrClassesMap.find(id);
@@ -209,22 +223,23 @@ public:
     }
 
 private:
-    void load_Achievement();        // load Achievement.dbc
-    void load_AchievementCriteria();// load Achievement_Criteria.dbc
-    void load_AreaTable();          // load AreaTable.dbc
-    void load_AreaGroup();          // load AreaGroup.dbc
-    void load_AreaPOI();            // load AreaPOI.dbc  (NOT USED)
-    void load_AreaTrigger();        // load AreaTrigger.dbc
-    void load_AuctionHouse();       // load AuctionHouse.dbc
-    void load_BankBagSlotPrices();  // load BankBagSlotPrices.dbc
-    void load_BannedAddOns();       // load BannedAddOns.dbc
-    void load_BarberShopStyle();    // load BarberShopStyle.dbc
-    void load_BattlemasterList();   // load BattlemasterList.dbc
-    void load_ChrClasses();         // load ChrClasses.dbc
-    void load_ChrRaces();           // load ChrRaces.dbc
-    void load_CharStartOutfit();    // load CharStartOutfit.dbc
-    void load_SkillRaceClassInfo(); // load SkillRaceClassInfo.dbc
-    void load_SkillLine();          // load SkillLine.dbc
+    void load_Achievement();                // load Achievement.dbc
+    void load_AchievementCriteria();        // load Achievement_Criteria.dbc
+    void load_AreaTable();                  // load AreaTable.dbc
+    void load_AreaGroup();                  // load AreaGroup.dbc
+    void load_AreaPOI();                    // load AreaPOI.dbc  (NOT USED)
+    void load_AreaTrigger();                // load AreaTrigger.dbc
+    void load_AuctionHouse();               // load AuctionHouse.dbc
+    void load_BankBagSlotPrices();          // load BankBagSlotPrices.dbc
+    void load_BannedAddOns();               // load BannedAddOns.dbc
+    void load_BarberShopStyle();            // load BarberShopStyle.dbc
+    void load_BattlemasterList();           // load BattlemasterList.dbc
+    void load_CharacterFacialHairStyles();  // load CharacterFacialHairStyles.dbc
+    void load_ChrClasses();                 // load ChrClasses.dbc
+    void load_ChrRaces();                   // load ChrRaces.dbc
+    void load_CharStartOutfit();            // load CharStartOutfit.dbc
+    void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
+    void load_SkillLine();                  // load SkillLine.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -239,6 +254,7 @@ private:
     BannedAddOnsDBCMap _bannedAddonsMap;
     BarberShopStyleDBCMap _barberShopStyleMap;
     BattlemasterListDBCMap _battlemasterListMap;
+    CharacterFacialHairStylesDBCMap _characterFacialHairStyleMap;
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;
     CharStartOutfitDBCMap _charStartOutfitMap;
@@ -249,9 +265,11 @@ private:
 
     // Handle others containers
     void initialize_Additional_Data();
+    void handle_CharacterFacialHairStylesByTripple();
     void handle_CharStartOutfitByTripple();
     void handle_SkillRaceClassInfo();
 
+    CharacterFacialHairStylesByTripple _characterFacialHairStylesByTripple;
     CharStartOutfitByTripple _charStartOutfitByTripple;
     SkillRaceClassInfoMap _skillRaceClassInfoBySkill;
 };
