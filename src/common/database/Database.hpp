@@ -49,9 +49,10 @@
 #include "database/mapper/dbc/PgDbcBattleMasterList.hpp"
 #include "database/mapper/dbc/PgDbcCharacterFacialHairstyles.hpp"
 #include "database/mapper/dbc/PgDbcCharSections.hpp"
+#include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
+#include "database/mapper/dbc/PgDbcCharTitles.hpp"
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
-#include "database/mapper/dbc/PgDbcCharStartOutFit.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -626,6 +627,15 @@ private:
                 )
         );
         conn.prepare(
+                "SELECT_DBC_CHARACTERFACIALHAIRSTYLES",
+                fmt::format(
+                        "SELECT id, raceid, sexid, variationid, "
+                        "geoset_1, geoset_2, geoset_3, geoset_4, geoset_5 "
+                        "FROM {}.dbc_characterfacialhairstyles",
+                        dbc_schema
+                )
+        );
+        conn.prepare(
                 "SELECT_DBC_CHARSECTIONS",
                 fmt::format(
                         "SELECT id, raceid, sexid, basesection, "
@@ -635,16 +645,41 @@ private:
                         dbc_schema
                 )
         );
+        conn.prepare("SELECT_DBC_CHARSTARTOUTFIT",
+                     fmt::format("SELECT "
+                                 "id, raceid, classid, sexid, outfitid, "
+                                 "itemid_1, itemid_2, itemid_3, itemid_4, itemid_5, itemid_6, "
+                                 "itemid_7, itemid_8, itemid_9, itemid_10, itemid_11, itemid_12, "
+                                 "itemid_13, itemid_14, itemid_15, itemid_16, itemid_17, itemid_18, "
+                                 "itemid_19, itemid_20, itemid_21, itemid_22, itemid_23, itemid_24, "
+                                 "displayitemid_1, displayitemid_2, displayitemid_3, displayitemid_4, displayitemid_5, displayitemid_6, "
+                                 "displayitemid_7, displayitemid_8, displayitemid_9, displayitemid_10, displayitemid_11, displayitemid_12, "
+                                 "displayitemid_13, displayitemid_14, displayitemid_15, displayitemid_16, displayitemid_17, displayitemid_18, "
+                                 "displayitemid_19, displayitemid_20, displayitemid_21, displayitemid_22, displayitemid_23, displayitemid_24, "
+                                 "inventorytype_1, inventorytype_2, inventorytype_3, inventorytype_4, inventorytype_5, inventorytype_6, "
+                                 "inventorytype_7, inventorytype_8, inventorytype_9, inventorytype_10, inventorytype_11, inventorytype_12, "
+                                 "inventorytype_13, inventorytype_14, inventorytype_15, inventorytype_16, inventorytype_17, inventorytype_18, "
+                                 "inventorytype_19, inventorytype_20, inventorytype_21, inventorytype_22, inventorytype_23, inventorytype_24 "
+                                 "FROM {}.dbc_charstartoutfit",
+                                 dbc_schema));
         conn.prepare(
-                "SELECT_DBC_CHARACTERFACIALHAIRSTYLES",
+                "SELECT_DBC_CHARTITLES",
                 fmt::format(
-                        "SELECT id, raceid, sexid, variationid, "
-                        "geoset_1, geoset_2, geoset_3, geoset_4, geoset_5 "
-                        "FROM {}.dbc_characterfacialhairstyles",
+                        "SELECT "
+                        "id, condition_id, "
+                        "name_lang_enus, name_lang_engb, name_lang_kokr, name_lang_frfr, name_lang_dede, "
+                        "name_lang_encn, name_lang_zhcn, name_lang_entw, name_lang_zhtw, "
+                        "name_lang_eses, name_lang_esmx, name_lang_ruru, name_lang_ptpt, "
+                        "name_lang_ptbr, name_lang_itit, name_lang_unk, name_lang_mask, "
+                        "name1_lang_enus, name1_lang_engb, name1_lang_kokr, name1_lang_frfr, name1_lang_dede, "
+                        "name1_lang_encn, name1_lang_zhcn, name1_lang_entw, name1_lang_zhtw, "
+                        "name1_lang_eses, name1_lang_esmx, name1_lang_ruru, name1_lang_ptpt, "
+                        "name1_lang_ptbr, name1_lang_itit, name1_lang_unk, name1_lang_mask, "
+                        "mask_id "
+                        "FROM {}.dbc_chartitles",
                         dbc_schema
                 )
         );
-
         conn.prepare("SELECT_DBC_CHRCLASSES",
                      fmt::format("SELECT "
                                  "id, field01, displaypower, petnametoken, "
@@ -696,23 +731,7 @@ private:
                                  "facialhaircustomization_1, facialhaircustomization_2, "
                                  "haircustomization, required_expansion "
                                  "FROM {}.dbc_chrraces", dbc_schema));
-        conn.prepare("SELECT_DBC_CHARSTARTOUTFIT",
-                     fmt::format("SELECT "
-                                 "id, raceid, classid, sexid, outfitid, "
-                                 "itemid_1, itemid_2, itemid_3, itemid_4, itemid_5, itemid_6, "
-                                 "itemid_7, itemid_8, itemid_9, itemid_10, itemid_11, itemid_12, "
-                                 "itemid_13, itemid_14, itemid_15, itemid_16, itemid_17, itemid_18, "
-                                 "itemid_19, itemid_20, itemid_21, itemid_22, itemid_23, itemid_24, "
-                                 "displayitemid_1, displayitemid_2, displayitemid_3, displayitemid_4, displayitemid_5, displayitemid_6, "
-                                 "displayitemid_7, displayitemid_8, displayitemid_9, displayitemid_10, displayitemid_11, displayitemid_12, "
-                                 "displayitemid_13, displayitemid_14, displayitemid_15, displayitemid_16, displayitemid_17, displayitemid_18, "
-                                 "displayitemid_19, displayitemid_20, displayitemid_21, displayitemid_22, displayitemid_23, displayitemid_24, "
-                                 "inventorytype_1, inventorytype_2, inventorytype_3, inventorytype_4, inventorytype_5, inventorytype_6, "
-                                 "inventorytype_7, inventorytype_8, inventorytype_9, inventorytype_10, inventorytype_11, inventorytype_12, "
-                                 "inventorytype_13, inventorytype_14, inventorytype_15, inventorytype_16, inventorytype_17, inventorytype_18, "
-                                 "inventorytype_19, inventorytype_20, inventorytype_21, inventorytype_22, inventorytype_23, inventorytype_24 "
-                                 "FROM {}.dbc_charstartoutfit",
-                                 dbc_schema));
+
         conn.prepare("SELECT_DBC_SKILLRACECLASSINFO",
                      fmt::format("SELECT "
                                  "id, skillid, racemask, classmask, "

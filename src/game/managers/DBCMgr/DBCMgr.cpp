@@ -28,9 +28,10 @@ void DBCMgr::cleanUpBeforeDelete() {
     _battlemasterListMap.clear();
     _characterFacialHairStyleMap.clear();
     _charSectionMap.clear();
+    _charStartOutfitMap.clear();
+    _charTitlesMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
-    _charStartOutfitMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -51,9 +52,10 @@ void DBCMgr::initialize() {
     load_BattlemasterList();
     load_CharacterFacialHairStyles();
     load_CharSections();
+    load_CharStartOutfit();
+    load_CharTitles();
     load_ChrClasses();
     load_ChrRaces();
-    load_CharStartOutfit();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -474,6 +476,87 @@ void DBCMgr::load_CharSections() {
     }
 }
 
+void DBCMgr::load_CharStartOutfit() {
+    auto log = Logger::get();
+    _charStartOutfitMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_CHARSTARTOUTFIT");
+        auto rows = server_->db()->execute_sync_many<DbcCharStartOutfit>(stmt);
+        for (const auto &row: rows) {
+            CharStartOutfitDBC cso;
+            cso.ID      = row.ID;
+            cso.RaceID  = row.RaceID;
+            cso.ClassID = row.ClassID;
+            cso.SexID   = row.SexID;
+
+            for (uint8_t i = 0; i < MAX_OUTFIT_ITEMS; i++)
+                cso.ItemID[i] = row.ItemID[i];
+
+            _charStartOutfitMap[row.ID] = cso;
+        }
+        log->info(">>> DBCMgr: loaded {} CharStartOutfit in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_CharStartOutfit failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_CharTitles() {
+    auto log = Logger::get();
+    _charTitlesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_CHARTITLES");
+        auto rows = server_->db()->execute_sync_many<DbcCharTitles>(stmt);
+        for (const auto &row: rows) {
+            CharTitlesDBC ct;
+            ct.ID = row.ID;
+
+            // --- Первые локализованные названия (Name) ---
+            ct.Name[LOCALE_enUS] = row.Name_Lang_enUS.value_or("");
+            ct.Name[LOCALE_enGB] = row.Name_Lang_enGB.value_or("");
+            ct.Name[LOCALE_koKR] = row.Name_Lang_koKR.value_or("");
+            ct.Name[LOCALE_frFR] = row.Name_Lang_frFR.value_or("");
+            ct.Name[LOCALE_deDE] = row.Name_Lang_deDE.value_or("");
+            ct.Name[LOCALE_zhCN] = row.Name_Lang_zhCN.value_or("");
+            ct.Name[LOCALE_zhTW] = row.Name_Lang_zhTW.value_or("");
+            ct.Name[LOCALE_esES] = row.Name_Lang_esES.value_or("");
+            ct.Name[LOCALE_esMX] = row.Name_Lang_esMX.value_or("");
+            ct.Name[LOCALE_ruRU] = row.Name_Lang_ruRU.value_or("");
+            ct.Name[LOCALE_ptPT] = row.Name_Lang_ptPT.value_or("");
+            ct.Name[LOCALE_ptBR] = row.Name_Lang_ptBR.value_or("");
+            ct.Name[LOCALE_itIT] = row.Name_Lang_itIT.value_or("");
+
+            // --- Вторые локализованные названия (Name1) ---
+            ct.Name1[LOCALE_enUS] = row.Name1_Lang_enUS.value_or("");
+            ct.Name1[LOCALE_enGB] = row.Name1_Lang_enGB.value_or("");
+            ct.Name1[LOCALE_koKR] = row.Name1_Lang_koKR.value_or("");
+            ct.Name1[LOCALE_frFR] = row.Name1_Lang_frFR.value_or("");
+            ct.Name1[LOCALE_deDE] = row.Name1_Lang_deDE.value_or("");
+            ct.Name1[LOCALE_zhCN] = row.Name1_Lang_zhCN.value_or("");
+            ct.Name1[LOCALE_zhTW] = row.Name1_Lang_zhTW.value_or("");
+            ct.Name1[LOCALE_esES] = row.Name1_Lang_esES.value_or("");
+            ct.Name1[LOCALE_esMX] = row.Name1_Lang_esMX.value_or("");
+            ct.Name1[LOCALE_ruRU] = row.Name1_Lang_ruRU.value_or("");
+            ct.Name1[LOCALE_ptPT] = row.Name1_Lang_ptPT.value_or("");
+            ct.Name1[LOCALE_ptBR] = row.Name1_Lang_ptBR.value_or("");
+            ct.Name1[LOCALE_itIT] = row.Name1_Lang_itIT.value_or("");
+
+            // --- Маска ---
+            ct.MaskID = row.Mask_ID;
+
+            _charTitlesMap[ct.ID] = ct;
+        }
+        log->info(">>> DBCMgr: loaded {} CharTitles in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_CharTitles failed: {}", ex.what());
+    }
+}
+
 void DBCMgr::load_ChrClasses() {
     auto log = Logger::get();
     _chrClassesMap.clear();
@@ -566,33 +649,6 @@ void DBCMgr::load_ChrRaces() {
 
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_ChrRaces failed: {}", ex.what());
-    }
-}
-
-void DBCMgr::load_CharStartOutfit() {
-    auto log = Logger::get();
-    _charStartOutfitMap.clear();
-    uint32_t oldMSTime = getMSTime();
-
-    try {
-        auto stmt = PreparedStatement("SELECT_DBC_CHARSTARTOUTFIT");
-        auto rows = server_->db()->execute_sync_many<DbcCharStartOutfit>(stmt);
-        for (const auto &row: rows) {
-            CharStartOutfitDBC cso;
-            cso.ID      = row.ID;
-            cso.RaceID  = row.RaceID;
-            cso.ClassID = row.ClassID;
-            cso.SexID   = row.SexID;
-
-            for (uint8_t i = 0; i < MAX_OUTFIT_ITEMS; i++)
-                cso.ItemID[i] = row.ItemID[i];
-
-            _charStartOutfitMap[row.ID] = cso;
-        }
-        log->info(">>> DBCMgr: loaded {} CharStartOutfit in {} ms",
-                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
-    } catch (const std::exception &ex) {
-        log->error("DBCMgr::load_CharStartOutfit failed: {}", ex.what());
     }
 }
 

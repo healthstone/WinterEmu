@@ -21,9 +21,11 @@ typedef std::unordered_map<uint32_t /*ID*/, BarberShopStyleDBC> BarberShopStyleD
 typedef std::unordered_map<uint32_t /*ID*/, BattlemasterListDBC> BattlemasterListDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CharacterFacialHairStylesDBC> CharacterFacialHairStylesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CharSectionsDBC> CharSectionsDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, CharStartOutfitDBC> CharStartOutfitDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, CharTitlesDBC> CharTitlesDBCMap;
+
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
-typedef std::unordered_map<uint32_t /*ID*/, CharStartOutfitDBC> CharStartOutfitDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -170,6 +172,15 @@ public:
         return nullptr;
     }
 
+    CharTitlesDBCMap const& getCharTitlesDBCMap() const { return _charTitlesMap; }
+    CharTitlesDBC const* getCharTitlesDBC(uint32_t id)
+    {
+        auto itr = _charTitlesMap.find(id);
+        if (itr != _charTitlesMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     ChrClassesDBC const* getChrClassesDBC(uint32_t id)
     {
         auto itr = _chrClassesMap.find(id);
@@ -249,9 +260,10 @@ private:
     void load_BattlemasterList();           // load BattlemasterList.dbc
     void load_CharacterFacialHairStyles();  // load CharacterFacialHairStyles.dbc
     void load_CharSections();               // load CharSections.dbc
+    void load_CharStartOutfit();            // load CharStartOutfit.dbc
+    void load_CharTitles();                 // load CharTitles.dbc
     void load_ChrClasses();                 // load ChrClasses.dbc
     void load_ChrRaces();                   // load ChrRaces.dbc
-    void load_CharStartOutfit();            // load CharStartOutfit.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -270,9 +282,11 @@ private:
     BattlemasterListDBCMap _battlemasterListMap;
     CharacterFacialHairStylesDBCMap _characterFacialHairStyleMap;
     CharSectionsDBCMap _charSectionMap;
+    CharStartOutfitDBCMap _charStartOutfitMap;
+    CharTitlesDBCMap _charTitlesMap;
+
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;
-    CharStartOutfitDBCMap _charStartOutfitMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
