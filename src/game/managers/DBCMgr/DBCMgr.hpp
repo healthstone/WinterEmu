@@ -23,7 +23,7 @@ typedef std::unordered_map<uint32_t /*ID*/, CharacterFacialHairStylesDBC> Charac
 typedef std::unordered_map<uint32_t /*ID*/, CharSectionsDBC> CharSectionsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CharStartOutfitDBC> CharStartOutfitDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CharTitlesDBC> CharTitlesDBCMap;
-
+typedef std::unordered_map<uint32_t /*ID*/, ChatChannelsDBC> ChatChannelsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
@@ -181,6 +181,15 @@ public:
         return nullptr;
     }
 
+    ChatChannelsDBCMap const& getChatChannelsDBCMap() const { return _chatChannelsMap; }
+    ChatChannelsDBC const* getChatChannelsDBC(uint32_t id)
+    {
+        ChatChannelsDBCMap::const_iterator itr = _chatChannelsMap.find(id);
+        if (itr != _chatChannelsMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     ChrClassesDBC const* getChrClassesDBC(uint32_t id)
     {
         auto itr = _chrClassesMap.find(id);
@@ -262,6 +271,7 @@ private:
     void load_CharSections();               // load CharSections.dbc
     void load_CharStartOutfit();            // load CharStartOutfit.dbc
     void load_CharTitles();                 // load CharTitles.dbc
+    void load_ChatChannels();               // load ChatChannels.dbc
     void load_ChrClasses();                 // load ChrClasses.dbc
     void load_ChrRaces();                   // load ChrRaces.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
@@ -284,7 +294,7 @@ private:
     CharSectionsDBCMap _charSectionMap;
     CharStartOutfitDBCMap _charStartOutfitMap;
     CharTitlesDBCMap _charTitlesMap;
-
+    ChatChannelsDBCMap _chatChannelsMap;
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;

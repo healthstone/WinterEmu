@@ -30,6 +30,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _charSectionMap.clear();
     _charStartOutfitMap.clear();
     _charTitlesMap.clear();
+    _chatChannelsMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _skillRaceClassInfoMap.clear();
@@ -54,6 +55,7 @@ void DBCMgr::initialize() {
     load_CharSections();
     load_CharStartOutfit();
     load_CharTitles();
+    load_ChatChannels();
     load_ChrClasses();
     load_ChrRaces();
     load_SkillRaceClassInfo();
@@ -557,6 +559,45 @@ void DBCMgr::load_CharTitles() {
     }
 }
 
+void DBCMgr::load_ChatChannels() {
+    auto log = Logger::get();
+    _chatChannelsMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_CHATCHANNELS");
+        auto rows = server_->db()->execute_sync_many<DbcChatChannels>(stmt);
+        for (const auto &row: rows) {
+            ChatChannelsDBC cc;
+            cc.ID = row.ID;
+            cc.Flags = row.Flags;
+
+            // локализованные имена
+            cc.Name[LOCALE_enUS] = row.Name_Lang_enUS.value_or("");
+            cc.Name[LOCALE_enGB] = row.Name_Lang_enGB.value_or("");
+            cc.Name[LOCALE_koKR] = row.Name_Lang_koKR.value_or("");
+            cc.Name[LOCALE_frFR] = row.Name_Lang_frFR.value_or("");
+            cc.Name[LOCALE_deDE] = row.Name_Lang_deDE.value_or("");
+            cc.Name[LOCALE_enCN] = row.Name_Lang_enCN.value_or("");
+            cc.Name[LOCALE_zhCN] = row.Name_Lang_zhCN.value_or("");
+            cc.Name[LOCALE_enTW] = row.Name_Lang_enTW.value_or("");
+            cc.Name[LOCALE_zhTW] = row.Name_Lang_zhTW.value_or("");
+            cc.Name[LOCALE_esES] = row.Name_Lang_esES.value_or("");
+            cc.Name[LOCALE_esMX] = row.Name_Lang_esMX.value_or("");
+            cc.Name[LOCALE_ruRU] = row.Name_Lang_ruRU.value_or("");
+            cc.Name[LOCALE_ptPT] = row.Name_Lang_ptPT.value_or("");
+            cc.Name[LOCALE_ptBR] = row.Name_Lang_ptBR.value_or("");
+            cc.Name[LOCALE_itIT] = row.Name_Lang_itIT.value_or("");
+
+            _chatChannelsMap[row.ID] = cc;
+        }
+        log->info(">>> DBCMgr: loaded {} ChatChannels in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_ChatChannels failed: {}", ex.what());
+    }
+}
+
 void DBCMgr::load_ChrClasses() {
     auto log = Logger::get();
     _chrClassesMap.clear();
@@ -586,7 +627,6 @@ void DBCMgr::load_ChrClasses() {
             cc.Name[LOCALE_ptPT] = row.Name_Lang_ptPT.value_or("");
             cc.Name[LOCALE_ptBR] = row.Name_Lang_ptBR.value_or("");
             cc.Name[LOCALE_itIT] = row.Name_Lang_itIT.value_or("");
-
 
             cc.SpellClassSet = row.SpellClassSet;
             cc.CinematicSequenceID = row.CinematicSequenceID;
