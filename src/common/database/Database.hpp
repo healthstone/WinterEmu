@@ -57,6 +57,7 @@
 #include "database/mapper/dbc/PgDbcCinematicCamera.hpp"
 #include "database/mapper/dbc/PgDbcCinematicSequences.hpp"
 #include "database/mapper/dbc/PgDbcCreatureDisplayInfo.hpp"
+#include "database/mapper/dbc/PgDbcCreatureDisplayInfoExtra.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -772,6 +773,15 @@ private:
                                  "particlecolorid, creaturegeosetdata, objecteffectpackageid "
                                  "FROM {}.dbc_creaturedisplayinfo",
                                  dbc_schema));
+        conn.prepare("SELECT_DBC_CREATUREDISPLAYINFOEXTRA",
+                     fmt::format("SELECT id, displayraceid, displaysexid, skinid, faceid, "
+                                 "hairstyleid, haircolorid, facialhairid, "
+                                 "npcitemdisplay_1, npcitemdisplay_2, npcitemdisplay_3, npcitemdisplay_4, npcitemdisplay_5, "
+                                 "npcitemdisplay_6, npcitemdisplay_7, npcitemdisplay_8, npcitemdisplay_9, npcitemdisplay_10, npcitemdisplay_11, "
+                                 "flags, bakename "
+                                 "FROM {}.dbc_creaturedisplayinfoextra",
+                                 dbc_schema));
+
         conn.prepare("SELECT_DBC_SKILLRACECLASSINFO",
                      fmt::format("SELECT "
                                  "id, skillid, racemask, classmask, "

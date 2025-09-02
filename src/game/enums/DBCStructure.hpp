@@ -454,7 +454,7 @@ struct CreatureDisplayInfoDBC {
 struct CreatureDisplayInfoExtraDBC {
     uint32_t ID;                                              // 0
     uint32_t DisplayRaceID;                                   // 1
-    uint32_t DisplaySexID;                                    // 2
+    uint8_t DisplaySexID;                                    // 2
     //uint32_t SkinID;                                        // 3
     //uint32_t FaceID;                                        // 4
     //uint32_t HairStyleID;                                   // 5

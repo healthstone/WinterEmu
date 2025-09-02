@@ -36,6 +36,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _cinematicCameraMap.clear();
     _cinematicSequencesMap.clear();
     _creatureDisplayInfoMap.clear();
+    _creatureDisplayInfoExtraMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -64,6 +65,7 @@ void DBCMgr::initialize() {
     load_CinematicCamera();
     load_CinematicSequences();
     load_CreatureDisplayInfo();
+    load_CreatureDisplayInfoExtra();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -776,6 +778,29 @@ void DBCMgr::load_CreatureDisplayInfo() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_CreatureDisplayInfo failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_CreatureDisplayInfoExtra() {
+    auto log = Logger::get();
+    _creatureDisplayInfoExtraMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_CREATUREDISPLAYINFOEXTRA");
+        auto rows = server_->db()->execute_sync_many<DbcCreatureDisplayInfoExtra>(stmt);
+        for (const auto &row: rows) {
+            CreatureDisplayInfoExtraDBC cdie;
+            cdie.ID = row.ID;
+            cdie.DisplayRaceID = row.DisplayRaceID;
+            cdie.DisplaySexID  = row.DisplaySexID;
+
+            _creatureDisplayInfoExtraMap[row.ID] = cdie;
+        }
+        log->info(">>> DBCMgr: loaded {} CreatureDisplayInfoExtra in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_CreatureDisplayInfoExtra failed: {}", ex.what());
     }
 }
 
