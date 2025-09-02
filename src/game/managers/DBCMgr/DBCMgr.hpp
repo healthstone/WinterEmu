@@ -26,6 +26,7 @@ typedef std::unordered_map<uint32_t /*ID*/, CharTitlesDBC> CharTitlesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChatChannelsDBC> ChatChannelsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, CinematicCameraDBC> CinematicCameraDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -172,6 +173,15 @@ public:
         return nullptr;
     }
 
+    CharStartOutfitDBCMap const& getCharStartOutfitDBCMap() const { return _charStartOutfitMap; }
+    CharStartOutfitDBC const* getCharStartOutfitDBC(uint8_t race, uint8_t classID, uint8_t gender)
+    {
+        auto i = _charStartOutfitByTripple.find(CharStartOutfitKey(race, classID, gender));
+        if (i != _charStartOutfitByTripple.end())
+            return i->second;
+        return nullptr;
+    }
+
     CharTitlesDBCMap const& getCharTitlesDBCMap() const { return _charTitlesMap; }
     CharTitlesDBC const* getCharTitlesDBC(uint32_t id)
     {
@@ -222,14 +232,7 @@ public:
         return nullptr;
     }
 
-    CharStartOutfitDBCMap const& getCharStartOutfitDBCMap() const { return _charStartOutfitMap; }
-    CharStartOutfitDBC const* getCharStartOutfitDBC(uint8_t race, uint8_t classID, uint8_t gender)
-    {
-        auto i = _charStartOutfitByTripple.find(CharStartOutfitKey(race, classID, gender));
-        if (i != _charStartOutfitByTripple.end())
-            return i->second;
-        return nullptr;
-    }
+    CinematicCameraDBCMap const& getCinematicCameraDBCMap() const { return _cinematicCameraMap; }
 
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
@@ -274,6 +277,7 @@ private:
     void load_ChatChannels();               // load ChatChannels.dbc
     void load_ChrClasses();                 // load ChrClasses.dbc
     void load_ChrRaces();                   // load ChrRaces.dbc
+    void load_CinematicCamera();            // load CinematicCamera.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -297,6 +301,7 @@ private:
     ChatChannelsDBCMap _chatChannelsMap;
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;
+    CinematicCameraDBCMap _cinematicCameraMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

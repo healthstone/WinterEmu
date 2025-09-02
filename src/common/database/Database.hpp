@@ -54,6 +54,7 @@
 #include "database/mapper/dbc/PgDbcChatChannels.hpp"
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
+#include "database/mapper/dbc/PgDbcCinematicCamera.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -749,6 +750,12 @@ private:
                                  "facialhaircustomization_1, facialhaircustomization_2, "
                                  "haircustomization, required_expansion "
                                  "FROM {}.dbc_chrraces", dbc_schema));
+        conn.prepare("SELECT_DBC_CINEMATICCAMERA",
+                     fmt::format("SELECT "
+                                 "id, model, soundid, "
+                                 "originx, originy, originz, originfacing "
+                                 "FROM {}.dbc_cinematiccamera",
+                                 dbc_schema));
 
         conn.prepare("SELECT_DBC_SKILLRACECLASSINFO",
                      fmt::format("SELECT "

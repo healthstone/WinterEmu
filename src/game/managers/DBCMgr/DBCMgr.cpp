@@ -33,6 +33,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _chatChannelsMap.clear();
     _chrClassesMap.clear();
     _chrRacesMap.clear();
+    _cinematicCameraMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -58,6 +59,7 @@ void DBCMgr::initialize() {
     load_ChatChannels();
     load_ChrClasses();
     load_ChrRaces();
+    load_CinematicCamera();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -689,6 +691,33 @@ void DBCMgr::load_ChrRaces() {
 
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_ChrRaces failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_CinematicCamera() {
+    auto log = Logger::get();
+    _cinematicCameraMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_CINEMATICCAMERA");
+        auto rows = server_->db()->execute_sync_many<DbcCinematicCamera>(stmt);
+        for (const auto &row: rows) {
+            CinematicCameraDBC cc;
+            cc.ID           = row.id;
+            cc.Model        = row.model.value_or("");
+            cc.SoundID      = row.soundid;
+            cc.OriginX      = row.originx;
+            cc.OriginY      = row.originy;
+            cc.OriginZ      = row.originz;
+            cc.OriginFacing = row.originfacing;
+
+            _cinematicCameraMap[row.id] = cc;
+        }
+        log->info(">>> DBCMgr: loaded {} CinematicCamera in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_CinematicCamera failed: {}", ex.what());
     }
 }
 
