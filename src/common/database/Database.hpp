@@ -56,6 +56,7 @@
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCinematicCamera.hpp"
 #include "database/mapper/dbc/PgDbcCinematicSequences.hpp"
+#include "database/mapper/dbc/PgDbcCreatureDisplayInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -761,6 +762,15 @@ private:
                      fmt::format("SELECT id, soundid, "
                                  "camera_1, camera_2, camera_3, camera_4, camera_5, camera_6, camera_7, camera_8 "
                                  "FROM {}.dbc_cinematicsequences",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_CREATUREDISPLAYINFO",
+                     fmt::format("SELECT "
+                                 "id, modelid, soundid, extendeddisplayinfoid, "
+                                 "creaturemodelscale, creaturemodelalpha, "
+                                 "texturevariation_1, texturevariation_2, texturevariation_3, "
+                                 "portraittexturename, bloodlevel, bloodid, npcsoundid, "
+                                 "particlecolorid, creaturegeosetdata, objecteffectpackageid "
+                                 "FROM {}.dbc_creaturedisplayinfo",
                                  dbc_schema));
         conn.prepare("SELECT_DBC_SKILLRACECLASSINFO",
                      fmt::format("SELECT "
