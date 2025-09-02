@@ -55,6 +55,7 @@
 #include "database/mapper/dbc/PgDbcChrClasses.hpp"
 #include "database/mapper/dbc/PgDbcChrRaces.hpp"
 #include "database/mapper/dbc/PgDbcCinematicCamera.hpp"
+#include "database/mapper/dbc/PgDbcCinematicSequences.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -756,7 +757,11 @@ private:
                                  "originx, originy, originz, originfacing "
                                  "FROM {}.dbc_cinematiccamera",
                                  dbc_schema));
-
+        conn.prepare("SELECT_DBC_CINEMATICSEQUENCES",
+                     fmt::format("SELECT id, soundid, "
+                                 "camera_1, camera_2, camera_3, camera_4, camera_5, camera_6, camera_7, camera_8 "
+                                 "FROM {}.dbc_cinematicsequences",
+                                 dbc_schema));
         conn.prepare("SELECT_DBC_SKILLRACECLASSINFO",
                      fmt::format("SELECT "
                                  "id, skillid, racemask, classmask, "

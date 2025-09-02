@@ -34,6 +34,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _chrClassesMap.clear();
     _chrRacesMap.clear();
     _cinematicCameraMap.clear();
+    _cinematicSequencesMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -60,6 +61,7 @@ void DBCMgr::initialize() {
     load_ChrClasses();
     load_ChrRaces();
     load_CinematicCamera();
+    load_CinematicSequences();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -718,6 +720,36 @@ void DBCMgr::load_CinematicCamera() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_CinematicCamera failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_CinematicSequences() {
+    auto log = Logger::get();
+    _cinematicSequencesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_CINEMATICSEQUENCES");
+        auto rows = server_->db()->execute_sync_many<DbcCinematicSequences>(stmt);
+        for (const auto &row: rows) {
+            CinematicSequencesDBC cs;
+            cs.ID = row.id;
+
+            cs.Camera[0] = row.camera_1;
+            cs.Camera[1] = row.camera_2;
+            cs.Camera[2] = row.camera_3;
+            cs.Camera[3] = row.camera_4;
+            cs.Camera[4] = row.camera_5;
+            cs.Camera[5] = row.camera_6;
+            cs.Camera[6] = row.camera_7;
+            cs.Camera[7] = row.camera_8;
+
+            _cinematicSequencesMap[row.id] = cs;
+        }
+        log->info(">>> DBCMgr: loaded {} CinematicSequences in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_CinematicSequences failed: {}", ex.what());
     }
 }
 

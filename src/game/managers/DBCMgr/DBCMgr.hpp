@@ -27,6 +27,7 @@ typedef std::unordered_map<uint32_t /*ID*/, ChatChannelsDBC> ChatChannelsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrClassesDBC> ChrClassesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ChrRacesDBC> ChrRacesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CinematicCameraDBC> CinematicCameraDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, CinematicSequencesDBC> CinematicSequencesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -194,7 +195,7 @@ public:
     ChatChannelsDBCMap const& getChatChannelsDBCMap() const { return _chatChannelsMap; }
     ChatChannelsDBC const* getChatChannelsDBC(uint32_t id)
     {
-        ChatChannelsDBCMap::const_iterator itr = _chatChannelsMap.find(id);
+        auto itr = _chatChannelsMap.find(id);
         if (itr != _chatChannelsMap.end())
             return &itr->second;
         return nullptr;
@@ -233,6 +234,14 @@ public:
     }
 
     CinematicCameraDBCMap const& getCinematicCameraDBCMap() const { return _cinematicCameraMap; }
+
+    CinematicSequencesDBC const* getCinematicSequencesDBC(uint32_t id)
+    {
+        auto itr = _cinematicSequencesMap.find(id);
+        if (itr != _cinematicSequencesMap.end())
+            return &itr->second;
+        return nullptr;
+    }
 
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
@@ -278,6 +287,7 @@ private:
     void load_ChrClasses();                 // load ChrClasses.dbc
     void load_ChrRaces();                   // load ChrRaces.dbc
     void load_CinematicCamera();            // load CinematicCamera.dbc
+    void load_CinematicSequences();         // load CinematicSequences.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -302,6 +312,7 @@ private:
     ChrClassesDBCMap _chrClassesMap;
     ChrRacesDBCMap _chrRacesMap;
     CinematicCameraDBCMap _cinematicCameraMap;
+    CinematicSequencesDBCMap _cinematicSequencesMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
