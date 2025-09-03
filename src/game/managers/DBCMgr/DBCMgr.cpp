@@ -37,6 +37,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _cinematicSequencesMap.clear();
     _creatureDisplayInfoMap.clear();
     _creatureDisplayInfoExtraMap.clear();
+    _creatureFamilyMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -66,6 +67,7 @@ void DBCMgr::initialize() {
     load_CinematicSequences();
     load_CreatureDisplayInfo();
     load_CreatureDisplayInfoExtra();
+    load_CreatureFamily();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -801,6 +803,52 @@ void DBCMgr::load_CreatureDisplayInfoExtra() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_CreatureDisplayInfoExtra failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_CreatureFamily() {
+    auto log = Logger::get();
+    _creatureFamilyMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_CREATUREFAMILY");
+        auto rows = server_->db()->execute_sync_many<DbcCreatureFamily>(stmt);
+        for (const auto &row: rows) {
+            CreatureFamilyDBC cf;
+            cf.ID            = row.ID;
+            cf.MinScale      = row.MinScale;
+            cf.MinScaleLevel = row.MinScaleLevel;
+            cf.MaxScale      = row.MaxScale;
+            cf.MaxScaleLevel = row.MaxScaleLevel;
+            cf.SkillLine[0]  = row.SkillLine_1;
+            cf.SkillLine[1]  = row.SkillLine_2;
+            cf.PetFoodMask   = row.PetFoodMask;
+            cf.PetTalentType = row.PetTalentType;
+
+            // Локализации
+            cf.Name[LOCALE_enUS] = row.Name_Lang_enUS.value_or("");
+            cf.Name[LOCALE_enGB] = row.Name_Lang_enGB.value_or("");
+            cf.Name[LOCALE_koKR] = row.Name_Lang_koKR.value_or("");
+            cf.Name[LOCALE_frFR] = row.Name_Lang_frFR.value_or("");
+            cf.Name[LOCALE_deDE] = row.Name_Lang_deDE.value_or("");
+            cf.Name[LOCALE_enCN] = row.Name_Lang_enCN.value_or("");
+            cf.Name[LOCALE_zhCN] = row.Name_Lang_zhCN.value_or("");
+            cf.Name[LOCALE_enTW] = row.Name_Lang_enTW.value_or("");
+            cf.Name[LOCALE_zhTW] = row.Name_Lang_zhTW.value_or("");
+            cf.Name[LOCALE_esES] = row.Name_Lang_esES.value_or("");
+            cf.Name[LOCALE_esMX] = row.Name_Lang_esMX.value_or("");
+            cf.Name[LOCALE_ruRU] = row.Name_Lang_ruRU.value_or("");
+            cf.Name[LOCALE_ptPT] = row.Name_Lang_ptPT.value_or("");
+            cf.Name[LOCALE_ptBR] = row.Name_Lang_ptBR.value_or("");
+            cf.Name[LOCALE_itIT] = row.Name_Lang_itIT.value_or("");
+
+            _creatureFamilyMap[cf.ID] = cf;
+        }
+        log->info(">>> DBCMgr: loaded {} CreatureFamily in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_CreatureFamily failed: {}", ex.what());
     }
 }
 
