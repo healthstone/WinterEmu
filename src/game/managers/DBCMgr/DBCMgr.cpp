@@ -38,6 +38,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _creatureDisplayInfoMap.clear();
     _creatureDisplayInfoExtraMap.clear();
     _creatureFamilyMap.clear();
+    _creatureModelDataMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -68,6 +69,7 @@ void DBCMgr::initialize() {
     load_CreatureDisplayInfo();
     load_CreatureDisplayInfoExtra();
     load_CreatureFamily();
+    load_CreatureModelData();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -849,6 +851,32 @@ void DBCMgr::load_CreatureFamily() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_CreatureFamily failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_CreatureModelData() {
+    auto log = Logger::get();
+    _creatureModelDataMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_CREATUREMODELDATA");
+        auto rows = server_->db()->execute_sync_many<DbcCreatureModelData>(stmt);
+        for (const auto &row: rows) {
+            CreatureModelDataDBC cmd;
+            cmd.ID = row.ID;
+            cmd.Flags           = row.Flags;
+            cmd.ModelName       = row.ModelName.value_or("");
+            cmd.ModelScale      = row.ModelScale;
+            cmd.CollisionHeight = row.CollisionHeight;
+            cmd.MountHeight     = row.MountHeight;
+
+            _creatureModelDataMap[row.ID] = cmd;
+        }
+        log->info(">>> DBCMgr: loaded {} CreatureModelData in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_CreatureModelData failed: {}", ex.what());
     }
 }
 

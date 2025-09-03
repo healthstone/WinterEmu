@@ -59,6 +59,7 @@
 #include "database/mapper/dbc/PgDbcCreatureDisplayInfo.hpp"
 #include "database/mapper/dbc/PgDbcCreatureDisplayInfoExtra.hpp"
 #include "database/mapper/dbc/PgDbcCreatureFamily.hpp"
+#include "database/mapper/dbc/PgDbcCreatureModelData.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -799,6 +800,18 @@ private:
                                  "name_lang_itit, name_lang_unk, "
                                  "name_lang_mask, iconfile "
                                  "FROM {}.dbc_creaturefamily",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_CREATUREMODELDATA",
+                     fmt::format("SELECT "
+                                 "id, flags, modelname, sizeclass, modelscale, "
+                                 "bloodid, footprinttextureid, footprinttexturelength, footprinttexturewidth, footprintparticlescale, "
+                                 "foleymaterialid, footstepshakesize, deaththudshakesize, soundid, "
+                                 "collisionwidth, collisionheight, mountheight, "
+                                 "geoboxminx, geoboxminy, geoboxminz, "
+                                 "geoboxmaxx, geoboxmaxy, geoboxmaxz, "
+                                 "worldeffectscale, attachedeffectscale, "
+                                 "missilecollisionradius, missilecollisionpush, missilecollisionraise "
+                                 "FROM {}.dbc_creaturemodeldata",
                                  dbc_schema));
 
         conn.prepare("SELECT_DBC_SKILLLINE",

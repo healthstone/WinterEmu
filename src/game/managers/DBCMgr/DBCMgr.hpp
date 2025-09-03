@@ -31,6 +31,7 @@ typedef std::unordered_map<uint32_t /*ID*/, CinematicSequencesDBC> CinematicSequ
 typedef std::unordered_map<uint32_t /*ID*/, CreatureDisplayInfoDBC> CreatureDisplayInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CreatureDisplayInfoExtraDBC> CreatureDisplayInfoExtraDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CreatureFamilyDBC> CreatureFamilyDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, CreatureModelDataDBC> CreatureModelDataDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -271,6 +272,14 @@ public:
         return nullptr;
     }
 
+    CreatureModelDataDBC const* getCreatureModelDataDBC(uint32_t id)
+    {
+        auto itr = _creatureModelDataMap.find(id);
+        if (itr != _creatureModelDataMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -319,6 +328,7 @@ private:
     void load_CreatureDisplayInfo();        // load CreatureDisplayInfo.dbc
     void load_CreatureDisplayInfoExtra();   // load CreatureDisplayInfoExtra.dbc
     void load_CreatureFamily();             // load CreatureFamily.dbc
+    void load_CreatureModelData();          // load CreatureModelData.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -347,6 +357,7 @@ private:
     CreatureDisplayInfoDBCMap _creatureDisplayInfoMap;
     CreatureDisplayInfoExtraDBCMap _creatureDisplayInfoExtraMap;
     CreatureFamilyDBCMap _creatureFamilyMap;
+    CreatureModelDataDBCMap _creatureModelDataMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
