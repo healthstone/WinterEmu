@@ -41,6 +41,8 @@ void DBCMgr::cleanUpBeforeDelete() {
     _creatureModelDataMap.clear();
     _creatureSpellDataMap.clear();
     _creatureTypeMap.clear();
+    _currencyCategoryMap.clear();
+    _currencyTypesMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -74,6 +76,8 @@ void DBCMgr::initialize() {
     load_CreatureModelData();
     load_CreatureSpellData();
     load_CreatureType();
+    load_CurrencyCategory();
+    load_CurrencyTypes();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -927,6 +931,33 @@ void DBCMgr::load_CreatureType() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_CreatureType failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_CurrencyCategory() {
+    //TODO нужна ли эта таблица?, в TC не используется
+}
+
+void DBCMgr::load_CurrencyTypes() {
+    auto log = Logger::get();
+    _currencyTypesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_CURRENCYTYPES");
+        auto rows = server_->db()->execute_sync_many<DbcCurrencyTypes>(stmt);
+        for (const auto &row: rows) {
+            CurrencyTypesDBC ct;
+            ct.ID       = row.ID;
+            ct.ItemID   = row.ItemID;
+            ct.BitIndex = row.BitIndex;
+
+            _currencyTypesMap[row.ID] = ct;
+        }
+        log->info(">>> DBCMgr: loaded {} CurrencyTypes in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_CurrencyTypes failed: {}", ex.what());
     }
 }
 

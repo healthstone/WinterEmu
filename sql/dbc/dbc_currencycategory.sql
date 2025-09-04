@@ -1,0 +1,52 @@
+DROP TABLE IF EXISTS dbc.dbc_currencycategory;
+
+CREATE TABLE dbc.dbc_currencycategory
+(
+    id             integer NOT NULL DEFAULT 0,
+    flags          integer NOT NULL DEFAULT 0,
+    name_lang_enus text,
+    name_lang_engb text,
+    name_lang_kokr text,
+    name_lang_frfr text,
+    name_lang_dede text,
+    name_lang_encn text,
+    name_lang_zhcn text,
+    name_lang_entw text,
+    name_lang_zhtw text,
+    name_lang_eses text,
+    name_lang_esmx text,
+    name_lang_ruru text,
+    name_lang_ptpt text,
+    name_lang_ptbr text,
+    name_lang_itit text,
+    name_lang_unk  text,
+    name_lang_mask bigint  NOT NULL DEFAULT 0,
+    CONSTRAINT pk_dbc_currencycategory PRIMARY KEY (id)
+);
+
+INSERT INTO dbc.dbc_currencycategory (id, flags,
+                                      name_lang_enus, name_lang_engb, name_lang_kokr, name_lang_frfr, name_lang_dede,
+                                      name_lang_encn, name_lang_zhcn, name_lang_entw, name_lang_zhtw,
+                                      name_lang_eses, name_lang_esmx, name_lang_ruru,
+                                      name_lang_ptpt, name_lang_ptbr, name_lang_itit,
+                                      name_lang_unk, name_lang_mask)
+VALUES (1, 0, 'Miscellaneous', 'Miscellaneous', '기타', 'Divers', 'Verschiedenes', '其它', '其它', '雜項', '雜項',
+        'Miscelánea', 'Miscelánea', 'Разное', '', '', '', '', 16712190),
+       (2, 0, 'Player vs. Player', 'Player vs. Player', '플레이어 대 플레이어', 'JcJ', 'Spieler gegen Spieler', 'PvP', 'PvP',
+        '玩家對玩家', '玩家對玩家', 'Jugador contra Jugador', 'Jugador contra Jugador', 'PvP', '', '', '', '',
+        16712190),
+       (3, 3, 'Unused', 'Unused', '미사용', 'Inutilisées', 'Unbenutzt', '未使用', '未使用', '未使用', '未使用',
+        'No las uso', 'No las uso', 'Неактивно', '', '', '', '', 16712190),
+       (4, 0, 'Classic', 'Classic', '오리지널', 'Classique', 'Classic', '经典旧世', '经典旧世', '艾澤拉斯', '艾澤拉斯',
+        'Clásico', 'Clásico', 'World of Warcraft', '', '', '', '', 16712190),
+       (21, 0, 'Wrath of the Lich King', 'Wrath of the Lich King', '리치 왕의 분노', 'Wrath of the Lich King',
+        'Wrath of the Lich King', '巫妖王之怒', '巫妖王之怒', '巫妖王之怒', '巫妖王之怒', 'Wrath of the Lich King',
+        'Wrath of the Lich King', 'Wrath of the Lich King', '', '', '', '', 16712190),
+       (22, 0, 'Dungeon and Raid', 'Dungeon and Raid', '던전 및 공격대', 'Raid', 'Dungeon und Schlachtzug', '地下城与团队',
+        '地下城与团队', '地城與團隊', '地城與團隊', 'Mazmorra y banda', 'Mazmorra y banda', 'Подземелья и рейды', '',
+        '', '', '', 16712190),
+       (23, 0, 'Burning Crusade', 'Burning Crusade', '불타는 성전', 'Burning Crusade', 'Burning Crusade', '燃烧的远征',
+        '燃烧的远征', '燃燒的遠征', '燃燒的遠征', 'Burning Crusade', 'Burning Crusade', 'Burning Crusade', '', '', '',
+        '', 16712190),
+       (41, 0, 'Test', 'Test', 'Test용', 'Test', 'Test', '测试', '测试', '測試', '測試', 'Prueba', 'Prueba', 'Test', '',
+        '', '', '', 16712190);

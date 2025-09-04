@@ -62,6 +62,8 @@
 #include "database/mapper/dbc/PgDbcCreatureModelData.hpp"
 #include "database/mapper/dbc/PgDbcCreatureSpellData.hpp"
 #include "database/mapper/dbc/PgDbcCreatureType.hpp"
+#include "database/mapper/dbc/PgDbcCurrencyCategory.hpp"
+#include "database/mapper/dbc/PgDbcCurrencyTypes.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -828,6 +830,20 @@ private:
                                  "name_lang_entw, name_lang_zhtw, name_lang_eses, name_lang_esmx, "
                                  "name_lang_ruru, name_lang_ptpt, name_lang_ptbr, name_lang_itit, "
                                  "name_lang_unk, name_lang_mask, flags FROM {}.dbc_creaturetype",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_CURRENCYCATEGORY",
+                     fmt::format("SELECT "
+                                 "id, flags, "
+                                 "name_lang_enus, name_lang_engb, name_lang_kokr, name_lang_frfr, name_lang_dede, "
+                                 "name_lang_encn, name_lang_zhcn, name_lang_entw, name_lang_zhtw, "
+                                 "name_lang_eses, name_lang_esmx, name_lang_ruru, "
+                                 "name_lang_ptpt, name_lang_ptbr, name_lang_itit, "
+                                 "name_lang_unk, name_lang_mask "
+                                 "FROM {}.dbc_currencycategory",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_CURRENCYTYPES",
+                     fmt::format("SELECT id, itemid, categoryid, bitindex "
+                                 "FROM {}.dbc_currencytypes",
                                  dbc_schema));
 
         conn.prepare("SELECT_DBC_SKILLLINE",

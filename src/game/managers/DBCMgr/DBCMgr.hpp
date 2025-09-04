@@ -34,6 +34,8 @@ typedef std::unordered_map<uint32_t /*ID*/, CreatureFamilyDBC> CreatureFamilyDBC
 typedef std::unordered_map<uint32_t /*ID*/, CreatureModelDataDBC> CreatureModelDataDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CreatureSpellDataDBC> CreatureSpellDataDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CreatureTypeDBC> CreatureTypeDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, CurrencyCategoryDBC> CurrencyCategoryDBCMap;
+typedef std::unordered_map<uint32_t /*ItemID*/, CurrencyTypesDBC> CurrencyTypesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -298,6 +300,22 @@ public:
         return nullptr;
     }
 
+    CurrencyCategoryDBC const* getCurrencyCategoryDBC(uint32_t id)
+    {
+        auto itr = _currencyCategoryMap.find(id);
+        if (itr != _currencyCategoryMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    CurrencyTypesDBC const* getCurrencyTypesDBCByItemID(uint32_t ItemID)
+    {
+        auto itr = _currencyTypesMap.find(ItemID);
+        if (itr != _currencyTypesMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -349,6 +367,8 @@ private:
     void load_CreatureModelData();          // load CreatureModelData.dbc
     void load_CreatureSpellData();          // load CreatureSpellData.dbc
     void load_CreatureType();               // load CreatureSpellData.dbc
+    void load_CurrencyCategory();           // load CurrencyCategory.dbc (NOT USED)
+    void load_CurrencyTypes();              // load CurrencyTypes.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -380,6 +400,8 @@ private:
     CreatureModelDataDBCMap _creatureModelDataMap;
     CreatureSpellDataDBCMap _creatureSpellDataMap;
     CreatureTypeDBCMap _creatureTypeMap;
+    CurrencyCategoryDBCMap _currencyCategoryMap;
+    CurrencyTypesDBCMap _currencyTypesMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
