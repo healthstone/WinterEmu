@@ -44,6 +44,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _currencyCategoryMap.clear();
     _currencyTypesMap.clear();
     _destructibleModelDataMap.clear();
+    _dungeonEncounterMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -80,6 +81,7 @@ void DBCMgr::initialize() {
     load_CurrencyCategory();
     load_CurrencyTypes();
     load_DestructibleModelData();
+    load_DungeonEncounter();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -985,6 +987,48 @@ void DBCMgr::load_DestructibleModelData() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_DestructibleModelData failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_DungeonEncounter() {
+    auto log = Logger::get();
+    _dungeonEncounterMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_DUNGEONENCOUNTER");
+        auto rows = server_->db()->execute_sync_many<DbcDungeonEncounter>(stmt);
+        for (const auto &row: rows) {
+            DungeonEncounterDBC de;
+
+            de.ID         = row.id;
+            de.MapID      = row.mapid;
+            de.Difficulty = row.difficulty;
+            de.Bit        = row.bit;
+
+            // Копируем локализованные имена
+            de.Name[LOCALE_enUS] = row.name_lang_enus.value_or("");
+            de.Name[LOCALE_enGB] = row.name_lang_engb.value_or("");
+            de.Name[LOCALE_koKR] = row.name_lang_kokr.value_or("");
+            de.Name[LOCALE_frFR] = row.name_lang_frfr.value_or("");
+            de.Name[LOCALE_deDE] = row.name_lang_dede.value_or("");
+            de.Name[LOCALE_enCN] = row.name_lang_encn.value_or("");
+            de.Name[LOCALE_zhCN] = row.name_lang_zhcn.value_or("");
+            de.Name[LOCALE_enTW] = row.name_lang_entw.value_or("");
+            de.Name[LOCALE_zhTW] = row.name_lang_zhtw.value_or("");
+            de.Name[LOCALE_esES] = row.name_lang_eses.value_or("");
+            de.Name[LOCALE_esMX] = row.name_lang_esmx.value_or("");
+            de.Name[LOCALE_ruRU] = row.name_lang_ruru.value_or("");
+            de.Name[LOCALE_ptPT] = row.name_lang_ptpt.value_or("");
+            de.Name[LOCALE_ptBR] = row.name_lang_ptbr.value_or("");
+            de.Name[LOCALE_itIT] = row.name_lang_itit.value_or("");
+
+            _dungeonEncounterMap[de.ID] = de;
+        }
+        log->info(">>> DBCMgr: loaded {} DungeonEncounter in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_DungeonEncounter failed: {}", ex.what());
     }
 }
 
