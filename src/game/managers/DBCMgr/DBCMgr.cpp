@@ -45,6 +45,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _currencyTypesMap.clear();
     _destructibleModelDataMap.clear();
     _dungeonEncounterMap.clear();
+    _durabilityCoastsMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -82,6 +83,7 @@ void DBCMgr::initialize() {
     load_CurrencyTypes();
     load_DestructibleModelData();
     load_DungeonEncounter();
+    load_DurabilityCosts();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1029,6 +1031,60 @@ void DBCMgr::load_DungeonEncounter() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_DungeonEncounter failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_DurabilityCosts() {
+    auto log = Logger::get();
+    _durabilityCoastsMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_DURABILITYCOSTS");
+        auto rows = server_->db()->execute_sync_many<DbcDurabilityCosts>(stmt);
+        for (const auto &row: rows) {
+            DurabilityCostsDBC dc;
+            dc.ID = row.id; // берем id из строки
+
+            // Копируем WeaponSubClassCost 1-21
+            dc.WeaponSubClassCost[0]  = row.weaponSubClassCost1;
+            dc.WeaponSubClassCost[1]  = row.weaponSubClassCost2;
+            dc.WeaponSubClassCost[2]  = row.weaponSubClassCost3;
+            dc.WeaponSubClassCost[3]  = row.weaponSubClassCost4;
+            dc.WeaponSubClassCost[4]  = row.weaponSubClassCost5;
+            dc.WeaponSubClassCost[5]  = row.weaponSubClassCost6;
+            dc.WeaponSubClassCost[6]  = row.weaponSubClassCost7;
+            dc.WeaponSubClassCost[7]  = row.weaponSubClassCost8;
+            dc.WeaponSubClassCost[8]  = row.weaponSubClassCost9;
+            dc.WeaponSubClassCost[9]  = row.weaponSubClassCost10;
+            dc.WeaponSubClassCost[10] = row.weaponSubClassCost11;
+            dc.WeaponSubClassCost[11] = row.weaponSubClassCost12;
+            dc.WeaponSubClassCost[12] = row.weaponSubClassCost13;
+            dc.WeaponSubClassCost[13] = row.weaponSubClassCost14;
+            dc.WeaponSubClassCost[14] = row.weaponSubClassCost15;
+            dc.WeaponSubClassCost[15] = row.weaponSubClassCost16;
+            dc.WeaponSubClassCost[16] = row.weaponSubClassCost17;
+            dc.WeaponSubClassCost[17] = row.weaponSubClassCost18;
+            dc.WeaponSubClassCost[18] = row.weaponSubClassCost19;
+            dc.WeaponSubClassCost[19] = row.weaponSubClassCost20;
+            dc.WeaponSubClassCost[20] = row.weaponSubClassCost21;
+
+            // Копируем ArmorSubClassCost 1-8
+            dc.ArmorSubClassCost[0] = row.armorSubClassCost1;
+            dc.ArmorSubClassCost[1] = row.armorSubClassCost2;
+            dc.ArmorSubClassCost[2] = row.armorSubClassCost3;
+            dc.ArmorSubClassCost[3] = row.armorSubClassCost4;
+            dc.ArmorSubClassCost[4] = row.armorSubClassCost5;
+            dc.ArmorSubClassCost[5] = row.armorSubClassCost6;
+            dc.ArmorSubClassCost[6] = row.armorSubClassCost7;
+            dc.ArmorSubClassCost[7] = row.armorSubClassCost8;
+
+            _durabilityCoastsMap[row.id] = dc;
+        }
+        log->info(">>> DBCMgr: loaded {} DurabilityCosts in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_DurabilityCosts failed: {}", ex.what());
     }
 }
 

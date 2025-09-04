@@ -66,6 +66,7 @@
 #include "database/mapper/dbc/PgDbcCurrencyTypes.hpp"
 #include "database/mapper/dbc/PgDbcDestructibleModelData.hpp"
 #include "database/mapper/dbc/PgDbcDungeonEncounter.hpp"
+#include "database/mapper/dbc/PgDbcDurabilityCosts.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -866,6 +867,19 @@ private:
                              "name_lang_esmx, name_lang_ruru, name_lang_ptpt, name_lang_ptbr, name_lang_itit, "
                              "name_lang_unk, name_lang_mask, spelliconid "
                              "FROM {}.dbc_dungeonencounter",
+                             dbc_schema));
+        conn.prepare("SELECT_DBC_DURABILITYCOSTS",
+                     fmt::format(
+                             "SELECT id, "
+                             "weaponsubclasscost_1, weaponsubclasscost_2, weaponsubclasscost_3, weaponsubclasscost_4, "
+                             "weaponsubclasscost_5, weaponsubclasscost_6, weaponsubclasscost_7, weaponsubclasscost_8, "
+                             "weaponsubclasscost_9, weaponsubclasscost_10, weaponsubclasscost_11, weaponsubclasscost_12, "
+                             "weaponsubclasscost_13, weaponsubclasscost_14, weaponsubclasscost_15, weaponsubclasscost_16, "
+                             "weaponsubclasscost_17, weaponsubclasscost_18, weaponsubclasscost_19, weaponsubclasscost_20, "
+                             "weaponsubclasscost_21, "
+                             "armorsubclasscost_1, armorsubclasscost_2, armorsubclasscost_3, armorsubclasscost_4, "
+                             "armorsubclasscost_5, armorsubclasscost_6, armorsubclasscost_7, armorsubclasscost_8 "
+                             "FROM {}.dbc_durabilitycosts",
                              dbc_schema));
 
         conn.prepare("SELECT_DBC_SKILLLINE",
