@@ -61,6 +61,7 @@
 #include "database/mapper/dbc/PgDbcCreatureFamily.hpp"
 #include "database/mapper/dbc/PgDbcCreatureModelData.hpp"
 #include "database/mapper/dbc/PgDbcCreatureSpellData.hpp"
+#include "database/mapper/dbc/PgDbcCreatureType.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -820,6 +821,13 @@ private:
                                  "spells_1, spells_2, spells_3, spells_4, "
                                  "availability_1, availability_2, availability_3, availability_4 "
                                  "FROM {}.dbc_creaturespelldata",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_CREATURETYPE",
+                     fmt::format("SELECT id, name_lang_enus, name_lang_engb, name_lang_kokr, "
+                                 "name_lang_frfr, name_lang_dede, name_lang_encn, name_lang_zhcn, "
+                                 "name_lang_entw, name_lang_zhtw, name_lang_eses, name_lang_esmx, "
+                                 "name_lang_ruru, name_lang_ptpt, name_lang_ptbr, name_lang_itit, "
+                                 "name_lang_unk, name_lang_mask, flags FROM {}.dbc_creaturetype",
                                  dbc_schema));
 
         conn.prepare("SELECT_DBC_SKILLLINE",
