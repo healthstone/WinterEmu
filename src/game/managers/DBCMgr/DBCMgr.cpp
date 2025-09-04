@@ -43,6 +43,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _creatureTypeMap.clear();
     _currencyCategoryMap.clear();
     _currencyTypesMap.clear();
+    _destructibleModelDataMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -78,6 +79,7 @@ void DBCMgr::initialize() {
     load_CreatureType();
     load_CurrencyCategory();
     load_CurrencyTypes();
+    load_DestructibleModelData();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -952,12 +954,37 @@ void DBCMgr::load_CurrencyTypes() {
             ct.ItemID   = row.ItemID;
             ct.BitIndex = row.BitIndex;
 
-            _currencyTypesMap[row.ID] = ct;
+            _currencyTypesMap[row.ItemID] = ct;
         }
         log->info(">>> DBCMgr: loaded {} CurrencyTypes in {} ms",
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_CurrencyTypes failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_DestructibleModelData() {
+    auto log = Logger::get();
+    _destructibleModelDataMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_DESTRUCTIBLEMODELDATA");
+        auto rows = server_->db()->execute_sync_many<DbcDestructibleModelData>(stmt);
+        for (const auto &row: rows) {
+            DestructibleModelDataDBC dmd;
+            dmd.ID = row.id;
+            dmd.State1Wmo      = row.state1_wmo;
+            dmd.State2Wmo      = row.state2_wmo;
+            dmd.State3Wmo      = row.state3_wmo;
+            dmd.RepairGroundFx = row.repair_ground_fx;
+
+            _destructibleModelDataMap[row.id] = dmd;
+        }
+        log->info(">>> DBCMgr: loaded {} DestructibleModelData in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_DestructibleModelData failed: {}", ex.what());
     }
 }
 

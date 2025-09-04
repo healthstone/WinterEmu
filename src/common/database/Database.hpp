@@ -64,6 +64,7 @@
 #include "database/mapper/dbc/PgDbcCreatureType.hpp"
 #include "database/mapper/dbc/PgDbcCurrencyCategory.hpp"
 #include "database/mapper/dbc/PgDbcCurrencyTypes.hpp"
+#include "database/mapper/dbc/PgDbcDestructibleModelData.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -845,6 +846,17 @@ private:
                      fmt::format("SELECT id, itemid, categoryid, bitindex "
                                  "FROM {}.dbc_currencytypes",
                                  dbc_schema));
+        conn.prepare("SELECT_DBC_DESTRUCTIBLEMODELDATA",
+                     fmt::format(
+                             "SELECT id, "
+                             "state0_impact_effect_doodad_set, state0_ambient_doodad_set, "
+                             "state1_wmo, state1_destruction_doodad_set, state1_impact_effect_doodad_set, state1_ambient_doodad_set, "
+                             "state2_wmo, state2_destruction_doodad_set, state2_impact_effect_doodad_set, state2_ambient_doodad_set, "
+                             "state3_wmo, state3_init_doodad_set, state3_ambient_doodad_set, "
+                             "eject_direction, repair_ground_fx, do_not_highlight, "
+                             "heal_effect, heal_effect_speed "
+                             "FROM {}.dbc_destructiblemodeldata",
+                             dbc_schema));
 
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "

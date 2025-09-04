@@ -36,6 +36,7 @@ typedef std::unordered_map<uint32_t /*ID*/, CreatureSpellDataDBC> CreatureSpellD
 typedef std::unordered_map<uint32_t /*ID*/, CreatureTypeDBC> CreatureTypeDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, CurrencyCategoryDBC> CurrencyCategoryDBCMap;
 typedef std::unordered_map<uint32_t /*ItemID*/, CurrencyTypesDBC> CurrencyTypesDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, DestructibleModelDataDBC> DestructibleModelDataDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -316,6 +317,14 @@ public:
         return nullptr;
     }
 
+    DestructibleModelDataDBC const* getDestructibleModelDataDBC(uint32_t ID)
+    {
+        auto itr = _destructibleModelDataMap.find(ID);
+        if (itr != _destructibleModelDataMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -369,6 +378,7 @@ private:
     void load_CreatureType();               // load CreatureSpellData.dbc
     void load_CurrencyCategory();           // load CurrencyCategory.dbc (NOT USED)
     void load_CurrencyTypes();              // load CurrencyTypes.dbc
+    void load_DestructibleModelData();      // load DestructibleModelData.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -402,6 +412,7 @@ private:
     CreatureTypeDBCMap _creatureTypeMap;
     CurrencyCategoryDBCMap _currencyCategoryMap;
     CurrencyTypesDBCMap _currencyTypesMap;
+    DestructibleModelDataDBCMap _destructibleModelDataMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
