@@ -60,6 +60,7 @@
 #include "database/mapper/dbc/PgDbcCreatureDisplayInfoExtra.hpp"
 #include "database/mapper/dbc/PgDbcCreatureFamily.hpp"
 #include "database/mapper/dbc/PgDbcCreatureModelData.hpp"
+#include "database/mapper/dbc/PgDbcCreatureSpellData.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -812,6 +813,13 @@ private:
                                  "worldeffectscale, attachedeffectscale, "
                                  "missilecollisionradius, missilecollisionpush, missilecollisionraise "
                                  "FROM {}.dbc_creaturemodeldata",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_CREATURESPELDATA",
+                     fmt::format("SELECT "
+                                 "id, "
+                                 "spells_1, spells_2, spells_3, spells_4, "
+                                 "availability_1, availability_2, availability_3, availability_4 "
+                                 "FROM {}.dbc_creaturespelldata",
                                  dbc_schema));
 
         conn.prepare("SELECT_DBC_SKILLLINE",

@@ -39,6 +39,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _creatureDisplayInfoExtraMap.clear();
     _creatureFamilyMap.clear();
     _creatureModelDataMap.clear();
+    _creatureSpellDataMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -70,6 +71,7 @@ void DBCMgr::initialize() {
     load_CreatureDisplayInfoExtra();
     load_CreatureFamily();
     load_CreatureModelData();
+    load_CreatureSpellData();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -877,6 +879,31 @@ void DBCMgr::load_CreatureModelData() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_CreatureModelData failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_CreatureSpellData() {
+    auto log = Logger::get();
+    _creatureSpellDataMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_CREATURESPELDATA");
+        auto rows = server_->db()->execute_sync_many<DbcCreatureSpellData>(stmt);
+        for (const auto &row: rows) {
+            CreatureSpellDataDBC csd;
+            csd.ID = row.ID;
+            csd.Spells[0] = row.Spells_1;
+            csd.Spells[1] = row.Spells_2;
+            csd.Spells[2] = row.Spells_3;
+            csd.Spells[3] = row.Spells_4;
+
+            _creatureSpellDataMap[row.ID] = csd;
+        }
+        log->info(">>> DBCMgr: loaded {} CreatureSpellData in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_CreatureSpellData failed: {}", ex.what());
     }
 }
 
