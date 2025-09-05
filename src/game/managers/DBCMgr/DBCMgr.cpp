@@ -47,6 +47,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _dungeonEncounterMap.clear();
     _durabilityCoastsMap.clear();
     _durabilityQualityMap.clear();
+    _emotesMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -86,6 +87,7 @@ void DBCMgr::initialize() {
     load_DungeonEncounter();
     load_DurabilityCosts();
     load_DurabilityQuality();
+    load_Emotes();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1109,6 +1111,30 @@ void DBCMgr::load_DurabilityQuality() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_DurabilityQuality failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_Emotes() {
+    auto log = Logger::get();
+    _emotesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_EMOTES");
+        auto rows = server_->db()->execute_sync_many<DbcEmotes>(stmt);
+        for (const auto &row: rows) {
+            EmotesDBC e;
+            e.ID = row.ID;
+            e.EmoteFlags         = row.EmoteFlags;
+            e.EmoteSpecProc      = row.EmoteSpecProc;
+            e.EmoteSpecProcParam = row.EmoteSpecProcParam;
+
+            _emotesMap[row.ID] = e;
+        }
+        log->info(">>> DBCMgr: loaded {} Emotes in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_Emotes failed: {}", ex.what());
     }
 }
 

@@ -68,6 +68,7 @@
 #include "database/mapper/dbc/PgDbcDungeonEncounter.hpp"
 #include "database/mapper/dbc/PgDbcDurabilityCosts.hpp"
 #include "database/mapper/dbc/PgDbcDurabilityQuality.hpp"
+#include "database/mapper/dbc/PgDbcEmotes.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -885,6 +886,11 @@ private:
         conn.prepare("SELECT_DBC_DURABILITYQUALITY",
                      fmt::format("SELECT id, data "
                                  "FROM {}.dbc_durabilityquality",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_EMOTES",
+                     fmt::format("SELECT id, emoteslashcommand, animid, emoteflags, "
+                                 "emotespecproc, emotespecprocparam, eventsoundid "
+                                 "FROM {}.dbc_emotes",
                                  dbc_schema));
 
         conn.prepare("SELECT_DBC_SKILLLINE",
