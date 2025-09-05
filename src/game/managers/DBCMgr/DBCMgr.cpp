@@ -48,6 +48,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _durabilityCoastsMap.clear();
     _durabilityQualityMap.clear();
     _emotesMap.clear();
+    _emotesTextMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -88,6 +89,7 @@ void DBCMgr::initialize() {
     load_DurabilityCosts();
     load_DurabilityQuality();
     load_Emotes();
+    load_EmotesText();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1135,6 +1137,28 @@ void DBCMgr::load_Emotes() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_Emotes failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_EmotesText() {
+    auto log = Logger::get();
+    _emotesTextMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_EMOTESTEXT");
+        auto rows = server_->db()->execute_sync_many<DbcEmotesText>(stmt);
+        for (const auto &row: rows) {
+            EmotesTextDBC et;
+            et.ID = row.ID;
+            et.EmoteID = row.EmoteID;
+
+            _emotesTextMap[row.ID] = et;
+        }
+        log->info(">>> DBCMgr: loaded {} EmotesText in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_EmotesText failed: {}", ex.what());
     }
 }
 

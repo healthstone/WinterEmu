@@ -41,6 +41,7 @@ typedef std::unordered_map<uint32_t /*ID*/, DungeonEncounterDBC> DungeonEncounte
 typedef std::unordered_map<uint32_t /*ID*/, DurabilityCostsDBC> DurabilityCostsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, DurabilityQualityDBC> DurabilityQualityDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, EmotesDBC> EmotesDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, EmotesTextDBC> EmotesTextDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -361,6 +362,14 @@ public:
         return nullptr;
     }
 
+    EmotesTextDBC const* getEmotesTextDBC(uint32_t ID)
+    {
+        auto itr = _emotesTextMap.find(ID);
+        if (itr != _emotesTextMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -419,6 +428,7 @@ private:
     void load_DurabilityCosts();            // load DurabilityCosts.dbc
     void load_DurabilityQuality();          // load DurabilityQuality.dbc
     void load_Emotes();                     // load Emotes.dbc
+    void load_EmotesText();                 // load EmotesText.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -457,6 +467,7 @@ private:
     DurabilityCostsDBCMap _durabilityCoastsMap;
     DurabilityQualityDBCMap _durabilityQualityMap;
     EmotesDBCMap _emotesMap;
+    EmotesTextDBCMap _emotesTextMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

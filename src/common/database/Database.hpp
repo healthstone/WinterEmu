@@ -69,6 +69,7 @@
 #include "database/mapper/dbc/PgDbcDurabilityCosts.hpp"
 #include "database/mapper/dbc/PgDbcDurabilityQuality.hpp"
 #include "database/mapper/dbc/PgDbcEmotes.hpp"
+#include "database/mapper/dbc/PgDbcEmotesText.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -891,6 +892,14 @@ private:
                      fmt::format("SELECT id, emoteslashcommand, animid, emoteflags, "
                                  "emotespecproc, emotespecprocparam, eventsoundid "
                                  "FROM {}.dbc_emotes",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_EMOTESTEXT",
+                     fmt::format("SELECT id, name, emoteid, "
+                                 "emotetext_1, emotetext_2, emotetext_3, emotetext_4, "
+                                 "emotetext_5, emotetext_6, emotetext_7, emotetext_8, "
+                                 "emotetext_9, emotetext_10, emotetext_11, emotetext_12, "
+                                 "emotetext_13, emotetext_14, emotetext_15, emotetext_16 "
+                                 "FROM {}.dbc_emotestext",
                                  dbc_schema));
 
         conn.prepare("SELECT_DBC_SKILLLINE",
