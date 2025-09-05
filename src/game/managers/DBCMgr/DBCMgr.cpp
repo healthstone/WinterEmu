@@ -12,6 +12,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _characterFacialHairStylesByTripple.clear();
     _charSectionsByPenta.clear();
     _charStartOutfitByTripple.clear();
+    _emotesTextSoundByTripple.clear();
     _skillRaceClassInfoBySkill.clear();
 
     // Потом уже сами основные мапы
@@ -49,6 +50,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _durabilityQualityMap.clear();
     _emotesMap.clear();
     _emotesTextMap.clear();
+    _emotesTextSoundMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -90,6 +92,7 @@ void DBCMgr::initialize() {
     load_DurabilityQuality();
     load_Emotes();
     load_EmotesText();
+    load_EmotesTextSound();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1162,6 +1165,31 @@ void DBCMgr::load_EmotesText() {
     }
 }
 
+void DBCMgr::load_EmotesTextSound() {
+    auto log = Logger::get();
+    _emotesTextSoundMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_EMOTESTEXTSOUND");
+        auto rows = server_->db()->execute_sync_many<DbcEmotesTextSound>(stmt);
+        for (const auto &row: rows) {
+            EmotesTextSoundDBC ets;
+            ets.ID = row.ID;
+            ets.EmotesTextID = row.EmotesTextID;
+            ets.RaceID       = row.RaceID;
+            ets.SexID        = row.SexID;
+            ets.SoundID      = row.SoundID;
+
+            _emotesTextSoundMap[row.ID] = ets;
+        }
+        log->info(">>> DBCMgr: loaded {} EmotesTextSound in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_EmotesTextSound failed: {}", ex.what());
+    }
+}
+
 void DBCMgr::load_SkillRaceClassInfo() {
     auto log = Logger::get();
     _skillRaceClassInfoMap.clear();
@@ -1234,6 +1262,7 @@ void DBCMgr::initialize_Additional_Data() {
     handle_CharacterFacialHairStylesByTripple();
     handle_CharSectionsByPenta();
     handle_CharStartOutfitByTripple();
+    handle_EmotesTextSoundByTripple();
     handle_SkillRaceClassInfo();
 }
 
@@ -1258,6 +1287,14 @@ void DBCMgr::handle_CharStartOutfitByTripple() {
     {
         if (CharStartOutfitDBC const* entry = &csoID.second)
             _charStartOutfitByTripple[CharStartOutfitKey(entry->RaceID, entry->ClassID, entry->SexID)] = entry;
+    }
+}
+
+void DBCMgr::handle_EmotesTextSoundByTripple() {
+    for (const auto& etsID : _emotesTextSoundMap)
+    {
+        if (EmotesTextSoundDBC const* entry = &etsID.second)
+            _emotesTextSoundByTripple[EmotesTextSoundKey(entry->EmotesTextID, entry->RaceID, entry->SexID)] = entry;
     }
 }
 

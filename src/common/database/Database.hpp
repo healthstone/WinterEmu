@@ -70,6 +70,7 @@
 #include "database/mapper/dbc/PgDbcDurabilityQuality.hpp"
 #include "database/mapper/dbc/PgDbcEmotes.hpp"
 #include "database/mapper/dbc/PgDbcEmotesText.hpp"
+#include "database/mapper/dbc/PgDbcEmotesTextSound.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -900,6 +901,10 @@ private:
                                  "emotetext_9, emotetext_10, emotetext_11, emotetext_12, "
                                  "emotetext_13, emotetext_14, emotetext_15, emotetext_16 "
                                  "FROM {}.dbc_emotestext",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_EMOTESTEXTSOUND",
+                     fmt::format("SELECT id, emotestextid, raceid, sexid, soundid "
+                                 "FROM {}.dbc_emotestextsound",
                                  dbc_schema));
 
         conn.prepare("SELECT_DBC_SKILLLINE",

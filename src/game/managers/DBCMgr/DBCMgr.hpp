@@ -42,6 +42,7 @@ typedef std::unordered_map<uint32_t /*ID*/, DurabilityCostsDBC> DurabilityCostsD
 typedef std::unordered_map<uint32_t /*ID*/, DurabilityQualityDBC> DurabilityQualityDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, EmotesDBC> EmotesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, EmotesTextDBC> EmotesTextDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, EmotesTextSoundDBC> EmotesTextSoundDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -57,6 +58,10 @@ typedef std::map<CharSectionsKey, CharSectionsDBC const*> CharSectionsByPenta;
 // CharStartOutfitByTripple
 typedef std::tuple<uint8_t, uint8_t, uint8_t> CharStartOutfitKey;
 typedef std::map<CharStartOutfitKey, CharStartOutfitDBC const*> CharStartOutfitByTripple;
+
+// EmotesTextSoundByTripple
+typedef std::tuple<uint32_t, uint8_t, uint8_t> EmotesTextSoundKey;
+typedef std::map<EmotesTextSoundKey, EmotesTextSoundDBC const*> EmotesTextSoundByTripple;
 
 // SkillRaceClassInfoBounds
 typedef std::unordered_multimap<uint32_t, SkillRaceClassInfoDBC const*> SkillRaceClassInfoMap;
@@ -370,6 +375,14 @@ public:
         return nullptr;
     }
 
+    EmotesTextSoundDBC const* getEmotesTextSoundDBCWithParam(uint32_t emote, uint8_t race, uint8_t gender)
+    {
+        auto i = _emotesTextSoundByTripple.find(EmotesTextSoundKey(emote, race, gender));
+        if (i != _emotesTextSoundByTripple.end())
+            return i->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -429,6 +442,7 @@ private:
     void load_DurabilityQuality();          // load DurabilityQuality.dbc
     void load_Emotes();                     // load Emotes.dbc
     void load_EmotesText();                 // load EmotesText.dbc
+    void load_EmotesTextSound();            // load EmotesTextSound.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -468,6 +482,7 @@ private:
     DurabilityQualityDBCMap _durabilityQualityMap;
     EmotesDBCMap _emotesMap;
     EmotesTextDBCMap _emotesTextMap;
+    EmotesTextSoundDBCMap _emotesTextSoundMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
@@ -478,10 +493,12 @@ private:
     void handle_CharacterFacialHairStylesByTripple();
     void handle_CharSectionsByPenta();
     void handle_CharStartOutfitByTripple();
+    void handle_EmotesTextSoundByTripple();
     void handle_SkillRaceClassInfo();
 
     CharacterFacialHairStylesByTripple _characterFacialHairStylesByTripple;
     CharSectionsByPenta _charSectionsByPenta;
     CharStartOutfitByTripple _charStartOutfitByTripple;
+    EmotesTextSoundByTripple _emotesTextSoundByTripple;
     SkillRaceClassInfoMap _skillRaceClassInfoBySkill;
 };
