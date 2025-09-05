@@ -67,6 +67,7 @@
 #include "database/mapper/dbc/PgDbcDestructibleModelData.hpp"
 #include "database/mapper/dbc/PgDbcDungeonEncounter.hpp"
 #include "database/mapper/dbc/PgDbcDurabilityCosts.hpp"
+#include "database/mapper/dbc/PgDbcDurabilityQuality.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -881,6 +882,10 @@ private:
                              "armorsubclasscost_5, armorsubclasscost_6, armorsubclasscost_7, armorsubclasscost_8 "
                              "FROM {}.dbc_durabilitycosts",
                              dbc_schema));
+        conn.prepare("SELECT_DBC_DURABILITYQUALITY",
+                     fmt::format("SELECT id, data "
+                                 "FROM {}.dbc_durabilityquality",
+                                 dbc_schema));
 
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "

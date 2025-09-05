@@ -39,6 +39,7 @@ typedef std::unordered_map<uint32_t /*ItemID*/, CurrencyTypesDBC> CurrencyTypesD
 typedef std::unordered_map<uint32_t /*ID*/, DestructibleModelDataDBC> DestructibleModelDataDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, DungeonEncounterDBC> DungeonEncounterDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, DurabilityCostsDBC> DurabilityCostsDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, DurabilityQualityDBC> DurabilityQualityDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -343,6 +344,14 @@ public:
         return nullptr;
     }
 
+    DurabilityQualityDBC const* getDurabilityQualityDBC(uint32_t ID)
+    {
+        auto itr = _durabilityQualityMap.find(ID);
+        if (itr != _durabilityQualityMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -399,6 +408,7 @@ private:
     void load_DestructibleModelData();      // load DestructibleModelData.dbc
     void load_DungeonEncounter();           // load DungeonEncounter.dbc
     void load_DurabilityCosts();            // load DurabilityCosts.dbc
+    void load_DurabilityQuality();          // load DurabilityQuality.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -435,6 +445,7 @@ private:
     DestructibleModelDataDBCMap _destructibleModelDataMap;
     DungeonEncounterDBCMap _dungeonEncounterMap;
     DurabilityCostsDBCMap _durabilityCoastsMap;
+    DurabilityQualityDBCMap _durabilityQualityMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

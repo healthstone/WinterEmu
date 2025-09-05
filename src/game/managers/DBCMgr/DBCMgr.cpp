@@ -46,6 +46,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _destructibleModelDataMap.clear();
     _dungeonEncounterMap.clear();
     _durabilityCoastsMap.clear();
+    _durabilityQualityMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -84,6 +85,7 @@ void DBCMgr::initialize() {
     load_DestructibleModelData();
     load_DungeonEncounter();
     load_DurabilityCosts();
+    load_DurabilityQuality();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1085,6 +1087,28 @@ void DBCMgr::load_DurabilityCosts() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_DurabilityCosts failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_DurabilityQuality() {
+    auto log = Logger::get();
+    _durabilityQualityMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_DURABILITYQUALITY");
+        auto rows = server_->db()->execute_sync_many<DbcDurabilityQuality>(stmt);
+        for (const auto &row: rows) {
+            DurabilityQualityDBC dq;
+            dq.ID = row.ID;
+            dq.Data = row.Data;
+
+            _durabilityQualityMap[row.ID] = dq;
+        }
+        log->info(">>> DBCMgr: loaded {} DurabilityQuality in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_DurabilityQuality failed: {}", ex.what());
     }
 }
 
