@@ -79,6 +79,7 @@
 #include "database/mapper/dbc/PgDbcGlyphProperties.hpp"
 #include "database/mapper/dbc/PgDbcGlyphSlot.hpp"
 #include "database/mapper/dbc/PgDbcGtBarberShopCostBase.hpp"
+#include "database/mapper/dbc/PgDbcGtCombatRatings.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -980,6 +981,12 @@ private:
                      fmt::format("SELECT id, data "
                                  "FROM {}.dbc_gtbarbershopcostbase",
                                  dbc_schema)
+        );
+        conn.prepare("SELECT_DBC_GTCOMBATRATINGS",
+                     fmt::format("SELECT id, data "
+                                 "FROM {}.dbc_gtcombatratings",
+                                 dbc_schema
+                     )
         );
 
         conn.prepare("SELECT_DBC_SKILLLINE",

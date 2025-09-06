@@ -51,6 +51,7 @@ typedef std::unordered_map<uint32_t /*ID*/, GemPropertiesDBC> GemPropertiesDBCMa
 typedef std::unordered_map<uint32_t /*ID*/, GlyphPropertiesDBC> GlyphPropertiesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GlyphSlotDBC> GlyphSlotDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GtBarberShopCostBaseDBC> GtBarberShopCostBaseDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, GtCombatRatingsDBC> GtCombatRatingsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -457,6 +458,14 @@ public:
         return nullptr;
     }
 
+    GtCombatRatingsDBC const* getGtCombatRatingsDBC(uint32_t ID)
+    {
+        auto itr = _gtCombatRatingsMap.find(ID);
+        if (itr != _gtCombatRatingsMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -525,6 +534,7 @@ private:
     void load_GlyphProperties();            // load GlyphProperties.dbc
     void load_GlyphSlot();                  // load GlyphSlot.dbc
     void load_gtBarberShopCostBase();       // load gtBarberShopCostBase.dbc
+    void load_gtCombatRatings();            // load gtCombatRatings.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -573,6 +583,7 @@ private:
     GlyphPropertiesDBCMap _glyphPropertiesMap;
     GlyphSlotDBCMap _glyphSlotMap;
     GtBarberShopCostBaseDBCMap _gtBarberShopCostBaseMap;
+    GtCombatRatingsDBCMap _gtCombatRatingsMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
