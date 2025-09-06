@@ -78,6 +78,7 @@
 #include "database/mapper/dbc/PgDbcGemProperties.hpp"
 #include "database/mapper/dbc/PgDbcGlyphProperties.hpp"
 #include "database/mapper/dbc/PgDbcGlyphSlot.hpp"
+#include "database/mapper/dbc/PgDbcGtBarberShopCostBase.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -974,6 +975,11 @@ private:
                                  "FROM {}.dbc_glyphslot",
                                  dbc_schema
                      )
+        );
+        conn.prepare("SELECT_DBC_GTBARBERSHOPCOSTBASE",
+                     fmt::format("SELECT id, data "
+                                 "FROM {}.dbc_gtbarbershopcostbase",
+                                 dbc_schema)
         );
 
         conn.prepare("SELECT_DBC_SKILLLINE",

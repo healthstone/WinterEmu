@@ -58,6 +58,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _gemPropertiesMap.clear();
     _glyphPropertiesMap.clear();
     _glyphSlotMap.clear();
+    _gtBarberShopCostBaseMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -107,6 +108,7 @@ void DBCMgr::initialize() {
     load_GemProperties();
     load_GlyphProperties();
     load_GlyphSlot();
+    load_gtBarberShopCostBase();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1422,6 +1424,28 @@ void DBCMgr::load_GlyphSlot() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_GlyphSlot failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_gtBarberShopCostBase() {
+    auto log = Logger::get();
+    _gtBarberShopCostBaseMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GTBARBERSHOPCOSTBASE");
+        auto rows = server_->db()->execute_sync_many<DbcGtBarberShopCostBase>(stmt);
+        for (const auto &row: rows) {
+            GtBarberShopCostBaseDBC gtbsc;
+            gtbsc.ID = row.id;
+            gtbsc.Data = row.data;
+
+            _gtBarberShopCostBaseMap[row.id] = gtbsc;
+        }
+        log->info(">>> DBCMgr: loaded {} gtBarberShopCostBase in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_gtBarberShopCostBase failed: {}", ex.what());
     }
 }
 
