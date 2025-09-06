@@ -55,6 +55,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _factionTemplateMap.clear();
     _gameobjectArtKitMap.clear();
     _gameobjectDisplayInfoMap.clear();
+    _gemPropertiesMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -101,6 +102,7 @@ void DBCMgr::initialize() {
     load_FactionTemplate();
     load_GameObjectArtKit();
     load_GameObjectDisplayInfo();
+    load_GemProperties();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1346,6 +1348,29 @@ void DBCMgr::load_GameObjectDisplayInfo() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_GameObjectDisplayInfo failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_GemProperties() {
+    auto log = Logger::get();
+    _gemPropertiesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GEMPROPERTIES");
+        auto rows = server_->db()->execute_sync_many<DbcGemProperties>(stmt);
+        for (const auto &row: rows) {
+            GemPropertiesDBC gp;
+            gp.ID = row.id;
+            gp.EnchantID = row.enchant_id;
+            gp.Type      = row.type;
+
+            _gemPropertiesMap[row.id] = gp;
+        }
+        log->info(">>> DBCMgr: loaded {} GemProperties in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_GemProperties failed: {}", ex.what());
     }
 }
 

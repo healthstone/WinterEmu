@@ -47,6 +47,7 @@ typedef std::unordered_map<uint32_t /*ID*/, FactionDBC> FactionDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, FactionTemplateDBC> FactionTemplateDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GameObjectArtKitDBC> GameObjectArtKitDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GameObjectDisplayInfoDBC> GameObjectDisplayInfoDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, GemPropertiesDBC> GemPropertiesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -420,6 +421,14 @@ public:
         return nullptr;
     }
 
+    GemPropertiesDBC const* getGemPropertiesDBC(uint32_t ID)
+    {
+        auto itr = _gemPropertiesMap.find(ID);
+        if (itr != _gemPropertiesMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -484,6 +493,7 @@ private:
     void load_FactionTemplate();            // load FactionTemplate.dbc
     void load_GameObjectArtKit();           // load GameObjectArtKit.dbc
     void load_GameObjectDisplayInfo();      // load GameObjectDisplayInfo.dbc
+    void load_GemProperties();              // load GemProperties.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -528,6 +538,7 @@ private:
     FactionTemplateDBCMap _factionTemplateMap;
     GameObjectArtKitDBCMap _gameobjectArtKitMap;
     GameObjectDisplayInfoDBCMap _gameobjectDisplayInfoMap;
+    GemPropertiesDBCMap _gemPropertiesMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
