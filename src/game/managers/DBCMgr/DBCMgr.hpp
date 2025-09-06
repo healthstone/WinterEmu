@@ -45,6 +45,8 @@ typedef std::unordered_map<uint32_t /*ID*/, EmotesTextDBC> EmotesTextDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, EmotesTextSoundDBC> EmotesTextSoundDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, FactionDBC> FactionDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, FactionTemplateDBC> FactionTemplateDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, GameObjectArtKitDBC> GameObjectArtKitDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, GameObjectDisplayInfoDBC> GameObjectDisplayInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -402,6 +404,22 @@ public:
         return nullptr;
     }
 
+    GameObjectArtKitDBC const* getGameObjectArtKitDBC(uint32_t ID)
+    {
+        auto itr = _gameobjectArtKitMap.find(ID);
+        if (itr != _gameobjectArtKitMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    GameObjectDisplayInfoDBC const* getGameObjectDisplayInfoDBC(uint32_t ID)
+    {
+        auto itr = _gameobjectDisplayInfoMap.find(ID);
+        if (itr != _gameobjectDisplayInfoMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -464,6 +482,8 @@ private:
     void load_EmotesTextSound();            // load EmotesTextSound.dbc
     void load_Faction();                    // load Faction.dbc
     void load_FactionTemplate();            // load FactionTemplate.dbc
+    void load_GameObjectArtKit();           // load GameObjectArtKit.dbc
+    void load_GameObjectDisplayInfo();      // load GameObjectDisplayInfo.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -506,6 +526,8 @@ private:
     EmotesTextSoundDBCMap _emotesTextSoundMap;
     FactionDBCMap _factionMap;
     FactionTemplateDBCMap _factionTemplateMap;
+    GameObjectArtKitDBCMap _gameobjectArtKitMap;
+    GameObjectDisplayInfoDBCMap _gameobjectDisplayInfoMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

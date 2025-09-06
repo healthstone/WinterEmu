@@ -53,6 +53,8 @@ void DBCMgr::cleanUpBeforeDelete() {
     _emotesTextSoundMap.clear();
     _factionMap.clear();
     _factionTemplateMap.clear();
+    _gameobjectArtKitMap.clear();
+    _gameobjectDisplayInfoMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -97,6 +99,8 @@ void DBCMgr::initialize() {
     load_EmotesTextSound();
     load_Faction();
     load_FactionTemplate();
+    load_GameObjectArtKit();
+    load_GameObjectDisplayInfo();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1293,6 +1297,55 @@ void DBCMgr::load_FactionTemplate() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_FactionTemplate failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_GameObjectArtKit() {
+    auto log = Logger::get();
+    _gameobjectArtKitMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GAMEOBJECTARTKIT");
+        auto rows = server_->db()->execute_sync_many<DbcGameObjectArtKit>(stmt);
+        for (const auto &row: rows) {
+            GameObjectArtKitDBC gak;
+            gak.ID = row.id;
+
+            _gameobjectArtKitMap[row.id] = gak;
+        }
+        log->info(">>> DBCMgr: loaded {} GameObjectArtKit in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_GameObjectArtKit failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_GameObjectDisplayInfo() {
+    auto log = Logger::get();
+    _gameobjectDisplayInfoMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GAMEOBJECTDISPLAYINFO");
+        auto rows = server_->db()->execute_sync_many<DbcGameObjectDisplayInfo>(stmt);
+        for (const auto &row: rows) {
+            GameObjectDisplayInfoDBC gdi;
+            gdi.ID = row.id;
+            gdi.ModelName   = row.modelname.value_or("");
+            gdi.GeoBoxMin.X = row.geoboxminx;
+            gdi.GeoBoxMin.Y = row.geoboxminy;
+            gdi.GeoBoxMin.Z = row.geoboxminz;
+            gdi.GeoBoxMax.X = row.geoboxmaxx;
+            gdi.GeoBoxMax.Y = row.geoboxmaxy;
+            gdi.GeoBoxMax.Z = row.geoboxmaxz;
+
+            _gameobjectDisplayInfoMap[row.id] = gdi;
+        }
+        log->info(">>> DBCMgr: loaded {} GameObjectDisplayInfo in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_GameObjectDisplayInfo failed: {}", ex.what());
     }
 }
 

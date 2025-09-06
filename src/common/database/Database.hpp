@@ -73,6 +73,8 @@
 #include "database/mapper/dbc/PgDbcEmotesTextSound.hpp"
 #include "database/mapper/dbc/PgDbcFaction.hpp"
 #include "database/mapper/dbc/PgDbcFactionTemplate.hpp"
+#include "database/mapper/dbc/PgDbcGameObjectArtKit.hpp"
+#include "database/mapper/dbc/PgDbcGameObjectDisplayInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -931,6 +933,24 @@ private:
                         "enemies_1, enemies_2, enemies_3, enemies_4, "
                         "friend_1, friend_2, friend_3, friend_4 "
                         "FROM {}.dbc_factiontemplate",
+                        dbc_schema
+                )
+        );
+        conn.prepare("SELECT_DBC_GAMEOBJECTARTKIT",
+                     fmt::format("SELECT id, texturevariation_1, texturevariation_2, texturevariation_3, "
+                                 "attachmodel_1, attachmodel_2, attachmodel_3, attachmodel_4 "
+                                 "FROM {}.dbc_gameobjectartkit",
+                                 dbc_schema
+                     )
+        );
+        conn.prepare("SELECT_DBC_GAMEOBJECTDISPLAYINFO",
+                fmt::format(
+                        "SELECT id, modelname, "
+                        "sound_1, sound_2, sound_3, sound_4, sound_5, "
+                        "sound_6, sound_7, sound_8, sound_9, sound_10, "
+                        "geoboxminx, geoboxminy, geoboxminz, geoboxmaxx, geoboxmaxy, geoboxmaxz, "
+                        "objecteffectpackageid "
+                        "FROM {}.dbc_gameobjectdisplayinfo",
                         dbc_schema
                 )
         );
