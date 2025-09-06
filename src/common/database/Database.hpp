@@ -77,6 +77,7 @@
 #include "database/mapper/dbc/PgDbcGameObjectDisplayInfo.hpp"
 #include "database/mapper/dbc/PgDbcGemProperties.hpp"
 #include "database/mapper/dbc/PgDbcGlyphProperties.hpp"
+#include "database/mapper/dbc/PgDbcGlyphSlot.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -968,6 +969,13 @@ private:
                                  dbc_schema
                      )
         );
+        conn.prepare("SELECT_DBC_GLYPHSLOT",
+                     fmt::format("SELECT id, type, tooltip "
+                                 "FROM {}.dbc_glyphslot",
+                                 dbc_schema
+                     )
+        );
+
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "

@@ -57,6 +57,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _gameobjectDisplayInfoMap.clear();
     _gemPropertiesMap.clear();
     _glyphPropertiesMap.clear();
+    _glyphSlotMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -105,6 +106,7 @@ void DBCMgr::initialize() {
     load_GameObjectDisplayInfo();
     load_GemProperties();
     load_GlyphProperties();
+    load_GlyphSlot();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1397,6 +1399,29 @@ void DBCMgr::load_GlyphProperties() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_GlyphProperties failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_GlyphSlot() {
+    auto log = Logger::get();
+    _glyphSlotMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GLYPHSLOT");
+        auto rows = server_->db()->execute_sync_many<DbcGlyphSlot>(stmt);
+        for (const auto &row: rows) {
+            GlyphSlotDBC gs;
+            gs.ID = row.id;
+            gs.Type    = row.type;
+            gs.Tooltip = row.tooltip;
+
+            _glyphSlotMap[row.id] = gs;
+        }
+        log->info(">>> DBCMgr: loaded {} GlyphSlot in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_GlyphSlot failed: {}", ex.what());
     }
 }
 

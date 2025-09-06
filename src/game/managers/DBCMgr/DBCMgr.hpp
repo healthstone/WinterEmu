@@ -49,6 +49,7 @@ typedef std::unordered_map<uint32_t /*ID*/, GameObjectArtKitDBC> GameObjectArtKi
 typedef std::unordered_map<uint32_t /*ID*/, GameObjectDisplayInfoDBC> GameObjectDisplayInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GemPropertiesDBC> GemPropertiesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GlyphPropertiesDBC> GlyphPropertiesDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, GlyphSlotDBC> GlyphSlotDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -438,6 +439,15 @@ public:
         return nullptr;
     }
 
+    GlyphSlotDBCMap const& getGlyphSlotDBCMap() const { return _glyphSlotMap; }
+    GlyphSlotDBC const* getGlyphSlotDBC(uint32_t ID)
+    {
+        auto itr = _glyphSlotMap.find(ID);
+        if (itr != _glyphSlotMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -504,6 +514,7 @@ private:
     void load_GameObjectDisplayInfo();      // load GameObjectDisplayInfo.dbc
     void load_GemProperties();              // load GemProperties.dbc
     void load_GlyphProperties();            // load GlyphProperties.dbc
+    void load_GlyphSlot();                  // load GlyphSlot.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -550,6 +561,7 @@ private:
     GameObjectDisplayInfoDBCMap _gameobjectDisplayInfoMap;
     GemPropertiesDBCMap _gemPropertiesMap;
     GlyphPropertiesDBCMap _glyphPropertiesMap;
+    GlyphSlotDBCMap _glyphSlotMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
