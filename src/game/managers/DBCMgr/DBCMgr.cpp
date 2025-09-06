@@ -52,6 +52,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _emotesTextMap.clear();
     _emotesTextSoundMap.clear();
     _factionMap.clear();
+    _factionTemplateMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -95,6 +96,7 @@ void DBCMgr::initialize() {
     load_EmotesText();
     load_EmotesTextSound();
     load_Faction();
+    load_FactionTemplate();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1255,6 +1257,42 @@ void DBCMgr::load_Faction() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_Faction failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_FactionTemplate() {
+    auto log = Logger::get();
+    _factionTemplateMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_FACTIONTEMPLATE");
+        auto rows = server_->db()->execute_sync_many<DbcFactionTemplate>(stmt);
+        for (const auto &row: rows) {
+            FactionTemplateDBC ft;
+            ft.ID = row.id;
+            ft.Faction      = row.faction;
+            ft.Flags        = row.flags;
+            ft.FactionGroup = row.factiongroup;
+            ft.FriendGroup  = row.friendgroup;
+            ft.EnemyGroup   = row.enemygroup;
+
+            ft.Enemies[0] = row.enemies_1;
+            ft.Enemies[1] = row.enemies_2;
+            ft.Enemies[2] = row.enemies_3;
+            ft.Enemies[3] = row.enemies_4;
+
+            ft.Friend[0] = row.friend_1;
+            ft.Friend[1] = row.friend_2;
+            ft.Friend[2] = row.friend_3;
+            ft.Friend[3] = row.friend_4;
+
+            _factionTemplateMap[row.id] = ft;
+        }
+        log->info(">>> DBCMgr: loaded {} FactionTemplate in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_FactionTemplate failed: {}", ex.what());
     }
 }
 

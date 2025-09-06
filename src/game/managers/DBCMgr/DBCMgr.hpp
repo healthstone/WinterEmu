@@ -44,6 +44,7 @@ typedef std::unordered_map<uint32_t /*ID*/, EmotesDBC> EmotesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, EmotesTextDBC> EmotesTextDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, EmotesTextSoundDBC> EmotesTextSoundDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, FactionDBC> FactionDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, FactionTemplateDBC> FactionTemplateDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -393,6 +394,14 @@ public:
         return nullptr;
     }
 
+    FactionTemplateDBC const* getFactionTemplateDBC(uint32_t ID)
+    {
+        auto itr = _factionTemplateMap.find(ID);
+        if (itr != _factionTemplateMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -454,6 +463,7 @@ private:
     void load_EmotesText();                 // load EmotesText.dbc
     void load_EmotesTextSound();            // load EmotesTextSound.dbc
     void load_Faction();                    // load Faction.dbc
+    void load_FactionTemplate();            // load FactionTemplate.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -495,6 +505,7 @@ private:
     EmotesTextDBCMap _emotesTextMap;
     EmotesTextSoundDBCMap _emotesTextSoundMap;
     FactionDBCMap _factionMap;
+    FactionTemplateDBCMap _factionTemplateMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

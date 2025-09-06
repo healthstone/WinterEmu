@@ -72,6 +72,7 @@
 #include "database/mapper/dbc/PgDbcEmotesText.hpp"
 #include "database/mapper/dbc/PgDbcEmotesTextSound.hpp"
 #include "database/mapper/dbc/PgDbcFaction.hpp"
+#include "database/mapper/dbc/PgDbcFactionTemplate.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -925,7 +926,14 @@ private:
                                  "description_lang_mask "
                                  "FROM {}.dbc_faction",
                                  dbc_schema));
-
+        conn.prepare("SELECT_DBC_FACTIONTEMPLATE",
+                fmt::format("SELECT id, faction, flags, factiongroup, friendgroup, enemygroup, "
+                        "enemies_1, enemies_2, enemies_3, enemies_4, "
+                        "friend_1, friend_2, friend_3, friend_4 "
+                        "FROM {}.dbc_factiontemplate",
+                        dbc_schema
+                )
+        );
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "
