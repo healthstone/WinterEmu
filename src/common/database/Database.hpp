@@ -71,6 +71,7 @@
 #include "database/mapper/dbc/PgDbcEmotes.hpp"
 #include "database/mapper/dbc/PgDbcEmotesText.hpp"
 #include "database/mapper/dbc/PgDbcEmotesTextSound.hpp"
+#include "database/mapper/dbc/PgDbcFaction.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -905,6 +906,24 @@ private:
         conn.prepare("SELECT_DBC_EMOTESTEXTSOUND",
                      fmt::format("SELECT id, emotestextid, raceid, sexid, soundid "
                                  "FROM {}.dbc_emotestextsound",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_FACTION",
+                     fmt::format("SELECT "
+                                 "id, reputationindex, "
+                                 "reputationracemask_1, reputationracemask_2, reputationracemask_3, reputationracemask_4, "
+                                 "reputationclassmask_1, reputationclassmask_2, reputationclassmask_3, reputationclassmask_4, "
+                                 "reputationbase_1, reputationbase_2, reputationbase_3, reputationbase_4, "
+                                 "reputationflags_1, reputationflags_2, reputationflags_3, reputationflags_4, "
+                                 "parentfactionid, parentfactionmod_1, parentfactionmod_2, parentfactioncap_1, parentfactioncap_2, "
+                                 "name_lang_enus, name_lang_engb, name_lang_kokr, name_lang_frfr, name_lang_dede, "
+                                 "name_lang_encn, name_lang_zhcn, name_lang_entw, name_lang_zhtw, name_lang_eses, name_lang_esmx, "
+                                 "name_lang_ruru, name_lang_ptpt, name_lang_ptbr, name_lang_itit, name_lang_unk, name_lang_mask, "
+                                 "description_lang_enus, description_lang_engb, description_lang_kokr, description_lang_frfr, "
+                                 "description_lang_dede, description_lang_encn, description_lang_zhcn, description_lang_entw, "
+                                 "description_lang_zhtw, description_lang_eses, description_lang_esmx, description_lang_ruru, "
+                                 "description_lang_ptpt, description_lang_ptbr, description_lang_itit, description_lang_unk, "
+                                 "description_lang_mask "
+                                 "FROM {}.dbc_faction",
                                  dbc_schema));
 
         conn.prepare("SELECT_DBC_SKILLLINE",

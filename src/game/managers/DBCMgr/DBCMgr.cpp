@@ -51,6 +51,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _emotesMap.clear();
     _emotesTextMap.clear();
     _emotesTextSoundMap.clear();
+    _factionMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -93,6 +94,7 @@ void DBCMgr::initialize() {
     load_Emotes();
     load_EmotesText();
     load_EmotesTextSound();
+    load_Faction();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1187,6 +1189,72 @@ void DBCMgr::load_EmotesTextSound() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_EmotesTextSound failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_Faction() {
+    auto log = Logger::get();
+    _factionMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_FACTION");
+        auto rows = server_->db()->execute_sync_many<DbcFaction>(stmt);
+        for (const auto &row: rows) {
+            FactionDBC f;
+            f.ID = row.id;
+            f.ReputationIndex = row.reputationindex;
+
+            f.ReputationRaceMask[0] = row.reputationracemask_1;
+            f.ReputationRaceMask[1] = row.reputationracemask_2;
+            f.ReputationRaceMask[2] = row.reputationracemask_3;
+            f.ReputationRaceMask[3] = row.reputationracemask_4;
+
+            f.ReputationClassMask[0] = row.reputationclassmask_1;
+            f.ReputationClassMask[1] = row.reputationclassmask_2;
+            f.ReputationClassMask[2] = row.reputationclassmask_3;
+            f.ReputationClassMask[3] = row.reputationclassmask_4;
+
+            f.ReputationBase[0] = row.reputationbase_1;
+            f.ReputationBase[1] = row.reputationbase_2;
+            f.ReputationBase[2] = row.reputationbase_3;
+            f.ReputationBase[3] = row.reputationbase_4;
+
+            f.ReputationFlags[0] = row.reputationflags_1;
+            f.ReputationFlags[1] = row.reputationflags_2;
+            f.ReputationFlags[2] = row.reputationflags_3;
+            f.ReputationFlags[3] = row.reputationflags_4;
+
+            f.ParentFactionID = row.parentfactionid;
+
+            f.ParentFactionMod[0] = row.parentfactionmod_1;
+            f.ParentFactionMod[1] = row.parentfactionmod_2;
+            f.ParentFactionCap[0] = row.parentfactioncap_1;
+            f.ParentFactionCap[1] = row.parentfactioncap_2;
+
+            // name localization
+            f.Name[0]  = row.name_lang_enus.value_or("");
+            f.Name[1]  = row.name_lang_engb.value_or("");
+            f.Name[2]  = row.name_lang_kokr.value_or("");
+            f.Name[3]  = row.name_lang_frfr.value_or("");
+            f.Name[4]  = row.name_lang_dede.value_or("");
+            f.Name[5]  = row.name_lang_encn.value_or("");
+            f.Name[6]  = row.name_lang_zhcn.value_or("");
+            f.Name[7]  = row.name_lang_entw.value_or("");
+            f.Name[8]  = row.name_lang_zhtw.value_or("");
+            f.Name[9]  = row.name_lang_eses.value_or("");
+            f.Name[10] = row.name_lang_esmx.value_or("");
+            f.Name[11] = row.name_lang_ruru.value_or("");
+            f.Name[12] = row.name_lang_ptpt.value_or("");
+            f.Name[13] = row.name_lang_ptbr.value_or("");
+            f.Name[14] = row.name_lang_itit.value_or("");
+
+            _factionMap[f.ID] = f;
+        }
+        log->info(">>> DBCMgr: loaded {} Faction in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_Faction failed: {}", ex.what());
     }
 }
 
