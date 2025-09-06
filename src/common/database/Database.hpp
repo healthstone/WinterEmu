@@ -76,6 +76,7 @@
 #include "database/mapper/dbc/PgDbcGameObjectArtKit.hpp"
 #include "database/mapper/dbc/PgDbcGameObjectDisplayInfo.hpp"
 #include "database/mapper/dbc/PgDbcGemProperties.hpp"
+#include "database/mapper/dbc/PgDbcGlyphProperties.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -958,6 +959,12 @@ private:
         conn.prepare("SELECT_DBC_GEMPROPERTIES",
                      fmt::format("SELECT id, enchant_id, maxcount_inv, maxcount_item, type "
                                  "FROM {}.dbc_gemproperties",
+                                 dbc_schema
+                     )
+        );
+        conn.prepare("SELECT_DBC_GLYPHPROPERTIES",
+                     fmt::format("SELECT id, spellid, glyphslotflags, spelliconid "
+                                 "FROM {}.dbc_glyphproperties",
                                  dbc_schema
                      )
         );
