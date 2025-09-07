@@ -71,6 +71,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _gtRegenHPPerSptMap.clear();
     _gtRegenMPPerSptMap.clear();
     _holidaysMap.clear();
+    _itemMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -133,6 +134,7 @@ void DBCMgr::initialize() {
     load_gtRegenHPPerSpt();
     load_gtRegenMPPerSpt();
     load_Holidays();
+    load_Item();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1788,6 +1790,34 @@ void DBCMgr::load_Holidays() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_Holidays failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_Item() {
+    auto log = Logger::get();
+    _itemMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_ITEM");
+        auto rows = server_->db()->execute_sync_many<DbcItem>(stmt);
+        for (const auto &row: rows) {
+            ItemDBC i;
+            i.ID = row.id;
+            i.ClassID                 = row.class_id;
+            i.SubclassID              = row.subclass_id;
+            i.SoundOverrideSubclassID = row.sound_override_subclassid;
+            i.Material                = row.material;
+            i.DisplayInfoID           = row.display_info_id;
+            i.InventoryType           = row.inventory_type;
+            i.SheatheType             = row.sheathe_type;
+
+            _itemMap[row.id] = i;
+        }
+        log->info(">>> DBCMgr: loaded {} Item in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_Item failed: {}", ex.what());
     }
 }
 

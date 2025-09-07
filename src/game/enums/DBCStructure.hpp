@@ -842,8 +842,8 @@ struct HolidaysDBC {
 // load Item.dbc
 struct ItemDBC {
     uint32_t ID;                                               // 0
-    uint32_t ClassID;                                          // 1
-    uint32_t SubclassID;                                       // 2
+    uint8_t ClassID;                                          // 1
+    uint8_t SubclassID;                                       // 2
     int32_t SoundOverrideSubclassID;                           // 3
     int32_t Material;                                          // 4
     uint32_t DisplayInfoID;                                    // 5

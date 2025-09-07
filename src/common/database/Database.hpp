@@ -91,6 +91,7 @@
 #include "database/mapper/dbc/PgDbcGtRegenHpPerSpt.hpp"
 #include "database/mapper/dbc/PgDbcGtRegenMpPerSpt.hpp"
 #include "database/mapper/dbc/PgDbcHolidays.hpp"
+#include "database/mapper/dbc/PgDbcItem.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1053,7 +1054,11 @@ private:
                                  "region, looping, calendarflags_1, calendarflags_2, calendarflags_3, calendarflags_4, calendarflags_5, calendarflags_6, calendarflags_7, calendarflags_8, calendarflags_9, calendarflags_10, "
                                  "holidaynameid, holidaydescriptionid, texturefilename, priority, calendarfiltertype, flags "
                                  "FROM {}.dbc_holidays", dbc_schema));
-
+        conn.prepare("SELECT_DBC_ITEM",
+                     fmt::format("SELECT id, class_id, subclass_id, sound_override_subclassid, "
+                                 "material, display_info_id, inventory_type, sheathe_type "
+                                 "FROM {}.dbc_item",
+                                 dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "
