@@ -57,6 +57,7 @@ typedef std::unordered_map<uint32_t /*ID*/, GtChanceToSpellCritDBC> GtChanceToSp
 typedef std::unordered_map<uint32_t /*ID*/, GtChanceToSpellCritBaseDBC> GtChanceToSpellCritBaseDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GtCombatRatingsDBC> GtCombatRatingsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GtNPCManaCostScalerDBC> GtNPCManaCostScalerDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, GtOCTClassCombatRatingScalarDBC> GtOCTClassCombatRatingScalarDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -511,6 +512,14 @@ public:
         return nullptr;
     }
 
+    GtOCTClassCombatRatingScalarDBC const* getGtOCTClassCombatRatingScalarDBC(uint32_t ID)
+    {
+        auto itr = _gtOCTClassCombatRatingScalarMap.find(ID);
+        if (itr != _gtOCTClassCombatRatingScalarMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -585,6 +594,7 @@ private:
     void load_gtChanceToSpellCritBase();    // load gtChanceToSpellCritBase.dbc
     void load_gtCombatRatings();            // load gtCombatRatings.dbc
     void load_gtNPCManaCostScaler();        // load gtNPCManaCostScaler.dbc
+    void load_gtOCTClassCombatRatingScalar();// load gtOCTClassCombatRatingScalar.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -639,6 +649,7 @@ private:
     GtChanceToSpellCritBaseDBCMap _gtChanceToSpellCritBaseMap;
     GtCombatRatingsDBCMap _gtCombatRatingsMap;
     GtNPCManaCostScalerDBCMap _gtNPCManaCostScalerMap;
+    GtOCTClassCombatRatingScalarDBCMap _gtOCTClassCombatRatingScalarMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

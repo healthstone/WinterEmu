@@ -65,6 +65,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _gtChanceToSpellCritBaseMap.clear();
     _gtCombatRatingsMap.clear();
     _gtNPCManaCostScalerMap.clear();
+    _gtOCTClassCombatRatingScalarMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -121,6 +122,7 @@ void DBCMgr::initialize() {
     load_gtChanceToSpellCritBase();
     load_gtCombatRatings();
     load_gtNPCManaCostScaler();
+    load_gtOCTClassCombatRatingScalar();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1590,6 +1592,28 @@ void DBCMgr::load_gtNPCManaCostScaler() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_gtNPCManaCostScaler failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_gtOCTClassCombatRatingScalar() {
+    auto log = Logger::get();
+    _skillRaceClassInfoMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GTOCTCLASSCOMBATRATINGSALAR");
+        auto rows = server_->db()->execute_sync_many<DbcGtoctClassCombatRatingScalar>(stmt);
+        for (const auto &row: rows) {
+            GtOCTClassCombatRatingScalarDBC gtOCTccrs;
+            gtOCTccrs.ID = row.id;
+            gtOCTccrs.Data = row.data;
+
+            _gtOCTClassCombatRatingScalarMap[row.id] = gtOCTccrs;
+        }
+        log->info(">>> DBCMgr: loaded {} gtOCTClassCombatRatingScalar in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_gtOCTClassCombatRatingScalar failed: {}", ex.what());
     }
 }
 
