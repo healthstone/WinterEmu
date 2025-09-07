@@ -1665,7 +1665,7 @@ void DBCMgr::load_gtOCTRegenMP() {
 
 void DBCMgr::load_gtRegenHPPerSpt() {
     auto log = Logger::get();
-    _skillRaceClassInfoMap.clear();
+    _gtRegenHPPerSptMap.clear();
     uint32_t oldMSTime = getMSTime();
 
     try {
