@@ -52,6 +52,7 @@ typedef std::unordered_map<uint32_t /*ID*/, GlyphPropertiesDBC> GlyphPropertiesD
 typedef std::unordered_map<uint32_t /*ID*/, GlyphSlotDBC> GlyphSlotDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GtBarberShopCostBaseDBC> GtBarberShopCostBaseDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GtCombatRatingsDBC> GtCombatRatingsDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, GtChanceToMeleeCritDBC> GtChanceToMeleeCritDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GtChanceToMeleeCritBaseDBC> GtChanceToMeleeCritBaseDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
@@ -467,6 +468,14 @@ public:
         return nullptr;
     }
 
+    GtChanceToMeleeCritDBC const* getGtChanceToMeleeCritDBC(uint32_t ID)
+    {
+        auto itr = _gtChanceToMeleeCritMap.find(ID);
+        if (itr != _gtChanceToMeleeCritMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     GtChanceToMeleeCritBaseDBC const* getGtChanceToMeleeCritBaseDBC(uint32_t ID)
     {
         auto itr = _gtChanceToMeleeCritBaseMap.find(ID);
@@ -545,6 +554,7 @@ private:
     void load_gtBarberShopCostBase();       // load gtBarberShopCostBase.dbc
     void load_gtCombatRatings();            // load gtCombatRatings.dbc
     void load_gtChanceToMeleeCritBase();    // load gtChanceToMeleeCritBase.dbc
+    void load_gtChanceToMeleeCrit();        // load gtChanceToMeleeCrit.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -594,6 +604,7 @@ private:
     GlyphSlotDBCMap _glyphSlotMap;
     GtBarberShopCostBaseDBCMap _gtBarberShopCostBaseMap;
     GtCombatRatingsDBCMap _gtCombatRatingsMap;
+    GtChanceToMeleeCritDBCMap _gtChanceToMeleeCritMap;
     GtChanceToMeleeCritBaseDBCMap _gtChanceToMeleeCritBaseMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
