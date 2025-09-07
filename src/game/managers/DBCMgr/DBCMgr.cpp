@@ -68,6 +68,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _gtOCTClassCombatRatingScalarMap.clear();
     _gtOCTRegenHPMap.clear();
     _gtOCTRegenMPMap.clear();
+    _gtRegenHPPerSptMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -127,6 +128,7 @@ void DBCMgr::initialize() {
     load_gtOCTClassCombatRatingScalar();
     load_gtOCTRegenHP();
     load_gtOCTRegenMP();
+    load_gtRegenHPPerSpt();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1658,6 +1660,28 @@ void DBCMgr::load_gtOCTRegenMP() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_gtOCTRegenMP failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_gtRegenHPPerSpt() {
+    auto log = Logger::get();
+    _skillRaceClassInfoMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GTREGENHPPERSPT");
+        auto rows = server_->db()->execute_sync_many<DbcGtRegenHpPerSpt>(stmt);
+        for (const auto &row: rows) {
+            GtRegenHPPerSptDBC gtrhpps;
+            gtrhpps.ID = row.id;
+            gtrhpps.Data = row.data;
+
+            _gtRegenHPPerSptMap[row.id] = gtrhpps;
+        }
+        log->info(">>> DBCMgr: loaded {} gtRegenHPPerSpt in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_gtRegenHPPerSpt failed: {}", ex.what());
     }
 }
 

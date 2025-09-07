@@ -60,6 +60,7 @@ typedef std::unordered_map<uint32_t /*ID*/, GtNPCManaCostScalerDBC> GtNPCManaCos
 typedef std::unordered_map<uint32_t /*ID*/, GtOCTClassCombatRatingScalarDBC> GtOCTClassCombatRatingScalarDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GtOCTRegenHPDBC> GtOCTRegenHPDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GtOCTRegenMPDBC> GtOCTRegenMPDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, GtRegenHPPerSptDBC> GtRegenHPPerSptDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -538,6 +539,14 @@ public:
         return nullptr;
     }
 
+    GtRegenHPPerSptDBC const* getGtRegenHPPerSptDBC(uint32_t ID)
+    {
+        auto itr = _gtRegenHPPerSptMap.find(ID);
+        if (itr != _gtRegenHPPerSptMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -615,6 +624,7 @@ private:
     void load_gtOCTClassCombatRatingScalar();// load gtOCTClassCombatRatingScalar.dbc
     void load_gtOCTRegenHP();               // load gtOCTRegenHP.dbc
     void load_gtOCTRegenMP();               // load gtOCTRegenMP.dbc
+    void load_gtRegenHPPerSpt();            // load gtRegenHPPerSpt.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -672,6 +682,7 @@ private:
     GtOCTClassCombatRatingScalarDBCMap _gtOCTClassCombatRatingScalarMap;
     GtOCTRegenHPDBCMap _gtOCTRegenHPMap;
     GtOCTRegenMPDBCMap _gtOCTRegenMPMap;
+    GtRegenHPPerSptDBCMap _gtRegenHPPerSptMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
