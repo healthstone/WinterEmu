@@ -90,6 +90,7 @@
 #include "database/mapper/dbc/PgDbcGtoctRegenMP.hpp"
 #include "database/mapper/dbc/PgDbcGtRegenHpPerSpt.hpp"
 #include "database/mapper/dbc/PgDbcGtRegenMpPerSpt.hpp"
+#include "database/mapper/dbc/PgDbcHolidays.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1046,6 +1047,13 @@ private:
         conn.prepare("SELECT_DBC_GTREGENMPPERSPT",
                      fmt::format("SELECT id, data FROM {}.dbc_gtregenmpperspt", dbc_schema)
         );
+        conn.prepare("SELECT_DBC_HOLIDAYS",
+                     fmt::format("SELECT id, duration_1, duration_2, duration_3, duration_4, duration_5, duration_6, duration_7, duration_8, duration_9, duration_10, "
+                                 "date_1, date_2, date_3, date_4, date_5, date_6, date_7, date_8, date_9, date_10, date_11, date_12, date_13, date_14, date_15, date_16, date_17, date_18, date_19, date_20, date_21, date_22, date_23, date_24, date_25, date_26, "
+                                 "region, looping, calendarflags_1, calendarflags_2, calendarflags_3, calendarflags_4, calendarflags_5, calendarflags_6, calendarflags_7, calendarflags_8, calendarflags_9, calendarflags_10, "
+                                 "holidaynameid, holidaydescriptionid, texturefilename, priority, calendarfiltertype, flags "
+                                 "FROM {}.dbc_holidays", dbc_schema));
+
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "

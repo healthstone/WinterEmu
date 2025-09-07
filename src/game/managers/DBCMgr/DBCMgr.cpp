@@ -70,6 +70,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _gtOCTRegenMPMap.clear();
     _gtRegenHPPerSptMap.clear();
     _gtRegenMPPerSptMap.clear();
+    _holidaysMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -131,6 +132,7 @@ void DBCMgr::initialize() {
     load_gtOCTRegenMP();
     load_gtRegenHPPerSpt();
     load_gtRegenMPPerSpt();
+    load_Holidays();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1706,6 +1708,86 @@ void DBCMgr::load_gtRegenMPPerSpt() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_gtRegenMPPerSpt failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_Holidays() {
+    auto log = Logger::get();
+    _holidaysMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_HOLIDAYS");
+        auto rows = server_->db()->execute_sync_many<DbcHolidays>(stmt);
+        for (const auto &row: rows) {
+            HolidaysDBC h;
+            h.ID = row.id;
+
+            h.Duration[0] = row.duration_1;
+            h.Duration[1] = row.duration_2;
+            h.Duration[2] = row.duration_3;
+            h.Duration[3] = row.duration_4;
+            h.Duration[4] = row.duration_5;
+            h.Duration[5] = row.duration_6;
+            h.Duration[6] = row.duration_7;
+            h.Duration[7] = row.duration_8;
+            h.Duration[8] = row.duration_9;
+            h.Duration[9] = row.duration_10;
+
+            // Date
+            h.Date[0] = row.date_1;
+            h.Date[1] = row.date_2;
+            h.Date[2] = row.date_3;
+            h.Date[3] = row.date_4;
+            h.Date[4] = row.date_5;
+            h.Date[5] = row.date_6;
+            h.Date[6] = row.date_7;
+            h.Date[7] = row.date_8;
+            h.Date[8] = row.date_9;
+            h.Date[9] = row.date_10;
+            h.Date[10] = row.date_11;
+            h.Date[11] = row.date_12;
+            h.Date[12] = row.date_13;
+            h.Date[13] = row.date_14;
+            h.Date[14] = row.date_15;
+            h.Date[15] = row.date_16;
+            h.Date[16] = row.date_17;
+            h.Date[17] = row.date_18;
+            h.Date[18] = row.date_19;
+            h.Date[19] = row.date_20;
+            h.Date[20] = row.date_21;
+            h.Date[21] = row.date_22;
+            h.Date[22] = row.date_23;
+            h.Date[23] = row.date_24;
+            h.Date[24] = row.date_25;
+            h.Date[25] = row.date_26;
+
+            h.Region  = row.region;
+            h.Looping = row.looping;
+
+            // CalendarFlags
+            h.CalendarFlags[0] = row.calendarflags_1;
+            h.CalendarFlags[1] = row.calendarflags_2;
+            h.CalendarFlags[2] = row.calendarflags_3;
+            h.CalendarFlags[3] = row.calendarflags_4;
+            h.CalendarFlags[4] = row.calendarflags_5;
+            h.CalendarFlags[5] = row.calendarflags_6;
+            h.CalendarFlags[6] = row.calendarflags_7;
+            h.CalendarFlags[7] = row.calendarflags_8;
+            h.CalendarFlags[8] = row.calendarflags_9;
+            h.CalendarFlags[9] = row.calendarflags_10;
+
+            h.TextureFilename = row.texturefilename.value_or("");
+
+            h.Priority           = row.priority;
+            h.CalendarFilterType = row.calendarfiltertype;
+
+            _holidaysMap[row.id] = h;
+        }
+        log->info(">>> DBCMgr: loaded {} Holidays in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_Holidays failed: {}", ex.what());
     }
 }
 
