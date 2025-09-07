@@ -62,6 +62,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _gtCombatRatingsMap.clear();
     _gtChanceToMeleeCritMap.clear();
     _gtChanceToMeleeCritBaseMap.clear();
+    _gtChanceToSpellCritMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -115,6 +116,7 @@ void DBCMgr::initialize() {
     load_gtCombatRatings();
     load_gtChanceToMeleeCrit();
     load_gtChanceToMeleeCritBase();
+    load_gtChanceToSpellCrit();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1518,6 +1520,28 @@ void DBCMgr::load_gtChanceToMeleeCritBase() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_gtChanceToMeleeCritBase failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_gtChanceToSpellCrit() {
+    auto log = Logger::get();
+    _gtChanceToSpellCritMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GTCHANGETOSPELLCRIT");
+        auto rows = server_->db()->execute_sync_many<DbcGtChanceToSpellCrit>(stmt);
+        for (const auto &row: rows) {
+            GtChanceToSpellCritDBC gtcsc;
+            gtcsc.ID = row.id;
+            gtcsc.Data = row.data;
+
+            _gtChanceToSpellCritMap[row.id] = gtcsc;
+        }
+        log->info(">>> DBCMgr: loaded {} gtChanceToSpellCrit in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_gtChanceToSpellCrit failed: {}", ex.what());
     }
 }
 

@@ -54,6 +54,7 @@ typedef std::unordered_map<uint32_t /*ID*/, GtBarberShopCostBaseDBC> GtBarberSho
 typedef std::unordered_map<uint32_t /*ID*/, GtCombatRatingsDBC> GtCombatRatingsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GtChanceToMeleeCritDBC> GtChanceToMeleeCritDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GtChanceToMeleeCritBaseDBC> GtChanceToMeleeCritBaseDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, GtChanceToSpellCritDBC> GtChanceToSpellCritDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -484,6 +485,14 @@ public:
         return nullptr;
     }
 
+    GtChanceToSpellCritDBC const* getGtChanceToSpellCritDBC(uint32_t ID)
+    {
+        auto itr = _gtChanceToSpellCritMap.find(ID);
+        if (itr != _gtChanceToSpellCritMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -553,8 +562,9 @@ private:
     void load_GlyphSlot();                  // load GlyphSlot.dbc
     void load_gtBarberShopCostBase();       // load gtBarberShopCostBase.dbc
     void load_gtCombatRatings();            // load gtCombatRatings.dbc
-    void load_gtChanceToMeleeCritBase();    // load gtChanceToMeleeCritBase.dbc
     void load_gtChanceToMeleeCrit();        // load gtChanceToMeleeCrit.dbc
+    void load_gtChanceToMeleeCritBase();    // load gtChanceToMeleeCritBase.dbc
+    void load_gtChanceToSpellCrit();        // load gtChanceToSpellCrit.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -606,6 +616,7 @@ private:
     GtCombatRatingsDBCMap _gtCombatRatingsMap;
     GtChanceToMeleeCritDBCMap _gtChanceToMeleeCritMap;
     GtChanceToMeleeCritBaseDBCMap _gtChanceToMeleeCritBaseMap;
+    GtChanceToSpellCritDBCMap _gtChanceToSpellCritMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

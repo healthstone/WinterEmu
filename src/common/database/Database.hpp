@@ -82,6 +82,7 @@
 #include "database/mapper/dbc/PgDbcGtCombatRatings.hpp"
 #include "database/mapper/dbc/PgDbcGtChanceToMeleeCrit.hpp"
 #include "database/mapper/dbc/PgDbcGtChanceToMeleeCritBase.hpp"
+#include "database/mapper/dbc/PgDbcGtChanceToSpellCrit.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -995,11 +996,15 @@ private:
                                  "FROM {}.dbc_gtchancetomeleecrit",
                                  dbc_schema)
         );
-
         conn.prepare("SELECT_DBC_GTCHANGETOMELEECRITBASE",
                   fmt::format("SELECT id, data "
                               "FROM {}.dbc_gtchancetomeleecritbase",
                               dbc_schema));
+        conn.prepare("SELECT_DBC_GTCHANGETOSPELLCRIT",
+                     fmt::format("SELECT id, data "
+                                 "FROM {}.dbc_gtchancetospellcrit",
+                                 dbc_schema));
+
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "
