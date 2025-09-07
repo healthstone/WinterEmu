@@ -69,6 +69,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _gtOCTRegenHPMap.clear();
     _gtOCTRegenMPMap.clear();
     _gtRegenHPPerSptMap.clear();
+    _gtRegenMPPerSptMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -129,6 +130,7 @@ void DBCMgr::initialize() {
     load_gtOCTRegenHP();
     load_gtOCTRegenMP();
     load_gtRegenHPPerSpt();
+    load_gtRegenMPPerSpt();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1682,6 +1684,28 @@ void DBCMgr::load_gtRegenHPPerSpt() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_gtRegenHPPerSpt failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_gtRegenMPPerSpt() {
+    auto log = Logger::get();
+    _gtRegenMPPerSptMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GTREGENMPPERSPT");
+        auto rows = server_->db()->execute_sync_many<DbcGtRegenMpPerSpt>(stmt);
+        for (const auto &row: rows) {
+            GtRegenMPPerSptDBC gtrmpps;
+            gtrmpps.ID = row.id;
+            gtrmpps.Data = row.data;
+
+            _gtRegenMPPerSptMap[row.id] = gtrmpps;
+        }
+        log->info(">>> DBCMgr: loaded {} gtRegenMPPerSpt in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_gtRegenMPPerSpt failed: {}", ex.what());
     }
 }
 
