@@ -92,6 +92,7 @@
 #include "database/mapper/dbc/PgDbcGtRegenMpPerSpt.hpp"
 #include "database/mapper/dbc/PgDbcHolidays.hpp"
 #include "database/mapper/dbc/PgDbcItem.hpp"
+#include "database/mapper/dbc/PgDbcItemBagFamily.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1058,6 +1059,13 @@ private:
                      fmt::format("SELECT id, class_id, subclass_id, sound_override_subclassid, "
                                  "material, display_info_id, inventory_type, sheathe_type "
                                  "FROM {}.dbc_item",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_ITEMBAGFAMILY",
+                     fmt::format("SELECT id, name_lang_enUS, name_lang_enGB, name_lang_koKR, name_lang_frFR, "
+                                 "name_lang_deDE, name_lang_enCN, name_lang_zhCN, name_lang_enTW, name_lang_zhTW, "
+                                 "name_lang_esES, name_lang_esMX, name_lang_ruRU, name_lang_ptPT, name_lang_ptBR, "
+                                 "name_lang_itIT, name_lang_Unk, name_lang_mask "
+                                 "FROM {}.dbc_itembagfamily",
                                  dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "

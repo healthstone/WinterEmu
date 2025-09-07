@@ -64,6 +64,7 @@ typedef std::unordered_map<uint32_t /*ID*/, GtRegenHPPerSptDBC> GtRegenHPPerSptD
 typedef std::unordered_map<uint32_t /*ID*/, GtRegenMPPerSptDBC> GtRegenMPPerSptDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, HolidaysDBC> HolidaysDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ItemDBC> ItemDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, ItemBagFamilyDBC> ItemBagFamilyDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -575,6 +576,14 @@ public:
         return nullptr;
     }
 
+    ItemBagFamilyDBC const* getItemBagFamilyDBC(uint32_t ID)
+    {
+        auto itr = _itemBagFamilyMap.find(ID);
+        if (itr != _itemBagFamilyMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -656,6 +665,7 @@ private:
     void load_gtRegenMPPerSpt();            // load gtRegenMPPerSpt.dbc
     void load_Holidays();                   // load Holidays.dbc
     void load_Item();                       // load Item.dbc
+    void load_ItemBagFamily();              // load ItemBagFamily.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -717,6 +727,7 @@ private:
     GtRegenMPPerSptDBCMap _gtRegenMPPerSptMap;
     HolidaysDBCMap _holidaysMap;
     ItemDBCMap _itemMap;
+    ItemBagFamilyDBCMap _itemBagFamilyMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

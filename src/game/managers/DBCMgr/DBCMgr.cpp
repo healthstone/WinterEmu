@@ -72,6 +72,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _gtRegenMPPerSptMap.clear();
     _holidaysMap.clear();
     _itemMap.clear();
+    _itemBagFamilyMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -135,6 +136,7 @@ void DBCMgr::initialize() {
     load_gtRegenMPPerSpt();
     load_Holidays();
     load_Item();
+    load_ItemBagFamily();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1818,6 +1820,27 @@ void DBCMgr::load_Item() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_Item failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_ItemBagFamily() {
+    auto log = Logger::get();
+    _itemBagFamilyMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_ITEMBAGFAMILY");
+        auto rows = server_->db()->execute_sync_many<DbcItemBagFamily>(stmt);
+        for (const auto &row: rows) {
+            ItemBagFamilyDBC ibf;
+            ibf.ID = row.id;
+
+            _itemBagFamilyMap[row.id] = ibf;
+        }
+        log->info(">>> DBCMgr: loaded {} ItemBagFamily in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_ItemBagFamily: {}", ex.what());
     }
 }
 
