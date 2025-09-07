@@ -80,6 +80,7 @@
 #include "database/mapper/dbc/PgDbcGlyphSlot.hpp"
 #include "database/mapper/dbc/PgDbcGtBarberShopCostBase.hpp"
 #include "database/mapper/dbc/PgDbcGtCombatRatings.hpp"
+#include "database/mapper/dbc/PgDbcGtChanceToMeleeCritBase.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -988,7 +989,10 @@ private:
                                  dbc_schema
                      )
         );
-
+        conn.prepare("SELECT_DBC_GTCHANGETOMELEECRITBASE",
+                  fmt::format("SELECT id, data "
+                              "FROM {}.dbc_gtchancetomeleecritbase",
+                              dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "

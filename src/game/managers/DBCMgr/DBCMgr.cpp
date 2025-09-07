@@ -60,6 +60,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _glyphSlotMap.clear();
     _gtBarberShopCostBaseMap.clear();
     _gtCombatRatingsMap.clear();
+    _gtChanceToMeleeCritBaseMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -111,6 +112,7 @@ void DBCMgr::initialize() {
     load_GlyphSlot();
     load_gtBarberShopCostBase();
     load_gtCombatRatings();
+    load_gtChanceToMeleeCritBase();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1470,6 +1472,28 @@ void DBCMgr::load_gtCombatRatings() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_gtCombatRatings failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_gtChanceToMeleeCritBase() {
+    auto log = Logger::get();
+    _gtChanceToMeleeCritBaseMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GTCHANGETOMELEECRITBASE");
+        auto rows = server_->db()->execute_sync_many<DbcGtChanceToMeleeCritBase>(stmt);
+        for (const auto &row: rows) {
+            GtChanceToMeleeCritBaseDBC gtcmcb;
+            gtcmcb.ID = row.id;
+            gtcmcb.Data = row.data;
+
+            _gtChanceToMeleeCritBaseMap[row.id] = gtcmcb;
+        }
+        log->info(">>> DBCMgr: loaded {} gtChanceToMeleeCritBase in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_gtChanceToMeleeCritBase failed: {}", ex.what());
     }
 }
 
