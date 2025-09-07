@@ -59,10 +59,11 @@ void DBCMgr::cleanUpBeforeDelete() {
     _glyphPropertiesMap.clear();
     _glyphSlotMap.clear();
     _gtBarberShopCostBaseMap.clear();
-    _gtCombatRatingsMap.clear();
     _gtChanceToMeleeCritMap.clear();
     _gtChanceToMeleeCritBaseMap.clear();
     _gtChanceToSpellCritMap.clear();
+    _gtChanceToSpellCritBaseMap.clear();
+    _gtCombatRatingsMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -113,10 +114,11 @@ void DBCMgr::initialize() {
     load_GlyphProperties();
     load_GlyphSlot();
     load_gtBarberShopCostBase();
-    load_gtCombatRatings();
     load_gtChanceToMeleeCrit();
     load_gtChanceToMeleeCritBase();
     load_gtChanceToSpellCrit();
+    load_gtChanceToSpellCritBase();
+    load_gtCombatRatings();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1457,28 +1459,6 @@ void DBCMgr::load_gtBarberShopCostBase() {
     }
 }
 
-void DBCMgr::load_gtCombatRatings() {
-    auto log = Logger::get();
-    _gtCombatRatingsMap.clear();
-    uint32_t oldMSTime = getMSTime();
-
-    try {
-        auto stmt = PreparedStatement("SELECT_DBC_GTCOMBATRATINGS");
-        auto rows = server_->db()->execute_sync_many<DbcGtCombatRatings>(stmt);
-        for (const auto &row: rows) {
-            GtCombatRatingsDBC gtcr;
-            gtcr.ID = row.id;
-            gtcr.Data = row.data;
-
-            _gtCombatRatingsMap[row.id] = gtcr;
-        }
-        log->info(">>> DBCMgr: loaded {} gtCombatRatings in {} ms",
-                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
-    } catch (const std::exception &ex) {
-        log->error("DBCMgr::load_gtCombatRatings failed: {}", ex.what());
-    }
-}
-
 void DBCMgr::load_gtChanceToMeleeCrit() {
     auto log = Logger::get();
     _gtChanceToMeleeCritMap.clear();
@@ -1542,6 +1522,50 @@ void DBCMgr::load_gtChanceToSpellCrit() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_gtChanceToSpellCrit failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_gtChanceToSpellCritBase() {
+    auto log = Logger::get();
+    _gtChanceToSpellCritBaseMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GTCHANGETOSPELLCRITBASE");
+        auto rows = server_->db()->execute_sync_many<DbcGtChanceToSpellCritBase>(stmt);
+        for (const auto &row: rows) {
+            GtChanceToSpellCritBaseDBC gtcscb;
+            gtcscb.ID = row.id;
+            gtcscb.Data = row.data;
+
+            _gtChanceToSpellCritBaseMap[row.id] = gtcscb;
+        }
+        log->info(">>> DBCMgr: loaded {} gtChanceToSpellCritBase in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_gtChanceToSpellCritBase failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_gtCombatRatings() {
+    auto log = Logger::get();
+    _gtCombatRatingsMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GTCOMBATRATINGS");
+        auto rows = server_->db()->execute_sync_many<DbcGtCombatRatings>(stmt);
+        for (const auto &row: rows) {
+            GtCombatRatingsDBC gtcr;
+            gtcr.ID = row.id;
+            gtcr.Data = row.data;
+
+            _gtCombatRatingsMap[row.id] = gtcr;
+        }
+        log->info(">>> DBCMgr: loaded {} gtCombatRatings in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_gtCombatRatings failed: {}", ex.what());
     }
 }
 
