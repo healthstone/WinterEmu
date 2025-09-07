@@ -56,6 +56,7 @@ typedef std::unordered_map<uint32_t /*ID*/, GtChanceToMeleeCritBaseDBC> GtChance
 typedef std::unordered_map<uint32_t /*ID*/, GtChanceToSpellCritDBC> GtChanceToSpellCritDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GtChanceToSpellCritBaseDBC> GtChanceToSpellCritBaseDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, GtCombatRatingsDBC> GtCombatRatingsDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, GtNPCManaCostScalerDBC> GtNPCManaCostScalerDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -502,6 +503,14 @@ public:
         return nullptr;
     }
 
+    GtNPCManaCostScalerDBC const* getGtNPCManaCostScalerDBC(uint32_t ID)
+    {
+        auto itr = _gtNPCManaCostScalerMap.find(ID);
+        if (itr != _gtNPCManaCostScalerMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -575,6 +584,7 @@ private:
     void load_gtChanceToSpellCrit();        // load gtChanceToSpellCrit.dbc
     void load_gtChanceToSpellCritBase();    // load gtChanceToSpellCritBase.dbc
     void load_gtCombatRatings();            // load gtCombatRatings.dbc
+    void load_gtNPCManaCostScaler();        // load gtNPCManaCostScaler.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -628,6 +638,7 @@ private:
     GtChanceToSpellCritDBCMap _gtChanceToSpellCritMap;
     GtChanceToSpellCritBaseDBCMap _gtChanceToSpellCritBaseMap;
     GtCombatRatingsDBCMap _gtCombatRatingsMap;
+    GtNPCManaCostScalerDBCMap _gtNPCManaCostScalerMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

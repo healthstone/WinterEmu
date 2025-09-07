@@ -84,6 +84,7 @@
 #include "database/mapper/dbc/PgDbcGtChanceToSpellCrit.hpp"
 #include "database/mapper/dbc/PgDbcGtChanceToSpellCritBase.hpp"
 #include "database/mapper/dbc/PgDbcGtCombatRatings.hpp"
+#include "database/mapper/dbc/PgDbcGtnpcManaCostScaler.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1011,6 +1012,13 @@ private:
                                  dbc_schema
                      )
         );
+        conn.prepare("SELECT_DBC_GTNPCMANACOSTSCALER",
+                     fmt::format("SELECT id, data "
+                                 "FROM {}.dbc_gtnpcmanacostscaler",
+                                 dbc_schema
+                     )
+        );
+
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "

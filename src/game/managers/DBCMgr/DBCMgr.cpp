@@ -64,6 +64,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _gtChanceToSpellCritMap.clear();
     _gtChanceToSpellCritBaseMap.clear();
     _gtCombatRatingsMap.clear();
+    _gtNPCManaCostScalerMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -119,6 +120,7 @@ void DBCMgr::initialize() {
     load_gtChanceToSpellCrit();
     load_gtChanceToSpellCritBase();
     load_gtCombatRatings();
+    load_gtNPCManaCostScaler();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1566,6 +1568,28 @@ void DBCMgr::load_gtCombatRatings() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_gtCombatRatings failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_gtNPCManaCostScaler() {
+    auto log = Logger::get();
+    _gtNPCManaCostScalerMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GTNPCMANACOSTSCALER");
+        auto rows = server_->db()->execute_sync_many<DbcGtnpcManaCostScaler>(stmt);
+        for (const auto &row: rows) {
+            GtNPCManaCostScalerDBC gtnpcMCS;
+            gtnpcMCS.ID = row.id;
+            gtnpcMCS.Data = row.data;
+
+            _gtNPCManaCostScalerMap[row.id] = gtnpcMCS;
+        }
+        log->info(">>> DBCMgr: loaded {} gtNPCManaCostScaler in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_gtNPCManaCostScaler failed: {}", ex.what());
     }
 }
 
