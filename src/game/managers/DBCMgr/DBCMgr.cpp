@@ -67,6 +67,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _gtNPCManaCostScalerMap.clear();
     _gtOCTClassCombatRatingScalarMap.clear();
     _gtOCTRegenHPMap.clear();
+    _gtOCTRegenMPMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -125,6 +126,7 @@ void DBCMgr::initialize() {
     load_gtNPCManaCostScaler();
     load_gtOCTClassCombatRatingScalar();
     load_gtOCTRegenHP();
+    load_gtOCTRegenMP();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1634,6 +1636,28 @@ void DBCMgr::load_gtOCTRegenHP() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_gtOCTRegenHP failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_gtOCTRegenMP() {
+    auto log = Logger::get();
+    _gtOCTRegenMPMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_GTOCTREGENMP");
+        auto rows = server_->db()->execute_sync_many<DbcGtoctRegenMP>(stmt);
+        for (const auto &row: rows) {
+            GtOCTRegenMPDBC gtOCTrmp;
+            gtOCTrmp.ID = row.id;
+            gtOCTrmp.Data = row.data;
+
+            _gtOCTRegenMPMap[row.id] = gtOCTrmp;
+        }
+        log->info(">>> DBCMgr: loaded {} gtOCTRegenMP in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_gtOCTRegenMP failed: {}", ex.what());
     }
 }
 
