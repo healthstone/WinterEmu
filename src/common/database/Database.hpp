@@ -86,6 +86,7 @@
 #include "database/mapper/dbc/PgDbcGtCombatRatings.hpp"
 #include "database/mapper/dbc/PgDbcGtnpcManaCostScaler.hpp"
 #include "database/mapper/dbc/PgDbcGtoctClassCombatRatingScalar.hpp"
+#include "database/mapper/dbc/PgDbcGtoctRegenHP.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1025,7 +1026,11 @@ private:
                                  dbc_schema
                      )
         );
-
+        conn.prepare("SELECT_DBC_GTOCTREGENHP",
+                     fmt::format("SELECT id, data "
+                                 "FROM {}.dbc_gtoctregenhp",
+                                 dbc_schema)
+        );
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "
