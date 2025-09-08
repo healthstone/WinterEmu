@@ -79,6 +79,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _itemRandomPropertiesMap.clear();
     _itemRandomSuffixMap.clear();
     _itemSetMap.clear();
+    _lfgDungeonMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -150,6 +151,7 @@ void DBCMgr::initialize() {
     load_ItemRandomProperties();
     load_ItemRandomSuffix();
     load_ItemSet();
+    load_LFGDungeons();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2141,6 +2143,55 @@ void DBCMgr::load_ItemSet() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_ItemSet: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_LFGDungeons() {
+    auto log = Logger::get();
+    _lfgDungeonMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_LFGDUNGEONS");
+        auto rows = server_->db()->execute_sync_many<PgDbcLfgDungeons>(stmt);
+        for (const auto &row: rows) {
+            LFGDungeonDBC ld;
+            ld.ID = row.id;
+
+            ld.Name[LOCALE_enUS] = row.name_lang_enus.value_or("");
+            ld.Name[LOCALE_enGB] = row.name_lang_engb.value_or("");
+            ld.Name[LOCALE_koKR] = row.name_lang_kokr.value_or("");
+            ld.Name[LOCALE_frFR] = row.name_lang_frfr.value_or("");
+            ld.Name[LOCALE_deDE] = row.name_lang_dede.value_or("");
+            ld.Name[LOCALE_enCN] = row.name_lang_encn.value_or("");
+            ld.Name[LOCALE_zhCN] = row.name_lang_zhcn.value_or("");
+            ld.Name[LOCALE_enTW] = row.name_lang_entw.value_or("");
+            ld.Name[LOCALE_zhTW] = row.name_lang_zhtw.value_or("");
+            ld.Name[LOCALE_esES] = row.name_lang_eses.value_or("");
+            ld.Name[LOCALE_esMX] = row.name_lang_esmx.value_or("");
+            ld.Name[LOCALE_ruRU] = row.name_lang_ruru.value_or("");
+            ld.Name[LOCALE_ptPT] = row.name_lang_ptpt.value_or("");
+            ld.Name[LOCALE_ptBR] = row.name_lang_ptbr.value_or("");
+            ld.Name[LOCALE_itIT] = row.name_lang_itit.value_or("");
+
+            ld.MinLevel       = row.min_level;
+            ld.MaxLevel       = row.max_level;
+            ld.TargetLevel    = row.target_level;
+            ld.TargetLevelMin = row.target_level_min;
+            ld.TargetLevelMax = row.target_level_max;
+            ld.MapID          = row.mapid;
+            ld.Difficulty     = row.difficulty;
+            ld.Flags          = row.flags;
+            ld.TypeID         = row.typeId;
+            ld.ExpansionLevel = row.expansionlevel;
+            ld.GroupID        = row.group_id;
+
+            _lfgDungeonMap[row.id] = ld;
+        }
+        log->info(">>> DBCMgr: loaded {} LFGDungeons in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_LFGDungeons failed: {}", ex.what());
     }
 }
 

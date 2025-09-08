@@ -24,7 +24,7 @@ struct DbcItemRandomSuffix {
     std::optional<std::string> name_lang_ptbr;
     std::optional<std::string> name_lang_itit;
     std::optional<std::string> name_lang_unk;
-    int64_t name_lang_mask;
+    uint32_t name_lang_mask;
     std::optional<std::string> internalname;
     uint32_t enchantment_1;
     uint32_t enchantment_2;
@@ -59,7 +59,7 @@ struct PgRowMapper<DbcItemRandomSuffix> {
                 get_optional_string(r, "name_lang_ptbr"),
                 get_optional_string(r, "name_lang_itit"),
                 get_optional_string(r, "name_lang_unk"),
-                r["name_lang_mask"].as<int64_t>(),
+                r["name_lang_mask"].as<uint32_t>(),
                 get_optional_string(r, "internalname"),
                 r["enchantment_1"].as<uint32_t>(),
                 r["enchantment_2"].as<uint32_t>(),

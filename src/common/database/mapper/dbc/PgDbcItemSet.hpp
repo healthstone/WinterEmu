@@ -26,7 +26,7 @@ struct DbcItemSet {
     std::optional<std::string> name_lang_itit;
     std::optional<std::string> name_lang_unk;
 
-    uint64_t name_lang_mask;
+    uint32_t name_lang_mask;
 
     uint32_t itemid_1;
     uint32_t itemid_2;
@@ -89,7 +89,7 @@ struct PgRowMapper<DbcItemSet> {
                 get_optional_string(r, "name_lang_ptbr"),
                 get_optional_string(r, "name_lang_itit"),
                 get_optional_string(r, "name_lang_unk"),
-                r["name_lang_mask"].as<uint64_t>(),
+                r["name_lang_mask"].as<uint32_t>(),
 
                 r["itemid_1"].as<uint32_t>(),
                 r["itemid_2"].as<uint32_t>(),

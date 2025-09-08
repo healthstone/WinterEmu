@@ -33,7 +33,7 @@ struct DbcItemRandomProperties {
     std::optional<std::string> name_lang_itit;
     std::optional<std::string> name_lang_unk;
 
-    uint64_t name_lang_mask;
+    uint32_t name_lang_mask;
 };
 
 template<>
@@ -65,7 +65,7 @@ struct PgRowMapper<DbcItemRandomProperties> {
         obj.name_lang_itit   = get_optional_string(r, "name_lang_itit");
         obj.name_lang_unk    = get_optional_string(r, "name_lang_unk");
 
-        obj.name_lang_mask   = r["name_lang_mask"].as<uint64_t>();
+        obj.name_lang_mask   = r["name_lang_mask"].as<uint32_t>();
         return obj;
     }
 };
