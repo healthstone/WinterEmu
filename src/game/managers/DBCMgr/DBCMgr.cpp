@@ -75,6 +75,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _itemBagFamilyMap.clear();
     _itemDisplayInfoMap.clear();
     _itemExtendedCostMap.clear();
+    _itemLimitCategoryMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -141,6 +142,7 @@ void DBCMgr::initialize() {
     load_ItemBagFamily();
     load_ItemDisplayInfo();
     load_ItemExtendedCost();
+    load_ItemLimitCategory();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1940,6 +1942,29 @@ void DBCMgr::load_ItemExtendedCost() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_ItemExtendedCost: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_ItemLimitCategory() {
+    auto log = Logger::get();
+    _itemLimitCategoryMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_ITEMLIMITCATEGORY");
+        auto rows = server_->db()->execute_sync_many<DbcItemLimitCategory>(stmt);
+        for (const auto &row: rows) {
+            ItemLimitCategoryDBC ilc;
+            ilc.ID = row.id;
+            ilc.Quantity = row.quantity;
+            ilc.Flags    = row.flags;
+
+            _itemLimitCategoryMap[row.id] = ilc;
+        }
+        log->info(">>> DBCMgr: loaded {} ItemLimitCategory in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_ItemLimitCategory: {}", ex.what());
     }
 }
 
