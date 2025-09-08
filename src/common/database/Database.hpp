@@ -93,6 +93,7 @@
 #include "database/mapper/dbc/PgDbcHolidays.hpp"
 #include "database/mapper/dbc/PgDbcItem.hpp"
 #include "database/mapper/dbc/PgDbcItemBagFamily.hpp"
+#include "database/mapper/dbc/PgDbcItemDisplayInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1066,6 +1067,18 @@ private:
                                  "name_lang_esES, name_lang_esMX, name_lang_ruRU, name_lang_ptPT, name_lang_ptBR, "
                                  "name_lang_itIT, name_lang_Unk, name_lang_mask "
                                  "FROM {}.dbc_itembagfamily",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_ITEMDISPLAYINFO",
+                     fmt::format("SELECT id, model_name_1, model_name_2, "
+                                 "model_texture_1, model_texture_2, "
+                                 "inventory_icon_1, inventory_icon_2, "
+                                 "geoset_group_1, geoset_group_2, geoset_group_3, "
+                                 "flags, spell_visual_id, group_sound_index, "
+                                 "helmet_geoset_vis_1, helmet_geoset_vis_2, "
+                                 "texture_1, texture_2, texture_3, texture_4, "
+                                 "texture_5, texture_6, texture_7, texture_8, "
+                                 "item_visual, particle_color_id "
+                                 "FROM {}.dbc_itemdisplayinfo",
                                  dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "

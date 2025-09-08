@@ -73,6 +73,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _holidaysMap.clear();
     _itemMap.clear();
     _itemBagFamilyMap.clear();
+    _itemDisplayInfoMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -137,6 +138,7 @@ void DBCMgr::initialize() {
     load_Holidays();
     load_Item();
     load_ItemBagFamily();
+    load_ItemDisplayInfo();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1611,7 +1613,7 @@ void DBCMgr::load_gtNPCManaCostScaler() {
 
 void DBCMgr::load_gtOCTClassCombatRatingScalar() {
     auto log = Logger::get();
-    _skillRaceClassInfoMap.clear();
+    _gtOCTClassCombatRatingScalarMap.clear();
     uint32_t oldMSTime = getMSTime();
 
     try {
@@ -1640,7 +1642,11 @@ void DBCMgr::load_gtOCTRegenHP() {
         auto stmt = PreparedStatement("SELECT_DBC_GTOCTREGENHP");
         auto rows = server_->db()->execute_sync_many<DbcGtoctRegenHP>(stmt);
         for (const auto &row: rows) {
+            GtOCTRegenHPDBC gtOCTrhp;
+            gtOCTrhp.ID = row.id;
+            gtOCTrhp.Data = row.data;
 
+            _gtOCTRegenHPMap[row.id] = gtOCTrhp;
         }
         log->info(">>> DBCMgr: loaded {} gtOCTRegenHP in {} ms",
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
@@ -1841,6 +1847,59 @@ void DBCMgr::load_ItemBagFamily() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_ItemBagFamily: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_ItemDisplayInfo() {
+    auto log = Logger::get();
+    _itemDisplayInfoMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_ITEMDISPLAYINFO");
+        auto rows = server_->db()->execute_sync_many<DbcItemDisplayInfo>(stmt);
+        for (const auto &row: rows) {
+            ItemDisplayInfoDBC idi;
+            idi.ID = row.id;
+
+            // Массивы строк
+            idi.ModelName[0]     = row.model_name_1.value_or("");
+            idi.ModelName[1]     = row.model_name_2.value_or("");
+            idi.ModelTexture[0]  = row.model_texture_1.value_or("");
+            idi.ModelTexture[1]  = row.model_texture_2.value_or("");
+            idi.InventoryIcon[0] = row.inventory_icon_1.value_or("");
+            idi.InventoryIcon[1] = row.inventory_icon_2.value_or("");
+
+            // Числовые массивы
+            idi.GeosetGroup[0] = row.geoset_group_1;
+            idi.GeosetGroup[1] = row.geoset_group_2;
+            idi.GeosetGroup[2] = row.geoset_group_3;
+
+            idi.Flags           = row.flags;
+            idi.SpellVisualID   = row.spell_visual_id;
+            idi.GroupSoundIndex = row.group_sound_index;
+
+            idi.HelmetGeosetVisID[0] = row.helmet_geoset_vis_1;
+            idi.HelmetGeosetVisID[1] = row.helmet_geoset_vis_2;
+
+            idi.Texture[0] = row.texture_1.value_or("");
+            idi.Texture[1] = row.texture_2.value_or("");
+            idi.Texture[2] = row.texture_3.value_or("");
+            idi.Texture[3] = row.texture_4.value_or("");
+            idi.Texture[4] = row.texture_5.value_or("");
+            idi.Texture[5] = row.texture_6.value_or("");
+            idi.Texture[6] = row.texture_7.value_or("");
+            idi.Texture[7] = row.texture_8.value_or("");
+
+            idi.ItemVisual      = row.item_visual;
+            idi.ParticleColorID = row.particle_color_id;
+
+            _itemDisplayInfoMap[row.id] = idi;
+        }
+        log->info(">>> DBCMgr: loaded {} ItemDisplayInfo in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_ItemDisplayInfo: {}", ex.what());
     }
 }
 
