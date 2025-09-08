@@ -76,6 +76,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _itemDisplayInfoMap.clear();
     _itemExtendedCostMap.clear();
     _itemLimitCategoryMap.clear();
+    _itemRandomPropertiesMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -143,6 +144,7 @@ void DBCMgr::initialize() {
     load_ItemDisplayInfo();
     load_ItemExtendedCost();
     load_ItemLimitCategory();
+    load_ItemRandomProperties();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1965,6 +1967,48 @@ void DBCMgr::load_ItemLimitCategory() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_ItemLimitCategory: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_ItemRandomProperties() {
+    auto log = Logger::get();
+    _itemRandomPropertiesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_ITEMRANDOMPROPERTIES");
+        auto rows = server_->db()->execute_sync_many<DbcItemRandomProperties>(stmt);
+        for (const auto &row: rows) {
+            ItemRandomPropertiesDBC irp;
+            irp.ID = row.id;
+
+            /** только 3 из 5 полей имеют значения (MAX_ITEM_ENCHANTMENT_EFFECTS == 3) **/
+            irp.Enchantment[0] = row.enchantment_1;
+            irp.Enchantment[1] = row.enchantment_2;
+            irp.Enchantment[2] = row.enchantment_3;
+
+            irp.Name[LOCALE_enUS] = row.name_lang_enus.value_or("");
+            irp.Name[LOCALE_enGB] = row.name_lang_engb.value_or("");
+            irp.Name[LOCALE_koKR] = row.name_lang_kokr.value_or("");
+            irp.Name[LOCALE_frFR] = row.name_lang_frfr.value_or("");
+            irp.Name[LOCALE_deDE] = row.name_lang_dede.value_or("");
+            irp.Name[LOCALE_enCN] = row.name_lang_encn.value_or("");
+            irp.Name[LOCALE_zhCN] = row.name_lang_zhcn.value_or("");
+            irp.Name[LOCALE_enTW] = row.name_lang_entw.value_or("");
+            irp.Name[LOCALE_zhTW] = row.name_lang_zhtw.value_or("");
+            irp.Name[LOCALE_esES] = row.name_lang_eses.value_or("");
+            irp.Name[LOCALE_esMX] = row.name_lang_esmx.value_or("");
+            irp.Name[LOCALE_ruRU] = row.name_lang_ruru.value_or("");
+            irp.Name[LOCALE_ptPT] = row.name_lang_ptpt.value_or("");
+            irp.Name[LOCALE_ptBR] = row.name_lang_ptbr.value_or("");
+            irp.Name[LOCALE_itIT] = row.name_lang_itit.value_or("");
+
+            _itemRandomPropertiesMap[row.id] = irp;
+        }
+        log->info(">>> DBCMgr: loaded {} ItemRandomProperties in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_ItemRandomProperties: {}", ex.what());
     }
 }
 

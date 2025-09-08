@@ -96,6 +96,7 @@
 #include "database/mapper/dbc/PgDbcItemDisplayInfo.hpp"
 #include "database/mapper/dbc/PgDbcItemExtendedCost.hpp"
 #include "database/mapper/dbc/PgDbcItemLimitCategory.hpp"
+#include "database/mapper/dbc/PgDbcItemRandomProperties.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1099,7 +1100,15 @@ private:
                                  "name_lang_mask, quantity, flags "
                                  "FROM {}.dbc_itemlimitcategory",
                                  dbc_schema));
-
+        conn.prepare("SELECT_DBC_ITEMRANDOMPROPERTIES",
+                     fmt::format(
+                             "SELECT id, name, enchantment_1, enchantment_2, enchantment_3, enchantment_4, enchantment_5, "
+                             "name_lang_enus, name_lang_engb, name_lang_kokr, name_lang_frfr, name_lang_dede, "
+                             "name_lang_encn, name_lang_zhcn, name_lang_entw, name_lang_zhtw, "
+                             "name_lang_eses, name_lang_esmx, name_lang_ruru, name_lang_ptpt, name_lang_ptbr, "
+                             "name_lang_itit, name_lang_unk, name_lang_mask "
+                             "FROM {}.dbc_itemrandomproperties",
+                             dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "
