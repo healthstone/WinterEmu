@@ -94,6 +94,7 @@
 #include "database/mapper/dbc/PgDbcItem.hpp"
 #include "database/mapper/dbc/PgDbcItemBagFamily.hpp"
 #include "database/mapper/dbc/PgDbcItemDisplayInfo.hpp"
+#include "database/mapper/dbc/PgDbcItemExtendedCost.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1079,6 +1080,14 @@ private:
                                  "texture_5, texture_6, texture_7, texture_8, "
                                  "item_visual, particle_color_id "
                                  "FROM {}.dbc_itemdisplayinfo",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_ITEMEXTENDEDCOST",
+                     fmt::format("SELECT "
+                                 "id, honor_points, arena_points, arena_bracket, "
+                                 "item_id_1, item_id_2, item_id_3, item_id_4, item_id_5, "
+                                 "item_count_1, item_count_2, item_count_3, item_count_4, item_count_5, "
+                                 "required_arena_rating, item_purchase_group "
+                                 "FROM {}.dbc_itemextendedcost",
                                  dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "

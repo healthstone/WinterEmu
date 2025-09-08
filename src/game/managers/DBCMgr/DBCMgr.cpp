@@ -74,6 +74,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _itemMap.clear();
     _itemBagFamilyMap.clear();
     _itemDisplayInfoMap.clear();
+    _itemExtendedCostMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -139,6 +140,7 @@ void DBCMgr::initialize() {
     load_Item();
     load_ItemBagFamily();
     load_ItemDisplayInfo();
+    load_ItemExtendedCost();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1900,6 +1902,44 @@ void DBCMgr::load_ItemDisplayInfo() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_ItemDisplayInfo: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_ItemExtendedCost() {
+    auto log = Logger::get();
+    _itemExtendedCostMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_ITEMEXTENDEDCOST");
+        auto rows = server_->db()->execute_sync_many<DbcItemExtendedCost>(stmt);
+        for (const auto &row: rows) {
+            ItemExtendedCostDBC iec;
+            iec.ID = row.id;
+            iec.HonorPoints = row.honor_points;
+            iec.ArenaPoints = row.arena_points;
+            iec.ArenaBracket = row.arena_bracket;
+
+            iec.ItemID[0] = row.item_id_1;
+            iec.ItemID[1] = row.item_id_2;
+            iec.ItemID[2] = row.item_id_3;
+            iec.ItemID[3] = row.item_id_4;
+            iec.ItemID[4] = row.item_id_5;
+
+            iec.ItemCount[0] = row.item_count_1;
+            iec.ItemCount[1] = row.item_count_2;
+            iec.ItemCount[2] = row.item_count_3;
+            iec.ItemCount[3] = row.item_count_4;
+            iec.ItemCount[4] = row.item_count_5;
+
+            iec.RequiredArenaRating = row.required_arena_rating;
+
+            _itemExtendedCostMap[row.id] = iec;
+        }
+        log->info(">>> DBCMgr: loaded {} ItemExtendedCost in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_ItemExtendedCost: {}", ex.what());
     }
 }
 

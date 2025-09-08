@@ -66,6 +66,7 @@ typedef std::unordered_map<uint32_t /*ID*/, HolidaysDBC> HolidaysDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ItemDBC> ItemDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ItemBagFamilyDBC> ItemBagFamilyDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ItemDisplayInfoDBC> ItemDisplayInfoDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, ItemExtendedCostDBC> ItemExtendedCostDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -593,6 +594,14 @@ public:
         return nullptr;
     }
 
+    ItemExtendedCostDBC const* getItemExtendedCostDBC(uint32_t ID)
+    {
+        auto itr = _itemExtendedCostMap.find(ID);
+        if (itr != _itemExtendedCostMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -676,6 +685,7 @@ private:
     void load_Item();                       // load Item.dbc
     void load_ItemBagFamily();              // load ItemBagFamily.dbc
     void load_ItemDisplayInfo();            // load ItemDisplayInfo.dbc
+    void load_ItemExtendedCost();           // load ItemExtendedCost.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -739,6 +749,7 @@ private:
     ItemDBCMap _itemMap;
     ItemBagFamilyDBCMap _itemBagFamilyMap;
     ItemDisplayInfoDBCMap _itemDisplayInfoMap;
+    ItemExtendedCostDBCMap _itemExtendedCostMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
