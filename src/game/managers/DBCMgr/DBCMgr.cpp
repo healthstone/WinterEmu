@@ -78,6 +78,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _itemLimitCategoryMap.clear();
     _itemRandomPropertiesMap.clear();
     _itemRandomSuffixMap.clear();
+    _itemSetMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -148,6 +149,7 @@ void DBCMgr::initialize() {
     load_ItemLimitCategory();
     load_ItemRandomProperties();
     load_ItemRandomSuffix();
+    load_ItemSet();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2070,6 +2072,75 @@ void DBCMgr::load_ItemRandomSuffix() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_ItemRandomSuffix: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_ItemSet() {
+    auto log = Logger::get();
+    _itemSetMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_ITEMSET");
+        auto rows = server_->db()->execute_sync_many<DbcItemSet>(stmt);
+        for (const auto &row: rows) {
+            ItemSetDBC is;
+            is.ID = row.id;
+
+            is.Name[LOCALE_enUS] = row.name_lang_enus.value_or("");
+            is.Name[LOCALE_enGB] = row.name_lang_engb.value_or("");
+            is.Name[LOCALE_koKR] = row.name_lang_kokr.value_or("");
+            is.Name[LOCALE_frFR] = row.name_lang_frfr.value_or("");
+            is.Name[LOCALE_deDE] = row.name_lang_dede.value_or("");
+            is.Name[LOCALE_enCN] = row.name_lang_encn.value_or("");
+            is.Name[LOCALE_zhCN] = row.name_lang_zhcn.value_or("");
+            is.Name[LOCALE_enTW] = row.name_lang_entw.value_or("");
+            is.Name[LOCALE_zhTW] = row.name_lang_zhtw.value_or("");
+            is.Name[LOCALE_esES] = row.name_lang_eses.value_or("");
+            is.Name[LOCALE_esMX] = row.name_lang_esmx.value_or("");
+            is.Name[LOCALE_ruRU] = row.name_lang_ruru.value_or("");
+            is.Name[LOCALE_ptPT] = row.name_lang_ptpt.value_or("");
+            is.Name[LOCALE_ptBR] = row.name_lang_ptbr.value_or("");
+            is.Name[LOCALE_itIT] = row.name_lang_itit.value_or("");
+
+            is.ItemID[0] = row.itemid_1;
+            is.ItemID[1] = row.itemid_2;
+            is.ItemID[2] = row.itemid_3;
+            is.ItemID[3] = row.itemid_4;
+            is.ItemID[4] = row.itemid_5;
+            is.ItemID[5] = row.itemid_6;
+            is.ItemID[6] = row.itemid_7;
+            is.ItemID[7] = row.itemid_8;
+            is.ItemID[8] = row.itemid_9;
+            is.ItemID[9] = row.itemid_10;
+
+            is.SetSpellID[0] = row.setspellid_1;
+            is.SetSpellID[1] = row.setspellid_2;
+            is.SetSpellID[2] = row.setspellid_3;
+            is.SetSpellID[3] = row.setspellid_4;
+            is.SetSpellID[4] = row.setspellid_5;
+            is.SetSpellID[5] = row.setspellid_6;
+            is.SetSpellID[6] = row.setspellid_7;
+            is.SetSpellID[7] = row.setspellid_8;
+
+            is.SetThreshold[0] = row.setthreshold_1;
+            is.SetThreshold[1] = row.setthreshold_2;
+            is.SetThreshold[2] = row.setthreshold_3;
+            is.SetThreshold[3] = row.setthreshold_4;
+            is.SetThreshold[4] = row.setthreshold_5;
+            is.SetThreshold[5] = row.setthreshold_6;
+            is.SetThreshold[6] = row.setthreshold_7;
+            is.SetThreshold[7] = row.setthreshold_8;
+
+            is.RequiredSkill     = row.requiredskill;
+            is.RequiredSkillRank = row.requiredskillrank;
+
+            _itemSetMap[row.id] = is;
+        }
+        log->info(">>> DBCMgr: loaded {} ItemSet in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_ItemSet: {}", ex.what());
     }
 }
 
