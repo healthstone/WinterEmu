@@ -80,6 +80,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _itemRandomSuffixMap.clear();
     _itemSetMap.clear();
     _lfgDungeonMap.clear();
+    _lightMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -152,6 +153,7 @@ void DBCMgr::initialize() {
     load_ItemRandomSuffix();
     load_ItemSet();
     load_LFGDungeons();
+    load_Light();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2189,6 +2191,31 @@ void DBCMgr::load_LFGDungeons() {
             _lfgDungeonMap[row.id] = ld;
         }
         log->info(">>> DBCMgr: loaded {} LFGDungeons in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_LFGDungeons failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_Light() {
+    auto log = Logger::get();
+    _lightMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_LIGHT");
+        auto rows = server_->db()->execute_sync_many<DbcLight>(stmt);
+        for (const auto &row: rows) {
+            LightDBC l;
+            l.ID = row.id;
+            l.ContinentID  = row.continent_id;
+            l.GameCoords.X = row.x;
+            l.GameCoords.Y = row.y;
+            l.GameCoords.Z = row.z;
+
+            _lightMap[row.id] = l;
+        }
+        log->info(">>> DBCMgr: loaded {} Light in {} ms",
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_LFGDungeons failed: {}", ex.what());

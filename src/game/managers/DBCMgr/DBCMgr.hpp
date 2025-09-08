@@ -72,6 +72,7 @@ typedef std::unordered_map<uint32_t /*ID*/, ItemRandomPropertiesDBC> ItemRandomP
 typedef std::unordered_map<uint32_t /*ID*/, ItemRandomSuffixDBC> ItemRandomSuffixDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ItemSetDBC> ItemSetDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, LFGDungeonDBC> LFGDungeonDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, LightDBC> LightDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -739,6 +740,7 @@ private:
     void load_ItemRandomSuffix();           // load ItemRandomSuffix.dbc
     void load_ItemSet();                    // load ItemSet.dbc
     void load_LFGDungeons();                // load LFGDungeons.dbc
+    void load_Light();                      // load Light.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -808,6 +810,7 @@ private:
     ItemRandomSuffixDBCMap _itemRandomSuffixMap;
     ItemSetDBCMap _itemSetMap;
     LFGDungeonDBCMap _lfgDungeonMap;
+    LightDBCMap _lightMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

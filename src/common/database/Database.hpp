@@ -100,6 +100,7 @@
 #include "database/mapper/dbc/PgDbcItemRandomSuffix.hpp"
 #include "database/mapper/dbc/PgDbcItemSet.hpp"
 #include "database/mapper/dbc/PgDbcLfgDungeons.hpp"
+#include "database/mapper/dbc/PgDbcLight.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1153,7 +1154,14 @@ private:
                                  "description_lang_unk, description_lang_mask "
                                  "FROM {}.dbc_lfgdungeons",
                                  dbc_schema));
-
+        conn.prepare("SELECT_DBC_LIGHT",
+                     fmt::format("SELECT "
+                                 "id, continent_id, x, y, z, "
+                                 "falloff_start, falloff_end, "
+                                 "lightparamsid_1, lightparamsid_2, lightparamsid_3, lightparamsid_4, "
+                                 "lightparamsid_5, lightparamsid_6, lightparamsid_7, lightparamsid_8 "
+                                 "FROM {}.dbc_light",
+                                 dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "
