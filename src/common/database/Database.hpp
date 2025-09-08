@@ -97,6 +97,7 @@
 #include "database/mapper/dbc/PgDbcItemExtendedCost.hpp"
 #include "database/mapper/dbc/PgDbcItemLimitCategory.hpp"
 #include "database/mapper/dbc/PgDbcItemRandomProperties.hpp"
+#include "database/mapper/dbc/PgDbcItemRandomSuffix.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1109,6 +1110,18 @@ private:
                              "name_lang_itit, name_lang_unk, name_lang_mask "
                              "FROM {}.dbc_itemrandomproperties",
                              dbc_schema));
+        conn.prepare("SELECT_DBC_ITEMRANDOMSUFFIX",
+                     fmt::format("SELECT "
+                                 "id, "
+                                 "name_lang_enus, name_lang_engb, name_lang_kokr, name_lang_frfr, name_lang_dede, "
+                                 "name_lang_encn, name_lang_zhcn, name_lang_entw, name_lang_zhtw, "
+                                 "name_lang_eses, name_lang_esmx, name_lang_ruru, "
+                                 "name_lang_ptpt, name_lang_ptbr, name_lang_itit, name_lang_unk, "
+                                 "name_lang_mask, internalname, "
+                                 "enchantment_1, enchantment_2, enchantment_3, enchantment_4, enchantment_5, "
+                                 "allocationpct_1, allocationpct_2, allocationpct_3, allocationpct_4, allocationpct_5 "
+                                 "FROM {}.dbc_itemrandomsuffix",
+                                 dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "

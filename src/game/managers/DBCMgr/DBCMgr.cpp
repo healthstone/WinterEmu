@@ -77,10 +77,12 @@ void DBCMgr::cleanUpBeforeDelete() {
     _itemExtendedCostMap.clear();
     _itemLimitCategoryMap.clear();
     _itemRandomPropertiesMap.clear();
+    _itemRandomSuffixMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
     _bannedAddonsHighestID = 0;
+    _itemRandomSuffixHighestID = 0;
 }
 
 void DBCMgr::initialize() {
@@ -145,6 +147,7 @@ void DBCMgr::initialize() {
     load_ItemExtendedCost();
     load_ItemLimitCategory();
     load_ItemRandomProperties();
+    load_ItemRandomSuffix();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -1982,10 +1985,11 @@ void DBCMgr::load_ItemRandomProperties() {
             ItemRandomPropertiesDBC irp;
             irp.ID = row.id;
 
-            /** только 3 из 5 полей имеют значения (MAX_ITEM_ENCHANTMENT_EFFECTS == 3) **/
             irp.Enchantment[0] = row.enchantment_1;
             irp.Enchantment[1] = row.enchantment_2;
             irp.Enchantment[2] = row.enchantment_3;
+            irp.Enchantment[3] = row.enchantment_4;
+            irp.Enchantment[4] = row.enchantment_5;
 
             irp.Name[LOCALE_enUS] = row.name_lang_enus.value_or("");
             irp.Name[LOCALE_enGB] = row.name_lang_engb.value_or("");
@@ -2009,6 +2013,63 @@ void DBCMgr::load_ItemRandomProperties() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_ItemRandomProperties: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_ItemRandomSuffix() {
+    auto log = Logger::get();
+    _itemRandomSuffixMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_ITEMRANDOMSUFFIX");
+        auto rows = server_->db()->execute_sync_many<DbcItemRandomSuffix>(stmt);
+        for (const auto &row: rows) {
+            ItemRandomSuffixDBC irs;
+            irs.ID = row.id;
+
+            irs.Name[LOCALE_enUS] = row.name_lang_enus.value_or("");
+            irs.Name[LOCALE_enGB] = row.name_lang_engb.value_or("");
+            irs.Name[LOCALE_koKR] = row.name_lang_kokr.value_or("");
+            irs.Name[LOCALE_frFR] = row.name_lang_frfr.value_or("");
+            irs.Name[LOCALE_deDE] = row.name_lang_dede.value_or("");
+            irs.Name[LOCALE_enCN] = row.name_lang_encn.value_or("");
+            irs.Name[LOCALE_zhCN] = row.name_lang_zhcn.value_or("");
+            irs.Name[LOCALE_enTW] = row.name_lang_entw.value_or("");
+            irs.Name[LOCALE_zhTW] = row.name_lang_zhtw.value_or("");
+            irs.Name[LOCALE_esES] = row.name_lang_eses.value_or("");
+            irs.Name[LOCALE_esMX] = row.name_lang_esmx.value_or("");
+            irs.Name[LOCALE_ruRU] = row.name_lang_ruru.value_or("");
+            irs.Name[LOCALE_ptPT] = row.name_lang_ptpt.value_or("");
+            irs.Name[LOCALE_ptBR] = row.name_lang_ptbr.value_or("");
+            irs.Name[LOCALE_itIT] = row.name_lang_itit.value_or("");
+
+            irs.Enchantment[0] = row.enchantment_1;
+            irs.Enchantment[1] = row.enchantment_2;
+            irs.Enchantment[2] = row.enchantment_3;
+            irs.Enchantment[3] = row.enchantment_4;
+            irs.Enchantment[4] = row.enchantment_5;
+
+            irs.AllocationPct[0] = row.allocationpct_1;
+            irs.AllocationPct[1] = row.allocationpct_2;
+            irs.AllocationPct[2] = row.allocationpct_3;
+            irs.AllocationPct[3] = row.allocationpct_4;
+            irs.AllocationPct[4] = row.allocationpct_5;
+
+            _itemRandomSuffixMap[row.id] = irs;
+
+            if (_itemRandomSuffixHighestID)
+            {
+                if (_itemRandomSuffixHighestID < row.id)
+                    _itemRandomSuffixHighestID = row.id;
+            }
+            else
+                _itemRandomSuffixHighestID = row.id;
+        }
+        log->info(">>> DBCMgr: loaded {} ItemRandomSuffix in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_ItemRandomSuffix: {}", ex.what());
     }
 }
 

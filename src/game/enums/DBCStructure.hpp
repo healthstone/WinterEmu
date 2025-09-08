@@ -898,7 +898,7 @@ struct ItemLimitCategoryDBC {
 };
 
 // load ItemRandomProperties.dbc
-#define MAX_ITEM_ENCHANTMENT_EFFECTS 3
+#define MAX_ITEM_ENCHANTMENT_EFFECTS 5
 
 struct ItemRandomPropertiesDBC {
     uint32_t ID;                                                          // 0

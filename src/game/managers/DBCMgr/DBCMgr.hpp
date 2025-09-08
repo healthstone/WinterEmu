@@ -69,6 +69,7 @@ typedef std::unordered_map<uint32_t /*ID*/, ItemDisplayInfoDBC> ItemDisplayInfoD
 typedef std::unordered_map<uint32_t /*ID*/, ItemExtendedCostDBC> ItemExtendedCostDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ItemLimitCategoryDBC> ItemLimitCategoryDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ItemRandomPropertiesDBC> ItemRandomPropertiesDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, ItemRandomSuffixDBC> ItemRandomSuffixDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -620,6 +621,15 @@ public:
         return nullptr;
     }
 
+    uint32_t getItemRandomSuffixHighestID() const { return _itemRandomSuffixHighestID; }
+    ItemRandomSuffixDBC const* getItemRandomSuffixDBC(uint32_t ID)
+    {
+        auto itr = _itemRandomSuffixMap.find(ID);
+        if (itr != _itemRandomSuffixMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -706,6 +716,7 @@ private:
     void load_ItemExtendedCost();           // load ItemExtendedCost.dbc
     void load_ItemLimitCategory();          // load ItemLimitCategory.dbc
     void load_ItemRandomProperties();       // load ItemRandomProperties.dbc
+    void load_ItemRandomSuffix();           // load ItemRandomSuffix.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -772,10 +783,12 @@ private:
     ItemExtendedCostDBCMap _itemExtendedCostMap;
     ItemLimitCategoryDBCMap _itemLimitCategoryMap;
     ItemRandomPropertiesDBCMap _itemRandomPropertiesMap;
+    ItemRandomSuffixDBCMap _itemRandomSuffixMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
     uint32_t _bannedAddonsHighestID;
+    uint32_t _itemRandomSuffixHighestID;
 
     // Handle others containers
     void initialize_Additional_Data();
