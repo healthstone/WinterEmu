@@ -84,6 +84,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _liquidTypeMap.clear();
     _lockMap.clear();
     _mailTemplateMap.clear();
+    _mapMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -160,6 +161,7 @@ void DBCMgr::initialize() {
     load_LiquidType();
     load_Lock();
     load_MailTemplate();
+    load_Map();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2349,6 +2351,54 @@ void DBCMgr::load_MailTemplate() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_MailTemplate failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_Map() {
+    auto log = Logger::get();
+    _mapMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_MAP");
+        auto rows = server_->db()->execute_sync_many<DbcMap>(stmt);
+        for (const auto &row: rows) {
+            MapDBC m;
+            m.ID = row.id;
+            m.InstanceType = row.instance_type;
+            m.Flags        = row.flags;
+
+            m.MapName[LOCALE_enUS] = row.mapname_lang_en_us.value_or("");
+            m.MapName[LOCALE_enGB] = row.mapname_lang_en_gb.value_or("");
+            m.MapName[LOCALE_koKR] = row.mapname_lang_ko_kr.value_or("");
+            m.MapName[LOCALE_frFR] = row.mapname_lang_fr_fr.value_or("");
+            m.MapName[LOCALE_deDE] = row.mapname_lang_de_de.value_or("");
+            m.MapName[LOCALE_enCN] = row.mapname_lang_en_cn.value_or("");
+            m.MapName[LOCALE_zhCN] = row.mapname_lang_zh_cn.value_or("");
+            m.MapName[LOCALE_enTW] = row.mapname_lang_en_tw.value_or("");
+            m.MapName[LOCALE_zhTW] = row.mapname_lang_zh_tw.value_or("");
+            m.MapName[LOCALE_esES] = row.mapname_lang_es_es.value_or("");
+            m.MapName[LOCALE_esMX] = row.mapname_lang_es_mx.value_or("");
+            m.MapName[LOCALE_ruRU] = row.mapname_lang_ru_ru.value_or("");
+            m.MapName[LOCALE_ptPT] = row.mapname_lang_pt_pt.value_or("");
+            m.MapName[LOCALE_ptBR] = row.mapname_lang_pt_br.value_or("");
+            m.MapName[LOCALE_itIT] = row.mapname_lang_it_it.value_or("");
+
+            m.AreaTableID     = row.area_table_id;
+            m.LoadingScreenID = row.loading_screen_id;
+            m.CorpseMapID     = row.corpse_map_id;
+            m.Corpse.X        = row.corpse_x;
+            m.Corpse.Y        = row.corpse_y;
+            m.ExpansionID     = row.expansion_id;
+            m.RaidOffset      = row.raid_offset;
+            m.MaxPlayers      = row.max_players;
+
+            _mapMap[row.id] = m;
+        }
+        log->info(">>> DBCMgr: loaded {} Map in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_Map failed: {}", ex.what());
     }
 }
 

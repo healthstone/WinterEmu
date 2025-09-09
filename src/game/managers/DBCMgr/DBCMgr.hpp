@@ -76,6 +76,7 @@ typedef std::unordered_map<uint32_t /*ID*/, LightDBC> LightDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, LiquidTypeDBC> LiquidTypeDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, LockDBC> LockDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, MailTemplateDBC> MailTemplateDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, MapDBC> MapDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -680,6 +681,15 @@ public:
         return nullptr;
     }
 
+    MapDBCMap const& getMapDBCMap() const { return _mapMap; }
+    MapDBC const* getMapDBC(uint32_t ID)
+    {
+        auto itr = _mapMap.find(ID);
+        if (itr != _mapMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -773,6 +783,7 @@ private:
     void load_LiquidType();                 // load LiquidType.dbc
     void load_Lock();                       // load Lock.dbc
     void load_MailTemplate();               // load MailTemplate.dbc
+    void load_Map();                        // load Map.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -846,6 +857,7 @@ private:
     LiquidTypeDBCMap _liquidTypeMap;
     LockDBCMap _lockMap;
     MailTemplateDBCMap _mailTemplateMap;
+    MapDBCMap _mapMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

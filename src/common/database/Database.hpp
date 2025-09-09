@@ -104,6 +104,7 @@
 #include "database/mapper/dbc/PgDbcLiquidType.hpp"
 #include "database/mapper/dbc/PgDbcLock.hpp"
 #include "database/mapper/dbc/PgDbcMailTemplate.hpp"
+#include "database/mapper/dbc/PgDbcMap.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1194,6 +1195,23 @@ private:
                                  "body_lang_es_mx, body_lang_ru_ru, body_lang_pt_pt, body_lang_pt_br, body_lang_it_it, "
                                  "body_lang_unk, body_lang_mask "
                                  "FROM {}.dbc_mailtemplate", dbc_schema));
+        conn.prepare("SELECT_DBC_MAP",
+                     fmt::format(
+                             "SELECT id, directory, instance_type, flags, pvp, "
+                             "mapname_lang_en_us, mapname_lang_en_gb, mapname_lang_ko_kr, mapname_lang_fr_fr, mapname_lang_de_de, "
+                             "mapname_lang_en_cn, mapname_lang_zh_cn, mapname_lang_en_tw, mapname_lang_zh_tw, mapname_lang_es_es, "
+                             "mapname_lang_es_mx, mapname_lang_ru_ru, mapname_lang_pt_pt, mapname_lang_pt_br, mapname_lang_it_it, "
+                             "mapname_lang_unk, mapname_lang_mask, area_table_id, "
+                             "mapdescription0_lang_en_us, mapdescription0_lang_en_gb, mapdescription0_lang_ko_kr, mapdescription0_lang_fr_fr, mapdescription0_lang_de_de, "
+                             "mapdescription0_lang_en_cn, mapdescription0_lang_zh_cn, mapdescription0_lang_en_tw, mapdescription0_lang_zh_tw, mapdescription0_lang_es_es, "
+                             "mapdescription0_lang_es_mx, mapdescription0_lang_ru_ru, mapdescription0_lang_pt_pt, mapdescription0_lang_pt_br, mapdescription0_lang_it_it, "
+                             "mapdescription0_lang_unk, mapdescription0_lang_mask, "
+                             "mapdescription1_lang_en_us, mapdescription1_lang_en_gb, mapdescription1_lang_ko_kr, mapdescription1_lang_fr_fr, mapdescription1_lang_de_de, "
+                             "mapdescription1_lang_en_cn, mapdescription1_lang_zh_cn, mapdescription1_lang_en_tw, mapdescription1_lang_zh_tw, mapdescription1_lang_es_es, "
+                             "mapdescription1_lang_es_mx, mapdescription1_lang_ru_ru, mapdescription1_lang_pt_pt, mapdescription1_lang_pt_br, mapdescription1_lang_it_it, "
+                             "mapdescription1_lang_unk, mapdescription1_lang_mask, "
+                             "loading_screen_id, minimap_icon_scale, corpse_map_id, corpse_x, corpse_y, time_of_day_override, expansion_id, raid_offset, max_players "
+                             "FROM {}.dbc_map", dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "
