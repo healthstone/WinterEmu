@@ -13,6 +13,8 @@ void DBCMgr::cleanUpBeforeDelete() {
     _charSectionsByPenta.clear();
     _charStartOutfitByTripple.clear();
     _emotesTextSoundByTripple.clear();
+    _lfgDungeonByDouble.clear();
+    _mapDifficultyByDouble.clear();
     _skillRaceClassInfoBySkill.clear();
 
     // Потом уже сами основные мапы
@@ -85,6 +87,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _lockMap.clear();
     _mailTemplateMap.clear();
     _mapMap.clear();
+    _mapDifficultyMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -162,6 +165,7 @@ void DBCMgr::initialize() {
     load_Lock();
     load_MailTemplate();
     load_Map();
+    load_MapDifficulty();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2402,6 +2406,48 @@ void DBCMgr::load_Map() {
     }
 }
 
+void DBCMgr::load_MapDifficulty() {
+    auto log = Logger::get();
+    _mapDifficultyMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_MAPDIFFICULTY");
+        auto rows = server_->db()->execute_sync_many<DbcMapDifficulty>(stmt);
+        for (const auto &row: rows) {
+            MapDifficultyDBC md;
+            md.ID = row.id;
+            md.MapID      = row.map_id;
+            md.Difficulty = row.difficulty;
+
+            md.Message[LOCALE_enUS] = row.message_lang_en_us.value_or("");
+            md.Message[LOCALE_enGB] = row.message_lang_en_gb.value_or("");
+            md.Message[LOCALE_koKR] = row.message_lang_ko_kr.value_or("");
+            md.Message[LOCALE_frFR] = row.message_lang_fr_fr.value_or("");
+            md.Message[LOCALE_deDE] = row.message_lang_de_de.value_or("");
+            md.Message[LOCALE_enCN] = row.message_lang_en_cn.value_or("");
+            md.Message[LOCALE_zhCN] = row.message_lang_zh_cn.value_or("");
+            md.Message[LOCALE_enTW] = row.message_lang_en_tw.value_or("");
+            md.Message[LOCALE_zhTW] = row.message_lang_zh_tw.value_or("");
+            md.Message[LOCALE_esES] = row.message_lang_es_es.value_or("");
+            md.Message[LOCALE_esMX] = row.message_lang_es_mx.value_or("");
+            md.Message[LOCALE_ruRU] = row.message_lang_ru_ru.value_or("");
+            md.Message[LOCALE_ptPT] = row.message_lang_pt_pt.value_or("");
+            md.Message[LOCALE_ptBR] = row.message_lang_pt_br.value_or("");
+            md.Message[LOCALE_itIT] = row.message_lang_it_it.value_or("");
+
+            md.RaidDuration = row.raid_duration;
+            md.MaxPlayers   = row.max_players;
+
+            _mapDifficultyMap[row.id] = md;
+        }
+        log->info(">>> DBCMgr: loaded {} MapDifficulty in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_MapDifficulty failed: {}", ex.what());
+    }
+}
+
 void DBCMgr::load_SkillRaceClassInfo() {
     auto log = Logger::get();
     _skillRaceClassInfoMap.clear();
@@ -2475,6 +2521,8 @@ void DBCMgr::initialize_Additional_Data() {
     handle_CharSectionsByPenta();
     handle_CharStartOutfitByTripple();
     handle_EmotesTextSoundByTripple();
+    handle_LFGDungeonDBCByDouble();
+    handle_MapDifficultyByDouble();
     handle_SkillRaceClassInfo();
 }
 
@@ -2507,6 +2555,21 @@ void DBCMgr::handle_EmotesTextSoundByTripple() {
     {
         if (EmotesTextSoundDBC const* entry = &etsID.second)
             _emotesTextSoundByTripple[EmotesTextSoundKey(entry->EmotesTextID, entry->RaceID, entry->SexID)] = entry;
+    }
+}
+
+void DBCMgr::handle_LFGDungeonDBCByDouble() {
+    for (const auto& lfgdID : _lfgDungeonMap)
+    {
+        if (LFGDungeonDBC const* entry = &lfgdID.second)
+            _lfgDungeonByDouble[LFGDungeonKey(entry->MapID, Difficulty(entry->Difficulty))] = entry;
+    }
+}
+void DBCMgr::handle_MapDifficultyByDouble() {
+    for (const auto& mpID : _mapDifficultyMap)
+    {
+        if (MapDifficultyDBC const* entry = &mpID.second)
+            _mapDifficultyByDouble[MapDifficultyKey(entry->MapID, Difficulty(entry->Difficulty))] = entry;
     }
 }
 

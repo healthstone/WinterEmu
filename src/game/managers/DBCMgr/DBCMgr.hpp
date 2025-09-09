@@ -77,6 +77,7 @@ typedef std::unordered_map<uint32_t /*ID*/, LiquidTypeDBC> LiquidTypeDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, LockDBC> LockDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, MailTemplateDBC> MailTemplateDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, MapDBC> MapDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, MapDifficultyDBC> MapDifficultyDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -96,6 +97,14 @@ typedef std::map<CharStartOutfitKey, CharStartOutfitDBC const*> CharStartOutfitB
 // EmotesTextSoundByTripple
 typedef std::tuple<uint32_t, uint8_t, uint8_t> EmotesTextSoundKey;
 typedef std::map<EmotesTextSoundKey, EmotesTextSoundDBC const*> EmotesTextSoundByTripple;
+
+// LFGDungeonDBCByDouble
+typedef std::tuple<int32_t, Difficulty> LFGDungeonKey;
+typedef std::map<LFGDungeonKey, LFGDungeonDBC const*> LFGDungeonDBCByDouble;
+
+// MapDifficultyByDouble
+typedef std::tuple<uint32_t, Difficulty> MapDifficultyKey;
+typedef std::map<MapDifficultyKey, MapDifficultyDBC const*> MapDifficultyByDouble;
 
 // SkillRaceClassInfoBounds
 typedef std::unordered_multimap<uint32_t, SkillRaceClassInfoDBC const*> SkillRaceClassInfoMap;
@@ -655,6 +664,35 @@ public:
         return nullptr;
     }
 
+    LightDBC const* getLightDBC(uint32_t ID)
+    {
+        auto itr = _lightMap.find(ID);
+        if (itr != _lightMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    uint32_t GetDefaultMapLight(uint32_t mapId) // UNUSED
+    {
+        for (LightDBCMap::const_iterator itr = _lightMap.begin(); itr != _lightMap.end(); ++itr)
+        {
+            if (itr->second.ContinentID == mapId &&
+                itr->second.GameCoords.X == 0.0f &&
+                itr->second.GameCoords.Y == 0.0f &&
+                itr->second.GameCoords.Z == 0.0f)
+                return itr->second.ID;
+        }
+        return 0;
+    }
+
+    LFGDungeonDBC const* getLFGDungeon(uint32_t mapId, Difficulty difficulty)
+    {
+        auto i = _lfgDungeonByDouble.find(LFGDungeonKey(mapId, difficulty));
+        if (i != _lfgDungeonByDouble.end())
+            return i->second;
+        return nullptr;
+    }
+
     LiquidTypeDBCMap const& getLiquidTypeDBCMap() const { return _liquidTypeMap; }
     LiquidTypeDBC const* getLiquidTypeDBC(uint32_t ID)
     {
@@ -687,6 +725,15 @@ public:
         auto itr = _mapMap.find(ID);
         if (itr != _mapMap.end())
             return &itr->second;
+        return nullptr;
+    }
+
+    MapDifficultyDBCMap const& getMapDifficultyDBCMap() const { return _mapDifficultyMap; }
+    MapDifficultyDBC const* getMapDifficultyData(uint32_t mapId, Difficulty difficulty)
+    {
+        auto i = _mapDifficultyByDouble.find(MapDifficultyKey(mapId, difficulty));
+        if (i != _mapDifficultyByDouble.end())
+            return i->second;
         return nullptr;
     }
 
@@ -784,6 +831,7 @@ private:
     void load_Lock();                       // load Lock.dbc
     void load_MailTemplate();               // load MailTemplate.dbc
     void load_Map();                        // load Map.dbc
+    void load_MapDifficulty();              // load MapDifficulty.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -858,6 +906,7 @@ private:
     LockDBCMap _lockMap;
     MailTemplateDBCMap _mailTemplateMap;
     MapDBCMap _mapMap;
+    MapDifficultyDBCMap _mapDifficultyMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
@@ -870,11 +919,15 @@ private:
     void handle_CharSectionsByPenta();
     void handle_CharStartOutfitByTripple();
     void handle_EmotesTextSoundByTripple();
+    void handle_LFGDungeonDBCByDouble();
+    void handle_MapDifficultyByDouble();
     void handle_SkillRaceClassInfo();
 
     CharacterFacialHairStylesByTripple _characterFacialHairStylesByTripple;
     CharSectionsByPenta _charSectionsByPenta;
     CharStartOutfitByTripple _charStartOutfitByTripple;
     EmotesTextSoundByTripple _emotesTextSoundByTripple;
+    LFGDungeonDBCByDouble _lfgDungeonByDouble;
+    MapDifficultyByDouble _mapDifficultyByDouble;
     SkillRaceClassInfoMap _skillRaceClassInfoBySkill;
 };

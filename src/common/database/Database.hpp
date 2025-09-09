@@ -105,6 +105,7 @@
 #include "database/mapper/dbc/PgDbcLock.hpp"
 #include "database/mapper/dbc/PgDbcMailTemplate.hpp"
 #include "database/mapper/dbc/PgDbcMap.hpp"
+#include "database/mapper/dbc/PgDbcMapDifficulty.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1212,6 +1213,14 @@ private:
                              "mapdescription1_lang_unk, mapdescription1_lang_mask, "
                              "loading_screen_id, minimap_icon_scale, corpse_map_id, corpse_x, corpse_y, time_of_day_override, expansion_id, raid_offset, max_players "
                              "FROM {}.dbc_map", dbc_schema));
+        conn.prepare("SELECT_DBC_MAPDIFFICULTY",
+                     fmt::format("SELECT id, map_id, difficulty, "
+                                 "message_lang_en_us, message_lang_en_gb, message_lang_ko_kr, message_lang_fr_fr, message_lang_de_de, "
+                                 "message_lang_en_cn, message_lang_zh_cn, message_lang_en_tw, message_lang_zh_tw, "
+                                 "message_lang_es_es, message_lang_es_mx, message_lang_ru_ru, message_lang_pt_pt, "
+                                 "message_lang_pt_br, message_lang_it_it, message_lang_unk, "
+                                 "message_lang_mask, raid_duration, max_players, difficulty_string "
+                                 "FROM {}.dbc_mapdifficulty", dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "
