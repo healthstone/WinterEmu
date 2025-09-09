@@ -82,6 +82,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _lfgDungeonMap.clear();
     _lightMap.clear();
     _liquidTypeMap.clear();
+    _lockMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -156,6 +157,7 @@ void DBCMgr::initialize() {
     load_LFGDungeons();
     load_Light();
     load_LiquidType();
+    load_Lock();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2244,6 +2246,54 @@ void DBCMgr::load_LiquidType() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_LiquidType failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_Lock() {
+    auto log = Logger::get();
+    _lockMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_LOCK");
+        auto rows = server_->db()->execute_sync_many<DbcLock>(stmt);
+        for (const auto &row: rows) {
+            LockDBC l;
+            l.ID = row.id;
+
+            l.Type[0] = row.type_1;
+            l.Type[1] = row.type_2;
+            l.Type[2] = row.type_3;
+            l.Type[3] = row.type_4;
+            l.Type[4] = row.type_5;
+            l.Type[5] = row.type_6;
+            l.Type[6] = row.type_7;
+            l.Type[7] = row.type_8;
+
+            l.Index[0] = row.index_1;
+            l.Index[1] = row.index_2;
+            l.Index[2] = row.index_3;
+            l.Index[3] = row.index_4;
+            l.Index[4] = row.index_5;
+            l.Index[5] = row.index_6;
+            l.Index[6] = row.index_7;
+            l.Index[7] = row.index_8;
+
+            l.Skill[0] = row.skill_1;
+            l.Skill[1] = row.skill_2;
+            l.Skill[2] = row.skill_3;
+            l.Skill[3] = row.skill_4;
+            l.Skill[4] = row.skill_5;
+            l.Skill[5] = row.skill_6;
+            l.Skill[6] = row.skill_7;
+            l.Skill[7] = row.skill_8;
+
+            _lockMap[row.id] = l;
+        }
+        log->info(">>> DBCMgr: loaded {} Lock in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_Lock failed: {}", ex.what());
     }
 }
 

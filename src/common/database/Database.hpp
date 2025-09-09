@@ -102,6 +102,7 @@
 #include "database/mapper/dbc/PgDbcLfgDungeons.hpp"
 #include "database/mapper/dbc/PgDbcLight.hpp"
 #include "database/mapper/dbc/PgDbcLiquidType.hpp"
+#include "database/mapper/dbc/PgDbcLock.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1174,7 +1175,13 @@ private:
                              "float_9, float_10, float_11, float_12, float_13, float_14, float_15, float_16, float_17, float_18, "
                              "int_1, int_2, int_3, int_4 "
                              "FROM {}.dbc_liquidtype", dbc_schema));
-
+        conn.prepare("SELECT_DBC_LOCK",
+                     fmt::format("SELECT "
+                                 "id, type_1, type_2, type_3, type_4, type_5, type_6, type_7, type_8, "
+                                 "index_1, index_2, index_3, index_4, index_5, index_6, index_7, index_8, "
+                                 "skill_1, skill_2, skill_3, skill_4, skill_5, skill_6, skill_7, skill_8, "
+                                 "action_1, action_2, action_3, action_4, action_5, action_6, action_7, action_8 "
+                                 "FROM {}.dbc_lock", dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "

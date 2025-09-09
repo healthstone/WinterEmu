@@ -1,0 +1,38 @@
+DROP TABLE IF EXISTS dbc.dbc_lock;
+
+CREATE TABLE dbc.dbc_lock
+(
+    id       integer PRIMARY KEY DEFAULT 0,
+    type_1   integer NOT NULL    DEFAULT 0,
+    type_2   integer NOT NULL    DEFAULT 0,
+    type_3   integer NOT NULL    DEFAULT 0,
+    type_4   integer NOT NULL    DEFAULT 0,
+    type_5   integer NOT NULL    DEFAULT 0,
+    type_6   integer NOT NULL    DEFAULT 0,
+    type_7   integer NOT NULL    DEFAULT 0,
+    type_8   integer NOT NULL    DEFAULT 0,
+    index_1  integer NOT NULL    DEFAULT 0,
+    index_2  integer NOT NULL    DEFAULT 0,
+    index_3  integer NOT NULL    DEFAULT 0,
+    index_4  integer NOT NULL    DEFAULT 0,
+    index_5  integer NOT NULL    DEFAULT 0,
+    index_6  integer NOT NULL    DEFAULT 0,
+    index_7  integer NOT NULL    DEFAULT 0,
+    index_8  integer NOT NULL    DEFAULT 0,
+    skill_1  integer NOT NULL    DEFAULT 0,
+    skill_2  integer NOT NULL    DEFAULT 0,
+    skill_3  integer NOT NULL    DEFAULT 0,
+    skill_4  integer NOT NULL    DEFAULT 0,
+    skill_5  integer NOT NULL    DEFAULT 0,
+    skill_6  integer NOT NULL    DEFAULT 0,
+    skill_7  integer NOT NULL    DEFAULT 0,
+    skill_8  integer NOT NULL    DEFAULT 0,
+    action_1 integer NOT NULL    DEFAULT 0,
+    action_2 integer NOT NULL    DEFAULT 0,
+    action_3 integer NOT NULL    DEFAULT 0,
+    action_4 integer NOT NULL    DEFAULT 0,
+    action_5 integer NOT NULL    DEFAULT 0,
+    action_6 integer NOT NULL    DEFAULT 0,
+    action_7 integer NOT NULL    DEFAULT 0,
+    action_8 integer NOT NULL    DEFAULT 0
+);
