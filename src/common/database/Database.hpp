@@ -103,6 +103,7 @@
 #include "database/mapper/dbc/PgDbcLight.hpp"
 #include "database/mapper/dbc/PgDbcLiquidType.hpp"
 #include "database/mapper/dbc/PgDbcLock.hpp"
+#include "database/mapper/dbc/PgDbcMailTemplate.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1182,6 +1183,17 @@ private:
                                  "skill_1, skill_2, skill_3, skill_4, skill_5, skill_6, skill_7, skill_8, "
                                  "action_1, action_2, action_3, action_4, action_5, action_6, action_7, action_8 "
                                  "FROM {}.dbc_lock", dbc_schema));
+        conn.prepare("SELECT_DBC_MAILTEMPLATE",
+                     fmt::format("SELECT id, "
+                                 "subject_lang_en_us, subject_lang_en_gb, subject_lang_ko_kr, subject_lang_fr_fr, "
+                                 "subject_lang_de_de, subject_lang_en_cn, subject_lang_zh_cn, subject_lang_en_tw, "
+                                 "subject_lang_zh_tw, subject_lang_es_es, subject_lang_es_mx, subject_lang_ru_ru, "
+                                 "subject_lang_pt_pt, subject_lang_pt_br, subject_lang_it_it, subject_lang_unk, subject_lang_mask, "
+                                 "body_lang_en_us, body_lang_en_gb, body_lang_ko_kr, body_lang_fr_fr, body_lang_de_de, "
+                                 "body_lang_en_cn, body_lang_zh_cn, body_lang_en_tw, body_lang_zh_tw, body_lang_es_es, "
+                                 "body_lang_es_mx, body_lang_ru_ru, body_lang_pt_pt, body_lang_pt_br, body_lang_it_it, "
+                                 "body_lang_unk, body_lang_mask "
+                                 "FROM {}.dbc_mailtemplate", dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "

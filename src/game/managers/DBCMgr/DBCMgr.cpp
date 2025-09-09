@@ -83,6 +83,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _lightMap.clear();
     _liquidTypeMap.clear();
     _lockMap.clear();
+    _mailTemplateMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -158,6 +159,7 @@ void DBCMgr::initialize() {
     load_Light();
     load_LiquidType();
     load_Lock();
+    load_MailTemplate();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2294,6 +2296,59 @@ void DBCMgr::load_Lock() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_Lock failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_MailTemplate() {
+    auto log = Logger::get();
+    _mailTemplateMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_MAILTEMPLATE");
+        auto rows = server_->db()->execute_sync_many<PgDbcMailTemplate>(stmt);
+        for (const auto &row: rows) {
+            MailTemplateDBC mt;
+            mt.ID = row.id;
+
+            mt.Subject[LOCALE_enUS] = row.subject_lang_en_us.value_or("");
+            mt.Subject[LOCALE_enGB] = row.subject_lang_en_gb.value_or("");
+            mt.Subject[LOCALE_koKR] = row.subject_lang_ko_kr.value_or("");
+            mt.Subject[LOCALE_frFR] = row.subject_lang_fr_fr.value_or("");
+            mt.Subject[LOCALE_deDE] = row.subject_lang_de_de.value_or("");
+            mt.Subject[LOCALE_enCN] = row.subject_lang_en_cn.value_or("");
+            mt.Subject[LOCALE_zhCN] = row.subject_lang_zh_cn.value_or("");
+            mt.Subject[LOCALE_enTW] = row.subject_lang_en_tw.value_or("");
+            mt.Subject[LOCALE_zhTW] = row.subject_lang_zh_tw.value_or("");
+            mt.Subject[LOCALE_esES] = row.subject_lang_es_es.value_or("");
+            mt.Subject[LOCALE_esMX] = row.subject_lang_es_mx.value_or("");
+            mt.Subject[LOCALE_ruRU] = row.subject_lang_ru_ru.value_or("");
+            mt.Subject[LOCALE_ptPT] = row.subject_lang_pt_pt.value_or("");
+            mt.Subject[LOCALE_ptBR] = row.subject_lang_pt_br.value_or("");
+            mt.Subject[LOCALE_itIT] = row.subject_lang_it_it.value_or("");
+
+            mt.Body[LOCALE_enUS] = row.body_lang_en_us.value_or("");
+            mt.Body[LOCALE_enGB] = row.body_lang_en_gb.value_or("");
+            mt.Body[LOCALE_koKR] = row.body_lang_ko_kr.value_or("");
+            mt.Body[LOCALE_frFR] = row.body_lang_fr_fr.value_or("");
+            mt.Body[LOCALE_deDE] = row.body_lang_de_de.value_or("");
+            mt.Body[LOCALE_enCN] = row.body_lang_en_cn.value_or("");
+            mt.Body[LOCALE_zhCN] = row.body_lang_zh_cn.value_or("");
+            mt.Body[LOCALE_enTW] = row.body_lang_en_tw.value_or("");
+            mt.Body[LOCALE_zhTW] = row.body_lang_zh_tw.value_or("");
+            mt.Body[LOCALE_esES] = row.body_lang_es_es.value_or("");
+            mt.Body[LOCALE_esMX] = row.body_lang_es_mx.value_or("");
+            mt.Body[LOCALE_ruRU] = row.body_lang_ru_ru.value_or("");
+            mt.Body[LOCALE_ptPT] = row.body_lang_pt_pt.value_or("");
+            mt.Body[LOCALE_ptBR] = row.body_lang_pt_br.value_or("");
+            mt.Body[LOCALE_itIT] = row.body_lang_it_it.value_or("");
+
+            _mailTemplateMap[row.id] = mt;
+        }
+        log->info(">>> DBCMgr: loaded {} MailTemplate in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_MailTemplate failed: {}", ex.what());
     }
 }
 

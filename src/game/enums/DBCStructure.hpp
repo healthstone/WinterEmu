@@ -1009,7 +1009,7 @@ struct LockDBC {
 // load MailTemplate.dbc
 struct MailTemplateDBC {
     uint32_t ID;                                              // 0
-    //char const* Subject[16];                                // 1-16
+    std::string Subject[TOTAL_LOCALES];                       // 1-16
     //uint32_t Subject_lang_mask;                             // 17
     std::string Body[TOTAL_LOCALES];                          // 18-33
     //uint32_t Body_lang_mask;                                // 34
