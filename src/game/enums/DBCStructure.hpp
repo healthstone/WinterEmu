@@ -978,7 +978,7 @@ struct LiquidTypeDBC {
     uint32_t ID;                                              // 0
     //char const* Name;                                       // 1
     //uint32_t Flags;                                         // 2
-    uint32_t SoundBank;                                       // 3
+    uint32_t Type;                                            // 3
     //uint32_t SoundID;                                       // 4
     uint32_t SpellID;                                         // 5
     //float MaxDarkenDepth;                                   // 6

@@ -81,6 +81,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _itemSetMap.clear();
     _lfgDungeonMap.clear();
     _lightMap.clear();
+    _liquidTypeMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -154,6 +155,7 @@ void DBCMgr::initialize() {
     load_ItemSet();
     load_LFGDungeons();
     load_Light();
+    load_LiquidType();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2219,6 +2221,29 @@ void DBCMgr::load_Light() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_LFGDungeons failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_LiquidType() {
+    auto log = Logger::get();
+    _liquidTypeMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_LIQUIDTYPE");
+        auto rows = server_->db()->execute_sync_many<DbcLiquidType>(stmt);
+        for (const auto &row: rows) {
+            LiquidTypeDBC lt;
+            lt.ID = row.id;
+            lt.Type = row.type;
+            lt.SpellID = row.spellid;
+
+            _liquidTypeMap[row.id] = lt;
+        }
+        log->info(">>> DBCMgr: loaded {} LiquidType in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_LiquidType failed: {}", ex.what());
     }
 }
 

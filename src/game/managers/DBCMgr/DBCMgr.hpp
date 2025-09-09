@@ -73,6 +73,7 @@ typedef std::unordered_map<uint32_t /*ID*/, ItemRandomSuffixDBC> ItemRandomSuffi
 typedef std::unordered_map<uint32_t /*ID*/, ItemSetDBC> ItemSetDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, LFGDungeonDBC> LFGDungeonDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, LightDBC> LightDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, LiquidTypeDBC> LiquidTypeDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -651,6 +652,15 @@ public:
         return nullptr;
     }
 
+    LiquidTypeDBCMap const& getLiquidTypeDBCMap() const { return _liquidTypeMap; }
+    LiquidTypeDBC const* getLiquidTypeDBC(uint32_t ID)
+    {
+        auto itr = _liquidTypeMap.find(ID);
+        if (itr != _liquidTypeMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -741,6 +751,7 @@ private:
     void load_ItemSet();                    // load ItemSet.dbc
     void load_LFGDungeons();                // load LFGDungeons.dbc
     void load_Light();                      // load Light.dbc
+    void load_LiquidType();                 // load LiquidType.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -811,6 +822,7 @@ private:
     ItemSetDBCMap _itemSetMap;
     LFGDungeonDBCMap _lfgDungeonMap;
     LightDBCMap _lightMap;
+    LiquidTypeDBCMap _liquidTypeMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

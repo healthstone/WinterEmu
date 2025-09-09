@@ -101,6 +101,7 @@
 #include "database/mapper/dbc/PgDbcItemSet.hpp"
 #include "database/mapper/dbc/PgDbcLfgDungeons.hpp"
 #include "database/mapper/dbc/PgDbcLight.hpp"
+#include "database/mapper/dbc/PgDbcLiquidType.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1162,6 +1163,18 @@ private:
                                  "lightparamsid_5, lightparamsid_6, lightparamsid_7, lightparamsid_8 "
                                  "FROM {}.dbc_light",
                                  dbc_schema));
+        conn.prepare("SELECT_DBC_LIQUIDTYPE",
+                     fmt::format(
+                             "SELECT id, name, flags, type, soundid, spellid, "
+                             "maxdarkendepth, fogdarkenintensity, ambdarkenintensity, dirdarkenintensity, "
+                             "lightid, particlescale, particlemovement, particletexslots, materialid, "
+                             "texture_1, texture_2, texture_3, texture_4, texture_5, texture_6, "
+                             "color_1, color_2, "
+                             "float_1, float_2, float_3, float_4, float_5, float_6, float_7, float_8, "
+                             "float_9, float_10, float_11, float_12, float_13, float_14, float_15, float_16, float_17, float_18, "
+                             "int_1, int_2, int_3, int_4 "
+                             "FROM {}.dbc_liquidtype", dbc_schema));
+
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "
