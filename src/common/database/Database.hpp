@@ -106,6 +106,7 @@
 #include "database/mapper/dbc/PgDbcMailTemplate.hpp"
 #include "database/mapper/dbc/PgDbcMap.hpp"
 #include "database/mapper/dbc/PgDbcMapDifficulty.hpp"
+#include "database/mapper/dbc/PgDbcMovie.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1221,6 +1222,10 @@ private:
                                  "message_lang_pt_br, message_lang_it_it, message_lang_unk, "
                                  "message_lang_mask, raid_duration, max_players, difficulty_string "
                                  "FROM {}.dbc_mapdifficulty", dbc_schema));
+        conn.prepare("SELECT_DBC_MOVIE",
+                     fmt::format(
+                             "SELECT id, filename, volume "
+                             "FROM {}.dbc_movie", dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "

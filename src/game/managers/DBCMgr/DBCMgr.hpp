@@ -78,6 +78,7 @@ typedef std::unordered_map<uint32_t /*ID*/, LockDBC> LockDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, MailTemplateDBC> MailTemplateDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, MapDBC> MapDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, MapDifficultyDBC> MapDifficultyDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, MovieDBC> MovieDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -737,6 +738,38 @@ public:
         return nullptr;
     }
 
+    MapDifficultyDBC const* getDownscaledMapDifficultyData(uint32_t mapId, Difficulty& difficulty)
+    {
+        uint32_t tmpDiff = difficulty;
+        MapDifficultyDBC const* mapDiff = getMapDifficultyData(mapId, Difficulty(tmpDiff));
+        if (!mapDiff)
+        {
+            if (tmpDiff > RAID_DIFFICULTY_25MAN_NORMAL) // heroic, downscale to normal
+                tmpDiff -= 2;
+            else
+                tmpDiff -= 1;   // any non-normal mode for raids like tbc (only one mode)
+
+            // pull new data
+            mapDiff = getMapDifficultyData(mapId, Difficulty(tmpDiff)); // we are 10 normal or 25 normal
+            if (!mapDiff)
+            {
+                tmpDiff -= 1;
+                mapDiff = getMapDifficultyData(mapId, Difficulty(tmpDiff)); // 10 normal
+            }
+        }
+
+        difficulty = Difficulty(tmpDiff);
+        return mapDiff;
+    }
+
+    MovieDBC const* getMovieDBC(uint32_t ID)
+    {
+        auto itr = _movieMap.find(ID);
+        if (itr != _movieMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -832,6 +865,7 @@ private:
     void load_MailTemplate();               // load MailTemplate.dbc
     void load_Map();                        // load Map.dbc
     void load_MapDifficulty();              // load MapDifficulty.dbc
+    void load_Movie();                      // load Movie.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -907,6 +941,7 @@ private:
     MailTemplateDBCMap _mailTemplateMap;
     MapDBCMap _mapMap;
     MapDifficultyDBCMap _mapDifficultyMap;
+    MovieDBCMap _movieMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

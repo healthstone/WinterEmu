@@ -88,6 +88,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _mailTemplateMap.clear();
     _mapMap.clear();
     _mapDifficultyMap.clear();
+    _movieMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -166,6 +167,7 @@ void DBCMgr::initialize() {
     load_MailTemplate();
     load_Map();
     load_MapDifficulty();
+    load_Movie();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2445,6 +2447,27 @@ void DBCMgr::load_MapDifficulty() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_MapDifficulty failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_Movie() {
+    auto log = Logger::get();
+    _movieMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_MOVIE");
+        auto rows = server_->db()->execute_sync_many<DbcMovie>(stmt);
+        for (const auto &row: rows) {
+            MovieDBC m;
+            m.ID = row.ID;
+
+            _movieMap[row.ID] = m;
+        }
+        log->info(">>> DBCMgr: loaded {} Movie in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_Movie failed: {}", ex.what());
     }
 }
 
