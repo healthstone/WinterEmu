@@ -99,6 +99,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _namesProfanityMap.clear();
     _namesReservedMap.clear();
     _overrideSpellDataMap.clear();
+    _powerDisplayMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -181,6 +182,7 @@ void DBCMgr::initialize() {
     load_NamesProfanity();
     load_NamesReserved();
     load_OverrideSpellData();
+    load_PowerDisplay();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2576,6 +2578,28 @@ void DBCMgr::load_OverrideSpellData() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_OverrideSpellData failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_PowerDisplay() {
+    auto log = Logger::get();
+    _powerDisplayMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_POWERDISPLAY");
+        auto rows = server_->db()->execute_sync_many<DbcPowerDisplay>(stmt);
+        for (const auto &row: rows) {
+            PowerDisplayDBC pd;
+            pd.ID = row.id;
+            pd.ActualType = row.actualtype;
+
+            _powerDisplayMap[row.id] = pd;
+        }
+        log->info(">>> DBCMgr: loaded {} PowerDisplay in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_PowerDisplay failed: {}", ex.what());
     }
 }
 

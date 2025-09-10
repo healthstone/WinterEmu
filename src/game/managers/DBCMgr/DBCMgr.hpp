@@ -85,6 +85,7 @@ typedef std::unordered_map<uint32_t /*ID*/, MovieDBC> MovieDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, NamesProfanityDBC> NamesProfanityDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, NamesReservedDBC> NamesReservedDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, OverrideSpellDataDBC> OverrideSpellDataDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, PowerDisplayDBC> PowerDisplayDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -788,6 +789,14 @@ public:
         return nullptr;
     }
 
+    PowerDisplayDBC const* getPowerDisplayDBC(uint32_t ID)
+    {
+        auto itr = _powerDisplayMap.find(ID);
+        if (itr != _powerDisplayMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -887,6 +896,7 @@ private:
     void load_NamesProfanity();             // load NamesProfanity.dbc
     void load_NamesReserved();              // load NamesReserved.dbc
     void load_OverrideSpellData();          // load OverrideSpellData.dbc
+    void load_PowerDisplay();               // load PowerDisplay.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -966,6 +976,7 @@ private:
     NamesProfanityDBCMap _namesProfanityMap;
     NamesReservedDBCMap _namesReservedMap;
     OverrideSpellDataDBCMap _overrideSpellDataMap;
+    PowerDisplayDBCMap _powerDisplayMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

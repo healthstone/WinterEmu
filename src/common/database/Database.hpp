@@ -110,6 +110,7 @@
 #include "database/mapper/dbc/PgDbcNamesProfanity.hpp"
 #include "database/mapper/dbc/PgDbcNamesReserved.hpp"
 #include "database/mapper/dbc/PgDbcOverridespellData.hpp"
+#include "database/mapper/dbc/PgDbcPowerDisplay.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1241,6 +1242,9 @@ private:
                      fmt::format("SELECT id, spells_1, spells_2, spells_3, spells_4, spells_5, "
                                  "spells_6, spells_7, spells_8, spells_9, spells_10, flags "
                                  "FROM {}.dbc_overridespelldata", dbc_schema));
+        conn.prepare("SELECT_DBC_POWERDISPLAY",
+                     fmt::format("SELECT id, actualtype, globalstring_basetag, red, green, blue "
+                                 "FROM {}.dbc_powerdisplay", dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "
