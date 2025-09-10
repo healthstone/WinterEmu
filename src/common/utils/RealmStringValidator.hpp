@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/game/Entity/Realm/Realm.hpp"
+#include "src/game/enums/RealmEnums.hpp"
 #include "src/game/enums/LanguageType.hpp"
 
 namespace RealmStringValidator {
