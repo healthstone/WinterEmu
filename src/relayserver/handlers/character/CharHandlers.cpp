@@ -321,7 +321,7 @@ ResponseCodes CharHandlers::checkPlayerName(std::shared_ptr<GameSession> session
 
     // TC CONFIG_STRICT_PLAYER_NAMES : default 0
     uint32_t strictMask = 0;
-    if (!RealmStringValidator::isValidString(currentRealm, wname, strictMask, false, true))
+    if (!RealmStringValidator::isValidString(currentRealm->Zone, wname, strictMask, false, true))
         return ResponseCodes::CHAR_NAME_MIXED_LANGUAGES;
 
     UTF8Utils::wstrToLower(wname);

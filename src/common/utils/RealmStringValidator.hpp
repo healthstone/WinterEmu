@@ -4,9 +4,9 @@
 #include "src/game/enums/LanguageType.hpp"
 
 namespace RealmStringValidator {
-    static LanguageType GetRealmLanguageType(bool create, Realm const* realm)
+    static LanguageType GetRealmLanguageType(bool create, RealmZone Zone)
     {
-        switch (realm->Zone)
+        switch (Zone)
         {
             case REALM_ZONE_UNKNOWN:                            // any language
             case REALM_ZONE_DEVELOPMENT:
@@ -135,7 +135,7 @@ namespace RealmStringValidator {
         return true;
     }
 
-    bool isValidString(Realm const* realm, const std::wstring& wstr, uint32_t strictMask, bool numericOrSpace,  bool create = false)
+    bool isValidString(RealmZone Zone, const std::wstring& wstr, uint32_t strictMask, bool numericOrSpace,  bool create = false)
     {
         if (strictMask == 0)                                       // any language, ignore realm
         {
@@ -150,7 +150,7 @@ namespace RealmStringValidator {
 
         if (strictMask & 0x2)                                    // realm zone specific
         {
-            LanguageType lt = GetRealmLanguageType(create, realm);
+            LanguageType lt = GetRealmLanguageType(create, Zone);
             if (lt & LT_EXTENDEN_LATIN)
                 if (isExtendedLatinString(wstr, numericOrSpace))
                     return true;
