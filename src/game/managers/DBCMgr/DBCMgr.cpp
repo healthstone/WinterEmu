@@ -2,6 +2,7 @@
 #include "Time/Timer.hpp"
 #include "Logger.hpp"
 #include "BaseServer.hpp"
+#include "utils/utf8utils/UTF8Utils.hpp"
 
 DBCMgr::~DBCMgr() {
     cleanUpBeforeDelete();
@@ -16,6 +17,12 @@ void DBCMgr::cleanUpBeforeDelete() {
     _lfgDungeonByDouble.clear();
     _mapDifficultyByDouble.clear();
     _skillRaceClassInfoBySkill.clear();
+
+    // handle additional containers
+    for (uint8_t i = 0; i < TOTAL_LOCALES; i++) {
+        _namesProfaneValidators[i].clear();
+        _namesReservedValidators[i].clear();
+    }
 
     // Потом уже сами основные мапы
     _achievementMap.clear();
@@ -89,6 +96,8 @@ void DBCMgr::cleanUpBeforeDelete() {
     _mapMap.clear();
     _mapDifficultyMap.clear();
     _movieMap.clear();
+    _namesProfanityMap.clear();
+    _namesReservedMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -168,6 +177,8 @@ void DBCMgr::initialize() {
     load_Map();
     load_MapDifficulty();
     load_Movie();
+    load_NamesProfanity();
+    load_NamesReserved();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2471,6 +2482,52 @@ void DBCMgr::load_Movie() {
     }
 }
 
+void DBCMgr::load_NamesProfanity() {
+    auto log = Logger::get();
+    _namesProfanityMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_NAMESPROFANITY");
+        auto rows = server_->db()->execute_sync_many<DbcNamesProfanity>(stmt);
+        for (const auto &row: rows) {
+            NamesProfanityDBC np;
+            np.ID = row.id;
+            np.Name     = row.name.value_or("");
+            np.Language = row.language;
+
+            _namesProfanityMap[row.id] = np;
+        }
+        log->info(">>> DBCMgr: loaded {} NamesProfanity in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_NamesProfanity failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_NamesReserved() {
+    auto log = Logger::get();
+    _namesReservedMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_NAMESRESERVED");
+        auto rows = server_->db()->execute_sync_many<DbcNamesReserved>(stmt);
+        for (const auto &row: rows) {
+            NamesReservedDBC nr;
+            nr.ID = row.id;
+            nr.Name = row.name.value_or("");
+            nr.Language = row.language;
+
+            _namesReservedMap[row.id] = nr;
+        }
+        log->info(">>> DBCMgr: loaded {} NamesReserved in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_NamesReserved failed: {}", ex.what());
+    }
+}
+
 void DBCMgr::load_SkillRaceClassInfo() {
     auto log = Logger::get();
     _skillRaceClassInfoMap.clear();
@@ -2546,6 +2603,8 @@ void DBCMgr::initialize_Additional_Data() {
     handle_EmotesTextSoundByTripple();
     handle_LFGDungeonDBCByDouble();
     handle_MapDifficultyByDouble();
+    handle_NamesProfanityRegex();
+    handle_NamesReservedRegex();
     handle_SkillRaceClassInfo();
 }
 
@@ -2594,6 +2653,50 @@ void DBCMgr::handle_MapDifficultyByDouble() {
         if (MapDifficultyDBC const* entry = &mpID.second)
             _mapDifficultyByDouble[MapDifficultyKey(entry->MapID, Difficulty(entry->Difficulty))] = entry;
     }
+}
+
+void DBCMgr::handle_NamesProfanityRegex() {
+    // Separate namesprofanity for languages
+    for (NamesProfanityDBCMap::const_iterator itr = _namesProfanityMap.begin(); itr != _namesProfanityMap.end(); ++itr)
+    {
+        std::wstring wname;
+        bool conversionResult = UTF8Utils::Utf8toWStr(itr->second.Name, wname);
+        if (!conversionResult) {
+            Logger::get()->error("DBCMgr::handle_NamesProfanityRegex failed for ID: {}", itr->second.ID);
+            continue;
+        }
+
+        if (itr->second.Language != -1)
+            _namesProfaneValidators[itr->second.Language].emplace_back(wname, boost::regex::perl | boost::regex::icase | boost::regex::optimize);
+        else
+            for (uint32_t i = 0; i < TOTAL_LOCALES; ++i)
+                _namesProfaneValidators[i].emplace_back(wname, boost::regex::perl | boost::regex::icase | boost::regex::optimize);
+    }
+
+    // clear this DBC container (UNUSED in life-cycle server)
+    _namesProfanityMap.clear();
+}
+
+void DBCMgr::handle_NamesReservedRegex() {
+    // Separate namesreserved for languages
+    for (NamesReservedDBCMap::const_iterator itr = _namesReservedMap.begin(); itr != _namesReservedMap.end(); ++itr)
+    {
+        std::wstring wname;
+        bool conversionResult = UTF8Utils::Utf8toWStr(itr->second.Name, wname);
+        if (!conversionResult) {
+            Logger::get()->error("DBCMgr::handle_NamesReservedRegex failed for ID: {}", itr->second.ID);
+            continue;
+        }
+
+        if (itr->second.Language != -1)
+            _namesReservedValidators[itr->second.Language].emplace_back(wname, boost::regex::perl | boost::regex::icase | boost::regex::optimize);
+        else
+            for (uint32_t i = 0; i < TOTAL_LOCALES; ++i)
+                _namesReservedValidators[i].emplace_back(wname, boost::regex::perl | boost::regex::icase | boost::regex::optimize);
+    }
+
+    // clear this DBC container (UNUSED in life-cycle server)
+    _namesReservedMap.clear();
 }
 
 void DBCMgr::handle_SkillRaceClassInfo() {

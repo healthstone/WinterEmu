@@ -2,7 +2,7 @@
 #include "CharCreateData.hpp"
 #include "packet/WoWPacket.hpp"
 #include "src/relayserver/GameSession/GameSession.hpp"
-#include "src/relayserver/enums/ResponseCodes.hpp"
+#include "src/game/enums/ResponseCodes.hpp"
 
 namespace CharHandlers {
     uint32_t constexpr MAX_CHARACTERS_PER_REALM = 10; // max supported by client in char enum
@@ -15,6 +15,7 @@ namespace CharHandlers {
     boost::asio::awaitable<void>
     handleCharacterCreate(std::shared_ptr<GameSession> session, const std::shared_ptr<WoWPacket> &p);
 
+    ResponseCodes checkPlayerName(std::shared_ptr<GameSession> session, std::string_view name);
     void sendCharResponse(std::shared_ptr<GameSession> session, WoWOpcodes opcode, ResponseCodes result);
 
     std::optional<CharCreateData> ReadPacketFields(const std::shared_ptr<WoWPacket> &p);

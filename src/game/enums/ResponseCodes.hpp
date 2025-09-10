@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-enum ResponseCodes
+enum class ResponseCodes : uint8_t
 {
     RESPONSE_SUCCESS                                       = 0,
     RESPONSE_FAILURE                                       = 1,

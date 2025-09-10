@@ -24,6 +24,15 @@ AuthHandlers::handleAuthPacket(std::shared_ptr<GameSession> session, std::shared
     }
     session->setAccount(account.value());
 
+    if (account.value().locale) {
+        auto localeConstant = static_cast<LocaleConstant>(account.value().locale.value());
+        session->setSessionDbcLocale(localeConstant);
+    }
+    else {
+        session->setSessionDbcLocale(LOCALE_enUS);
+        log->warn("[AuthHandlers::handleAuthPacket] Account '{}' logged-in without DBC Locale, WTF? Attention", authSessionData->accountName);
+    }
+
     // Ключевое изменение: инициализация шифрования ДО проверки дайджеста
     session->initCrypt(account->session_key_auth.value());
 

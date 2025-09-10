@@ -5,8 +5,11 @@
 #include <unordered_map>
 #include <memory>
 #include <map>
+#include <vector>
+#include <boost/regex.hpp>
 #include "src/game/enums/DBCStructure.hpp"
 #include "src/game/enums/Team.hpp"
+#include "src/game/enums/ResponseCodes.hpp"
 
 typedef std::unordered_map<uint32_t /*ID*/, AchievementDBC> AchievementDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, AchievementCriteriaDBC> AchievementCriteriaDBCMap;
@@ -79,6 +82,8 @@ typedef std::unordered_map<uint32_t /*ID*/, MailTemplateDBC> MailTemplateDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, MapDBC> MapDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, MapDifficultyDBC> MapDifficultyDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, MovieDBC> MovieDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, NamesProfanityDBC> NamesProfanityDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, NamesReservedDBC> NamesReservedDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -106,6 +111,9 @@ typedef std::map<LFGDungeonKey, LFGDungeonDBC const*> LFGDungeonDBCByDouble;
 // MapDifficultyByDouble
 typedef std::tuple<uint32_t, Difficulty> MapDifficultyKey;
 typedef std::map<MapDifficultyKey, MapDifficultyDBC const*> MapDifficultyByDouble;
+
+// regex
+typedef std::array<std::vector<boost::wregex>, TOTAL_LOCALES> NameValidationRegexContainer;
 
 // SkillRaceClassInfoBounds
 typedef std::unordered_multimap<uint32_t, SkillRaceClassInfoDBC const*> SkillRaceClassInfoMap;
@@ -770,6 +778,24 @@ public:
         return nullptr;
     }
 
+    // Handlers for working with DBC data
+    ResponseCodes validateName(std::wstring const& name, LocaleConstant locale)
+    {
+        if (locale >= TOTAL_LOCALES)
+            return ResponseCodes::RESPONSE_FAILURE;
+
+        for (boost::wregex const& regex : _namesProfaneValidators[locale])
+            if (boost::regex_search(name, regex))
+                return ResponseCodes::CHAR_NAME_PROFANE;
+
+        // regexes at TOTAL_LOCALES are loaded from NamesReserved which is not locale specific
+        for (boost::wregex const& regex : _namesReservedValidators[locale])
+            if (boost::regex_search(name, regex))
+                return ResponseCodes::CHAR_NAME_RESERVED;
+
+        return ResponseCodes::CHAR_NAME_SUCCESS;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -866,6 +892,8 @@ private:
     void load_Map();                        // load Map.dbc
     void load_MapDifficulty();              // load MapDifficulty.dbc
     void load_Movie();                      // load Movie.dbc
+    void load_NamesProfanity();             // load NamesProfanity.dbc
+    void load_NamesReserved();              // load NamesReserved.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -942,6 +970,8 @@ private:
     MapDBCMap _mapMap;
     MapDifficultyDBCMap _mapDifficultyMap;
     MovieDBCMap _movieMap;
+    NamesProfanityDBCMap _namesProfanityMap;
+    NamesReservedDBCMap _namesReservedMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
@@ -956,6 +986,8 @@ private:
     void handle_EmotesTextSoundByTripple();
     void handle_LFGDungeonDBCByDouble();
     void handle_MapDifficultyByDouble();
+    void handle_NamesProfanityRegex();
+    void handle_NamesReservedRegex();
     void handle_SkillRaceClassInfo();
 
     CharacterFacialHairStylesByTripple _characterFacialHairStylesByTripple;
@@ -964,5 +996,7 @@ private:
     EmotesTextSoundByTripple _emotesTextSoundByTripple;
     LFGDungeonDBCByDouble _lfgDungeonByDouble;
     MapDifficultyByDouble _mapDifficultyByDouble;
+    NameValidationRegexContainer _namesProfaneValidators;
+    NameValidationRegexContainer _namesReservedValidators;
     SkillRaceClassInfoMap _skillRaceClassInfoBySkill;
 };

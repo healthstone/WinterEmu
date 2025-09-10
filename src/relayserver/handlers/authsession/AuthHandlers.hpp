@@ -2,7 +2,7 @@
 #include "AuthSessionData.hpp"
 #include "packet/WoWPacket.hpp"
 #include "src/relayserver/GameSession/GameSession.hpp"
-#include "src/relayserver/enums/ResponseCodes.hpp"
+#include "src/game/enums/ResponseCodes.hpp"
 
 namespace AuthHandlers {
     /** CMSG_AUTH_SESSION **/

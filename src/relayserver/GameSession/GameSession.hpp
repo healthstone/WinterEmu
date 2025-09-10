@@ -86,6 +86,8 @@ public:
     void setOverSpeedPings(uint32_t overSpeedPings) { m_overSpeedPings = overSpeedPings; }
     uint32_t getLatency() const { return m_latency; }
     void setLatency(uint32_t latency) { m_latency = latency; }
+    LocaleConstant getSessionDbcLocale() const { return m_sessionDbcLocale; }
+    void setSessionDbcLocale(LocaleConstant value) { m_sessionDbcLocale = value; }
 
     /// Character section
     ObjectGuid getCurrentPlayerObjectGuid() const { return currentPlayerObjectGuid_; }
@@ -174,6 +176,7 @@ private:
     TimePoint m_lastPingTime;
     uint32_t m_overSpeedPings;
     uint32_t m_latency;
+    LocaleConstant m_sessionDbcLocale;
 
     /// Character section
     ObjectGuid currentPlayerObjectGuid_;

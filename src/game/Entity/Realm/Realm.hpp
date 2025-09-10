@@ -44,4 +44,6 @@ struct Realm {
     bool isFFAPvPRealm() const {
         return Type == RealmType::REALM_TYPE_FFA_PVP;
     }
+
+    RealmZone Zone = REALM_ZONE_DEVELOPMENT;
 };

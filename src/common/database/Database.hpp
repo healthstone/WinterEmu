@@ -107,6 +107,8 @@
 #include "database/mapper/dbc/PgDbcMap.hpp"
 #include "database/mapper/dbc/PgDbcMapDifficulty.hpp"
 #include "database/mapper/dbc/PgDbcMovie.hpp"
+#include "database/mapper/dbc/PgDbcNamesProfanity.hpp"
+#include "database/mapper/dbc/PgDbcNamesReserved.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1226,6 +1228,14 @@ private:
                      fmt::format(
                              "SELECT id, filename, volume "
                              "FROM {}.dbc_movie", dbc_schema));
+        conn.prepare("SELECT_DBC_NAMESPROFANITY",
+                     fmt::format("SELECT id, name, language "
+                                 "FROM {}.dbc_namesprofanity",
+                                 dbc_schema));
+        conn.prepare("SELECT_DBC_NAMESRESERVED",
+                     fmt::format("SELECT id, name, language "
+                                 "FROM {}.dbc_namesreserved",
+                                 dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "

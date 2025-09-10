@@ -8,7 +8,9 @@
 #include "src/game/enums/PetDefines.hpp"
 #include "src/game/enums/PlayerEnums.hpp"
 #include "src/game/Entity/PlayerInfo/PlayerInfo.hpp"
+#include "utils/RealmStringValidator.hpp"
 
+#define MAX_PLAYER_NAME          12                         // max allowed by client name length
 
 boost::asio::awaitable<void>
 CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
@@ -263,6 +265,12 @@ CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, const 
         co_return;
     }
 
+    ResponseCodes res = checkPlayerName(session, ccd->m_name);
+    if (res != ResponseCodes::CHAR_NAME_SUCCESS) {
+        sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, res);
+        co_return;
+    }
+
     auto usernameCount = co_await fetchUsernameCountFromDB(session, ccd->m_name);
     if (usernameCount > 0) {
         sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_NAME_IN_USE);
@@ -291,8 +299,37 @@ CharHandlers::handleCharacterCreate(std::shared_ptr<GameSession> session, const 
 
     co_await handleInsertCharacter(session, ccd.value(), info);
     co_await handleUpdateRealmCharacters(session, session->getCharactersCountOnRealm() + 1);
+
     sendCharResponse(session, WoWOpcodes::SMSG_CHAR_CREATE, ResponseCodes::CHAR_CREATE_SUCCESS);
     co_return;
+}
+
+ResponseCodes CharHandlers::checkPlayerName(std::shared_ptr<GameSession> session, std::string_view name)
+{
+    std::wstring wname;
+    if (!UTF8Utils::Utf8toWStr(name, wname))
+        return ResponseCodes::CHAR_NAME_INVALID_CHARACTER;
+
+    if (wname.size() > MAX_PLAYER_NAME)
+        return ResponseCodes::CHAR_NAME_TOO_LONG;
+
+    if (wname.size() < 2)
+        return ResponseCodes::CHAR_NAME_TOO_SHORT;
+
+    auto currentRealm = session->server()->getRealm();
+    auto dbcMgr = session->server()->getDBCMgr();
+
+    // TC CONFIG_STRICT_PLAYER_NAMES : default 0
+    uint32_t strictMask = 0;
+    if (!RealmStringValidator::isValidString(currentRealm, wname, strictMask, false, true))
+        return ResponseCodes::CHAR_NAME_MIXED_LANGUAGES;
+
+    UTF8Utils::wstrToLower(wname);
+    for (size_t i = 2; i < wname.size(); ++i)
+        if (wname[i] == wname[i-1] && wname[i] == wname[i-2])
+            return ResponseCodes::CHAR_NAME_THREE_CONSECUTIVE;
+
+    return dbcMgr->validateName(wname, session->getSessionDbcLocale());
 }
 
 void CharHandlers::sendCharResponse(std::shared_ptr<GameSession> session, WoWOpcodes opcode, ResponseCodes result) {
