@@ -98,6 +98,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _movieMap.clear();
     _namesProfanityMap.clear();
     _namesReservedMap.clear();
+    _overrideSpellDataMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -179,6 +180,7 @@ void DBCMgr::initialize() {
     load_Movie();
     load_NamesProfanity();
     load_NamesReserved();
+    load_OverrideSpellData();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -201,6 +203,23 @@ Team DBCMgr::teamForRace(uint8_t race)
         log->error("DBCMgr::teamForRace: Race ({}) not found in DBC: wrong DBC files?", race);
 
     return Team::ALLIANCE;
+}
+
+ResponseCodes DBCMgr::validateName(std::wstring const& name, LocaleConstant locale)
+{
+    if (locale >= TOTAL_LOCALES)
+        return ResponseCodes::RESPONSE_FAILURE;
+
+    for (boost::wregex const& regex : _namesProfaneValidators[locale])
+        if (boost::regex_search(name, regex))
+            return ResponseCodes::CHAR_NAME_PROFANE;
+
+    // regexes at TOTAL_LOCALES are loaded from NamesReserved which is not locale specific
+    for (boost::wregex const& regex : _namesReservedValidators[locale])
+        if (boost::regex_search(name, regex))
+            return ResponseCodes::CHAR_NAME_RESERVED;
+
+    return ResponseCodes::CHAR_NAME_SUCCESS;
 }
 
 void DBCMgr::load_Achievement() {
@@ -2525,6 +2544,38 @@ void DBCMgr::load_NamesReserved() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_NamesReserved failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_OverrideSpellData() {
+    auto log = Logger::get();
+    _overrideSpellDataMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_OVERRIDESPELLDATA");
+        auto rows = server_->db()->execute_sync_many<DbcOverridespellData>(stmt);
+        for (const auto &row: rows) {
+            OverrideSpellDataDBC osd;
+            osd.ID = row.id;
+
+            osd.Spells[0] = row.spells_1;
+            osd.Spells[1] = row.spells_2;
+            osd.Spells[2] = row.spells_3;
+            osd.Spells[3] = row.spells_4;
+            osd.Spells[4] = row.spells_5;
+            osd.Spells[5] = row.spells_6;
+            osd.Spells[6] = row.spells_7;
+            osd.Spells[7] = row.spells_8;
+            osd.Spells[8] = row.spells_9;
+            osd.Spells[9] = row.spells_10;
+
+            _overrideSpellDataMap[row.id] = osd;
+        }
+        log->info(">>> DBCMgr: loaded {} OverrideSpellData in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_OverrideSpellData failed: {}", ex.what());
     }
 }
 

@@ -84,6 +84,7 @@ typedef std::unordered_map<uint32_t /*ID*/, MapDifficultyDBC> MapDifficultyDBCMa
 typedef std::unordered_map<uint32_t /*ID*/, MovieDBC> MovieDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, NamesProfanityDBC> NamesProfanityDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, NamesReservedDBC> NamesReservedDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, OverrideSpellDataDBC> OverrideSpellDataDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -133,6 +134,7 @@ public:
 
     // Utilities
     Team teamForRace(uint8_t race);
+    ResponseCodes validateName(std::wstring const& name, LocaleConstant locale);
 
     // Base functions
     AchievementDBCMap const& getAchievementDBCMap() const { return _achievementMap; }
@@ -778,22 +780,12 @@ public:
         return nullptr;
     }
 
-    // Handlers for working with DBC data
-    ResponseCodes validateName(std::wstring const& name, LocaleConstant locale)
+    OverrideSpellDataDBC const* getOverrideSpellDataDBC(uint32_t ID)
     {
-        if (locale >= TOTAL_LOCALES)
-            return ResponseCodes::RESPONSE_FAILURE;
-
-        for (boost::wregex const& regex : _namesProfaneValidators[locale])
-            if (boost::regex_search(name, regex))
-                return ResponseCodes::CHAR_NAME_PROFANE;
-
-        // regexes at TOTAL_LOCALES are loaded from NamesReserved which is not locale specific
-        for (boost::wregex const& regex : _namesReservedValidators[locale])
-            if (boost::regex_search(name, regex))
-                return ResponseCodes::CHAR_NAME_RESERVED;
-
-        return ResponseCodes::CHAR_NAME_SUCCESS;
+        auto itr = _overrideSpellDataMap.find(ID);
+        if (itr != _overrideSpellDataMap.end())
+            return &itr->second;
+        return nullptr;
     }
 
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
@@ -894,6 +886,7 @@ private:
     void load_Movie();                      // load Movie.dbc
     void load_NamesProfanity();             // load NamesProfanity.dbc
     void load_NamesReserved();              // load NamesReserved.dbc
+    void load_OverrideSpellData();          // load OverrideSpellData.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -972,6 +965,7 @@ private:
     MovieDBCMap _movieMap;
     NamesProfanityDBCMap _namesProfanityMap;
     NamesReservedDBCMap _namesReservedMap;
+    OverrideSpellDataDBCMap _overrideSpellDataMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
