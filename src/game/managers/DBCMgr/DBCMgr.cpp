@@ -101,7 +101,9 @@ void DBCMgr::cleanUpBeforeDelete() {
     _overrideSpellDataMap.clear();
     _powerDisplayMap.clear();
     _pvpDifficultyMap.clear();
+    _questFactionRewardMap.clear();
     _questSortMap.clear();
+    _questXPMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -186,7 +188,9 @@ void DBCMgr::initialize() {
     load_OverrideSpellData();
     load_PowerDisplay();
     load_PvpDifficulty();
+    load_QuestFactionReward();
     load_QuestSort();
+    load_QuestXP();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2638,6 +2642,38 @@ void DBCMgr::load_PvpDifficulty() {
     }
 }
 
+void DBCMgr::load_QuestFactionReward() {
+    auto log = Logger::get();
+    _questFactionRewardMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_QUESTFACTIONREWARD");
+        auto rows = server_->db()->execute_sync_many<DbcQuestFactionReward>(stmt);
+        for (const auto &row: rows) {
+            QuestFactionRewardDBC qfr;
+            qfr.ID = row.id;
+
+            qfr.Difficulty[0] = row.difficulty_1;
+            qfr.Difficulty[1] = row.difficulty_2;
+            qfr.Difficulty[2] = row.difficulty_3;
+            qfr.Difficulty[3] = row.difficulty_4;
+            qfr.Difficulty[4] = row.difficulty_5;
+            qfr.Difficulty[5] = row.difficulty_6;
+            qfr.Difficulty[6] = row.difficulty_7;
+            qfr.Difficulty[7] = row.difficulty_8;
+            qfr.Difficulty[8] = row.difficulty_9;
+            qfr.Difficulty[9] = row.difficulty_10;
+
+            _questFactionRewardMap[row.id] = qfr;
+        }
+        log->info(">>> DBCMgr: loaded {} QuestFactionReward in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_QuestFactionReward failed: {}", ex.what());
+    }
+}
+
 void DBCMgr::load_QuestSort() {
     auto log = Logger::get();
     _questSortMap.clear();
@@ -2656,6 +2692,38 @@ void DBCMgr::load_QuestSort() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_QuestSort failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_QuestXP() {
+    auto log = Logger::get();
+    _questXPMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_QUESTXP");
+        auto rows = server_->db()->execute_sync_many<DbcQuestXp>(stmt);
+        for (const auto &row: rows) {
+            QuestXPDBC qxp;
+            qxp.ID = row.id;
+
+            qxp.Difficulty[0] = row.difficulty_1;
+            qxp.Difficulty[1] = row.difficulty_2;
+            qxp.Difficulty[2] = row.difficulty_3;
+            qxp.Difficulty[3] = row.difficulty_4;
+            qxp.Difficulty[4] = row.difficulty_5;
+            qxp.Difficulty[5] = row.difficulty_6;
+            qxp.Difficulty[6] = row.difficulty_7;
+            qxp.Difficulty[7] = row.difficulty_8;
+            qxp.Difficulty[8] = row.difficulty_9;
+            qxp.Difficulty[9] = row.difficulty_10;
+
+            _questXPMap[row.id] = qxp;
+        }
+        log->info(">>> DBCMgr: loaded {} QuestXP in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_QuestXP failed: {}", ex.what());
     }
 }
 

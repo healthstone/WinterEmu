@@ -112,7 +112,9 @@
 #include "database/mapper/dbc/PgDbcOverridespellData.hpp"
 #include "database/mapper/dbc/PgDbcPowerDisplay.hpp"
 #include "database/mapper/dbc/PgDbcPvpdifficulty.hpp"
+#include "database/mapper/dbc/PgDbcQuestFactionReward.hpp"
 #include "database/mapper/dbc/PgDbcQuestsort.hpp"
+#include "database/mapper/dbc/PgDbcQuestXp.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1251,6 +1253,12 @@ private:
                      fmt::format("SELECT id, map_id, range_index, min_level, max_level, difficulty "
                                  "FROM {}.dbc_pvpdifficulty",
                                  dbc_schema));
+        conn.prepare("SELECT_DBC_QUESTFACTIONREWARD",
+                     fmt::format(
+                             "SELECT id, difficulty_1, difficulty_2, difficulty_3, difficulty_4, "
+                             "difficulty_5, difficulty_6, difficulty_7, difficulty_8, difficulty_9, difficulty_10 "
+                             "FROM {}.dbc_questfactionreward",
+                             dbc_schema));
         conn.prepare("SELECT_DBC_QUESTSORT",
                      fmt::format(
                              "SELECT id, sortname_lang_enus, sortname_lang_engb, sortname_lang_kokr, sortname_lang_frfr, "
@@ -1258,6 +1266,12 @@ private:
                              "sortname_lang_zhtw, sortname_lang_eses, sortname_lang_esmx, sortname_lang_ruru, "
                              "sortname_lang_ptpt, sortname_lang_ptbr, sortname_lang_itit, sortname_lang_unk, sortname_lang_mask "
                              "FROM {}.dbc_questsort", dbc_schema));
+        conn.prepare("SELECT_DBC_QUESTXP",
+                     fmt::format(
+                             "SELECT id, difficulty_1, difficulty_2, difficulty_3, difficulty_4, difficulty_5, "
+                             "difficulty_6, difficulty_7, difficulty_8, difficulty_9, difficulty_10 "
+                             "FROM {}.dbc_questxp",
+                             dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "

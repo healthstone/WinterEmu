@@ -87,7 +87,9 @@ typedef std::unordered_map<uint32_t /*ID*/, NamesReservedDBC> NamesReservedDBCMa
 typedef std::unordered_map<uint32_t /*ID*/, OverrideSpellDataDBC> OverrideSpellDataDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, PowerDisplayDBC> PowerDisplayDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, PvPDifficultyDBC> PvPDifficultyDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, QuestFactionRewardDBC> QuestFactionRewardDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, QuestSortDBC> QuestSortDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, QuestXPDBC> QuestXPDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -829,10 +831,26 @@ public:
         return nullptr;
     }
 
+    QuestFactionRewardDBC const* getQuestFactionRewardDBC(uint32_t ID)
+    {
+        auto itr = _questFactionRewardMap.find(ID);
+        if (itr != _questFactionRewardMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     QuestSortDBC const* getQuestSortDBC(uint32_t ID)
     {
         auto itr = _questSortMap.find(ID);
         if (itr != _questSortMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    QuestXPDBC const* getQuestXPDBC(uint32_t ID)
+    {
+        auto itr = _questXPMap.find(ID);
+        if (itr != _questXPMap.end())
             return &itr->second;
         return nullptr;
     }
@@ -938,7 +956,9 @@ private:
     void load_OverrideSpellData();          // load OverrideSpellData.dbc
     void load_PowerDisplay();               // load PowerDisplay.dbc
     void load_PvpDifficulty();              // load PvpDifficulty.dbc
+    void load_QuestFactionReward();         // load QuestFactionReward.dbc
     void load_QuestSort();                  // load QuestSort.dbc
+    void load_QuestXP();                    // load QuestXP.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -1020,7 +1040,9 @@ private:
     OverrideSpellDataDBCMap _overrideSpellDataMap;
     PowerDisplayDBCMap _powerDisplayMap;
     PvPDifficultyDBCMap _pvpDifficultyMap;
+    QuestFactionRewardDBCMap _questFactionRewardMap;
     QuestSortDBCMap _questSortMap;
+    QuestXPDBCMap _questXPMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
