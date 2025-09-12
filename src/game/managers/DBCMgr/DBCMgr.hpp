@@ -86,6 +86,7 @@ typedef std::unordered_map<uint32_t /*ID*/, NamesProfanityDBC> NamesProfanityDBC
 typedef std::unordered_map<uint32_t /*ID*/, NamesReservedDBC> NamesReservedDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, OverrideSpellDataDBC> OverrideSpellDataDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, PowerDisplayDBC> PowerDisplayDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, PvPDifficultyDBC> PvPDifficultyDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -797,6 +798,36 @@ public:
         return nullptr;
     }
 
+    PvPDifficultyDBC const* getBattlegroundBracketByLevel(uint32_t mapid, uint32_t level)
+    {
+        PvPDifficultyDBC const* maxEntry = nullptr;              // used for level > max listed level case
+        for (PvPDifficultyDBCMap::const_iterator itr = _pvpDifficultyMap.begin(); itr != _pvpDifficultyMap.end(); ++itr)
+        {
+            // skip unrelated and too-high brackets
+            if (itr->second.MapID != mapid || itr->second.MinLevel > level)
+                continue;
+
+            // exactly fit
+            if (itr->second.MaxLevel >= level)
+                return &itr->second;
+
+            // remember for possible out-of-range case (search higher from existed)
+            if (!maxEntry || maxEntry->MaxLevel < itr->second.MaxLevel)
+                maxEntry = &itr->second;
+        }
+        return maxEntry;
+    }
+
+    PvPDifficultyDBC const* getBattlegroundBracketById(uint32_t mapid, BattlegroundBracketId id)
+    {
+        for (PvPDifficultyDBCMap::const_iterator itr = _pvpDifficultyMap.begin(); itr != _pvpDifficultyMap.end(); ++itr)
+        {
+            if (itr->second.MapID == mapid && itr->second.GetBracketId() == id)
+                return &itr->second;
+        }
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -897,6 +928,7 @@ private:
     void load_NamesReserved();              // load NamesReserved.dbc
     void load_OverrideSpellData();          // load OverrideSpellData.dbc
     void load_PowerDisplay();               // load PowerDisplay.dbc
+    void load_PvpDifficulty();              // load PvpDifficulty.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -977,6 +1009,7 @@ private:
     NamesReservedDBCMap _namesReservedMap;
     OverrideSpellDataDBCMap _overrideSpellDataMap;
     PowerDisplayDBCMap _powerDisplayMap;
+    PvPDifficultyDBCMap _pvpDifficultyMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

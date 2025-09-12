@@ -100,6 +100,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _namesReservedMap.clear();
     _overrideSpellDataMap.clear();
     _powerDisplayMap.clear();
+    _pvpDifficultyMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -183,6 +184,7 @@ void DBCMgr::initialize() {
     load_NamesReserved();
     load_OverrideSpellData();
     load_PowerDisplay();
+    load_PvpDifficulty();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2600,6 +2602,37 @@ void DBCMgr::load_PowerDisplay() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_PowerDisplay failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_PvpDifficulty() {
+    auto log = Logger::get();
+    _pvpDifficultyMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_PVPDifficulty");
+        auto rows = server_->db()->execute_sync_many<DbcPvpdifficulty>(stmt);
+        for (const auto &row: rows) {
+            PvPDifficultyDBC pd;
+            pd.ID = row.id;
+            pd.MapID      = row.map_id;
+            pd.RangeIndex = row.range_index;
+            pd.MinLevel   = row.min_level;
+            pd.MaxLevel   = row.max_level;
+            pd.Difficulty = row.difficulty;
+
+            if (pd.RangeIndex < MAX_BATTLEGROUND_BRACKETS) {
+                _pvpDifficultyMap[row.id] = pd;
+            }
+            else {
+                log->error("PvpDifficulty bracket ({}) exceeded max allowed value ({})", pd.RangeIndex, MAX_BATTLEGROUND_BRACKETS);
+            }
+        }
+        log->info(">>> DBCMgr: loaded {} PvpDifficulty in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_PvpDifficulty failed: {}", ex.what());
     }
 }
 

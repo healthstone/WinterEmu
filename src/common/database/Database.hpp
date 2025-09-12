@@ -111,6 +111,7 @@
 #include "database/mapper/dbc/PgDbcNamesReserved.hpp"
 #include "database/mapper/dbc/PgDbcOverridespellData.hpp"
 #include "database/mapper/dbc/PgDbcPowerDisplay.hpp"
+#include "database/mapper/dbc/PgDbcPvpdifficulty.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1245,6 +1246,10 @@ private:
         conn.prepare("SELECT_DBC_POWERDISPLAY",
                      fmt::format("SELECT id, actualtype, globalstring_basetag, red, green, blue "
                                  "FROM {}.dbc_powerdisplay", dbc_schema));
+        conn.prepare("SELECT_DBC_PVPDifficulty",
+                     fmt::format("SELECT id, map_id, range_index, min_level, max_level, difficulty "
+                                 "FROM {}.dbc_pvpdifficulty",
+                                 dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "
