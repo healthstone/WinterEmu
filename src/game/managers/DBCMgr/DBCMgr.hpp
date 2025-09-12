@@ -87,6 +87,7 @@ typedef std::unordered_map<uint32_t /*ID*/, NamesReservedDBC> NamesReservedDBCMa
 typedef std::unordered_map<uint32_t /*ID*/, OverrideSpellDataDBC> OverrideSpellDataDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, PowerDisplayDBC> PowerDisplayDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, PvPDifficultyDBC> PvPDifficultyDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, QuestSortDBC> QuestSortDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -828,6 +829,14 @@ public:
         return nullptr;
     }
 
+    QuestSortDBC const* getQuestSortDBC(uint32_t ID)
+    {
+        auto itr = _questSortMap.find(ID);
+        if (itr != _questSortMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -929,6 +938,7 @@ private:
     void load_OverrideSpellData();          // load OverrideSpellData.dbc
     void load_PowerDisplay();               // load PowerDisplay.dbc
     void load_PvpDifficulty();              // load PvpDifficulty.dbc
+    void load_QuestSort();                  // load QuestSort.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -1010,6 +1020,7 @@ private:
     OverrideSpellDataDBCMap _overrideSpellDataMap;
     PowerDisplayDBCMap _powerDisplayMap;
     PvPDifficultyDBCMap _pvpDifficultyMap;
+    QuestSortDBCMap _questSortMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 

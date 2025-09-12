@@ -101,6 +101,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _overrideSpellDataMap.clear();
     _powerDisplayMap.clear();
     _pvpDifficultyMap.clear();
+    _questSortMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -185,6 +186,7 @@ void DBCMgr::initialize() {
     load_OverrideSpellData();
     load_PowerDisplay();
     load_PvpDifficulty();
+    load_QuestSort();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2633,6 +2635,27 @@ void DBCMgr::load_PvpDifficulty() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_PvpDifficulty failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_QuestSort() {
+    auto log = Logger::get();
+    _questSortMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_QUESTSORT");
+        auto rows = server_->db()->execute_sync_many<DbcQuestsort>(stmt);
+        for (const auto &row: rows) {
+            QuestSortDBC qs;
+            qs.ID = row.id;
+
+            _questSortMap[row.id] = qs;
+        }
+        log->info(">>> DBCMgr: loaded {} QuestSort in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_QuestSort failed: {}", ex.what());
     }
 }
 

@@ -112,6 +112,7 @@
 #include "database/mapper/dbc/PgDbcOverridespellData.hpp"
 #include "database/mapper/dbc/PgDbcPowerDisplay.hpp"
 #include "database/mapper/dbc/PgDbcPvpdifficulty.hpp"
+#include "database/mapper/dbc/PgDbcQuestsort.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1250,6 +1251,13 @@ private:
                      fmt::format("SELECT id, map_id, range_index, min_level, max_level, difficulty "
                                  "FROM {}.dbc_pvpdifficulty",
                                  dbc_schema));
+        conn.prepare("SELECT_DBC_QUESTSORT",
+                     fmt::format(
+                             "SELECT id, sortname_lang_enus, sortname_lang_engb, sortname_lang_kokr, sortname_lang_frfr, "
+                             "sortname_lang_dede, sortname_lang_encn, sortname_lang_zhcn, sortname_lang_entw, "
+                             "sortname_lang_zhtw, sortname_lang_eses, sortname_lang_esmx, sortname_lang_ruru, "
+                             "sortname_lang_ptpt, sortname_lang_ptbr, sortname_lang_itit, sortname_lang_unk, sortname_lang_mask "
+                             "FROM {}.dbc_questsort", dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "
