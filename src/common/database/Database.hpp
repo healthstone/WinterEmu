@@ -115,6 +115,7 @@
 #include "database/mapper/dbc/PgDbcQuestFactionReward.hpp"
 #include "database/mapper/dbc/PgDbcQuestsort.hpp"
 #include "database/mapper/dbc/PgDbcQuestXp.hpp"
+#include "database/mapper/dbc/PgDbcRandPropPoints.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
@@ -1272,6 +1273,11 @@ private:
                              "difficulty_6, difficulty_7, difficulty_8, difficulty_9, difficulty_10 "
                              "FROM {}.dbc_questxp",
                              dbc_schema));
+        conn.prepare("SELECT_DBC_RANDPROPPOINTS",
+                     fmt::format("SELECT id, epic_1, epic_2, epic_3, epic_4, epic_5, "
+                                 "superior_1, superior_2, superior_3, superior_4, superior_5, "
+                                 "good_1, good_2, good_3, good_4, good_5 "
+                                 "FROM {}.dbc_randproppoints", dbc_schema));
         conn.prepare("SELECT_DBC_SKILLLINE",
                      fmt::format("SELECT "
                                  "id, categoryid, skillcostsid, "

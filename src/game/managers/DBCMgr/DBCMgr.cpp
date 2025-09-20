@@ -104,6 +104,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _questFactionRewardMap.clear();
     _questSortMap.clear();
     _questXPMap.clear();
+    _randPropPointsMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -191,6 +192,7 @@ void DBCMgr::initialize() {
     load_QuestFactionReward();
     load_QuestSort();
     load_QuestXP();
+    load_RandPropPoints();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2724,6 +2726,44 @@ void DBCMgr::load_QuestXP() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_QuestXP failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_RandPropPoints() {
+    auto log = Logger::get();
+    _randPropPointsMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_RANDPROPPOINTS");
+        auto rows = server_->db()->execute_sync_many<DbcRandPropPoints>(stmt);
+        for (const auto &row: rows) {
+            RandPropPointsDBC rpp;
+            rpp.ID = row.id;
+            rpp.Epic[0] = row.epic_1;
+            rpp.Epic[1] = row.epic_2;
+            rpp.Epic[2] = row.epic_3;
+            rpp.Epic[3] = row.epic_4;
+            rpp.Epic[4] = row.epic_5;
+
+            rpp.Superior[0] = row.superior_1;
+            rpp.Superior[1] = row.superior_2;
+            rpp.Superior[2] = row.superior_3;
+            rpp.Superior[3] = row.superior_4;
+            rpp.Superior[4] = row.superior_5;
+
+            rpp.Good[0] = row.good_1;
+            rpp.Good[1] = row.good_2;
+            rpp.Good[2] = row.good_3;
+            rpp.Good[3] = row.good_4;
+            rpp.Good[4] = row.good_5;
+
+            _randPropPointsMap[row.id] = rpp;
+        }
+        log->info(">>> DBCMgr: loaded {} RandPropPoints in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_RandPropPoints failed: {}", ex.what());
     }
 }
 

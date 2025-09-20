@@ -90,6 +90,7 @@ typedef std::unordered_map<uint32_t /*ID*/, PvPDifficultyDBC> PvPDifficultyDBCMa
 typedef std::unordered_map<uint32_t /*ID*/, QuestFactionRewardDBC> QuestFactionRewardDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, QuestSortDBC> QuestSortDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, QuestXPDBC> QuestXPDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, RandPropPointsDBC> RandPropPointsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 
@@ -855,6 +856,14 @@ public:
         return nullptr;
     }
 
+    RandPropPointsDBC const* getRandPropPointsDBC(uint32_t ID)
+    {
+        auto itr = _randPropPointsMap.find(ID);
+        if (itr != _randPropPointsMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -959,6 +968,7 @@ private:
     void load_QuestFactionReward();         // load QuestFactionReward.dbc
     void load_QuestSort();                  // load QuestSort.dbc
     void load_QuestXP();                    // load QuestXP.dbc
+    void load_RandPropPoints();             // load RandPropPoints.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
 
@@ -1043,6 +1053,7 @@ private:
     QuestFactionRewardDBCMap _questFactionRewardMap;
     QuestSortDBCMap _questSortMap;
     QuestXPDBCMap _questXPMap;
+    RandPropPointsDBCMap _randPropPointsMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
 
