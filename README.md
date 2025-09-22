@@ -144,6 +144,8 @@ Install:
 sudo apt install libssl-dev libboost-all-dev libpq-dev libpqxx-dev pkg-config catch2
 ```
 
+libpqxx should be version 6.4
+
 ---
 
 ## 🚀 Getting Started

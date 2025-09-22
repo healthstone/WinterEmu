@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include "packet/ByteBuffer.hpp"
 
 TEST_CASE("ByteBuffer integer BE/LE read/write") {
