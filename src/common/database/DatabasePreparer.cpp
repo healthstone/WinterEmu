@@ -870,6 +870,15 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                              "canlink "
                              "FROM {}.dbc_skillline",
                              dbc_schema));
+    conn.prepare("SELECT_DBC_SCALINGSTATDISTRIBUTION",
+                 fmt::format(
+                         "SELECT id, statid_1, statid_2, statid_3, statid_4, statid_5, "
+                         "statid_6, statid_7, statid_8, statid_9, statid_10, "
+                         "bonus_1, bonus_2, bonus_3, bonus_4, bonus_5, bonus_6, bonus_7, bonus_8, bonus_9, bonus_10, "
+                         "maxlevel "
+                         "FROM {}.dbc_scalingstatdistribution",
+                         dbc_schema));
+
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {

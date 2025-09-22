@@ -105,6 +105,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _questSortMap.clear();
     _questXPMap.clear();
     _randPropPointsMap.clear();
+    _scalingStatDistributionMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -193,6 +194,7 @@ void DBCMgr::initialize() {
     load_QuestSort();
     load_QuestXP();
     load_RandPropPoints();
+    load_ScalingStatDistribution();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2764,6 +2766,51 @@ void DBCMgr::load_RandPropPoints() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_RandPropPoints failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_ScalingStatDistribution() {
+    auto log = Logger::get();
+    _scalingStatDistributionMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SCALINGSTATDISTRIBUTION");
+        auto rows = server_->db()->execute_sync_many<DbcScalingStatDistribution>(stmt);
+        for (const auto &row: rows) {
+            ScalingStatDistributionDBC ssd;
+            ssd.ID = row.id;
+
+            ssd.StatID[0] = row.statid_1;
+            ssd.StatID[1] = row.statid_2;
+            ssd.StatID[2] = row.statid_3;
+            ssd.StatID[3] = row.statid_4;
+            ssd.StatID[4] = row.statid_5;
+            ssd.StatID[5] = row.statid_6;
+            ssd.StatID[6] = row.statid_7;
+            ssd.StatID[7] = row.statid_8;
+            ssd.StatID[8] = row.statid_9;
+            ssd.StatID[9] = row.statid_10;
+
+            ssd.Bonus[0] = row.bonus_1;
+            ssd.Bonus[1] = row.bonus_2;
+            ssd.Bonus[2] = row.bonus_3;
+            ssd.Bonus[3] = row.bonus_4;
+            ssd.Bonus[4] = row.bonus_5;
+            ssd.Bonus[5] = row.bonus_6;
+            ssd.Bonus[6] = row.bonus_7;
+            ssd.Bonus[7] = row.bonus_8;
+            ssd.Bonus[8] = row.bonus_9;
+            ssd.Bonus[9] = row.bonus_10;
+
+            ssd.Maxlevel = row.maxlevel;
+
+            _scalingStatDistributionMap[row.id] = ssd;
+        }
+        log->info(">>> DBCMgr: loaded {} ScalingStatDistribution in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_ScalingStatDistribution failed: {}", ex.what());
     }
 }
 
