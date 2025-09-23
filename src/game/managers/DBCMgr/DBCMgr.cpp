@@ -106,6 +106,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _questXPMap.clear();
     _randPropPointsMap.clear();
     _scalingStatDistributionMap.clear();
+    _scalingStatValuesMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
 
@@ -195,6 +196,7 @@ void DBCMgr::initialize() {
     load_QuestXP();
     load_RandPropPoints();
     load_ScalingStatDistribution();
+    load_ScalingStatValues();
     load_SkillRaceClassInfo();
     load_SkillLine();
 
@@ -2811,6 +2813,50 @@ void DBCMgr::load_ScalingStatDistribution() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_ScalingStatDistribution failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_ScalingStatValues() {
+    auto log = Logger::get();
+    _scalingStatValuesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SCALINGSTATVALUES");
+        auto rows = server_->db()->execute_sync_many<DbcScalingStatValues>(stmt);
+        for (const auto &row: rows) {
+            ScalingStatValuesDBC ssv;
+            ssv.ID        = row.id;
+            ssv.Charlevel = row.charlevel;
+            ssv.ShoulderBudget       = row.shoulderbudget;
+            ssv.TrinketBudget        = row.trinketbudget;
+            ssv.WeaponBudget1H       = row.weaponbudget1h;
+            ssv.RangedBudget         = row.rangedbudget;
+            ssv.ClothShoulderArmor   = row.clothshoulderarmor;
+            ssv.LeatherShoulderArmor = row.leathershoulderarmor;
+            ssv.MailShoulderArmor    = row.mailshoulderarmor;
+            ssv.PlateShoulderArmor   = row.plateshoulderarmor;
+            ssv.WeaponDPS1H          = row.weapondps1h;
+            ssv.WeaponDPS2H          = row.weapondps2h;
+            ssv.SpellcasterDPS1H     = row.spellcasterdps1h;
+            ssv.SpellcasterDPS2H     = row.spellcasterdps2h;
+            ssv.RangedDPS            = row.rangeddps;
+            ssv.WandDPS              = row.wanddps;
+            ssv.SpellPower           = row.spellpower;
+            ssv.PrimaryBudget        = row.primarybudget;
+            ssv.TertiaryBudget       = row.tertiarybudget;
+            ssv.ClothCloakArmor      = row.clothcloakarmor;
+            ssv.ClothChestArmor      = row.clothchestarmor;
+            ssv.LeatherChestArmor    = row.leatherchestarmor;
+            ssv.MailChestArmor       = row.mailchestarmor;
+            ssv.PlateChestArmor      = row.platechestarmor;
+
+            _scalingStatValuesMap[row.charlevel] = ssv;
+        }
+        log->info(">>> DBCMgr: loaded {} ScalingStatValues in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_ScalingStatValues failed: {}", ex.what());
     }
 }
 

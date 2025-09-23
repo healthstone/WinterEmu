@@ -123,6 +123,7 @@
 #include "database/mapper/dbc/PgDbcQuestXp.hpp"
 #include "database/mapper/dbc/PgDbcRandPropPoints.hpp"
 #include "database/mapper/dbc/PgDbcScalingStatDistribution.hpp"
+#include "database/mapper/dbc/PgDbcScalingStatValues.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 
