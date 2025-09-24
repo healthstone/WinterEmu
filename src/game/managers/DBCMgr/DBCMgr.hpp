@@ -96,6 +96,7 @@ typedef std::unordered_map<uint32_t /*CharLevel*/, ScalingStatValuesDBC> Scaling
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineAbilityDBC> SkillLineAbilityDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, SkillTiersDBC> SkillTiersDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -916,6 +917,14 @@ public:
         return nullptr;
     }
 
+    SkillTiersDBC const* getSkillTiersDBC(uint32_t ID)
+    {
+        auto itr = _skillTiersMap.find(ID);
+        if (itr != _skillTiersMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1002,6 +1011,7 @@ private:
     void load_SkillLine();                  // load SkillLine.dbc
     void load_SkillLineAbility();           // load SkillLineAbility.dbc
     void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
+    void load_SkillTiers();                 // load SkillTiers.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1090,6 +1100,7 @@ private:
     SkillLineDBCMap _skillLineMap;
     SkillLineAbilityDBCMap _skillLineAbilityMap;
     SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
+    SkillTiersDBCMap _skillTiersMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;

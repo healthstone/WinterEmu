@@ -110,6 +110,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _skillLineMap.clear();
     _skillLineAbilityMap.clear();
     _skillRaceClassInfoMap.clear();
+    _skillTiersMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -201,6 +202,7 @@ void DBCMgr::initialize() {
     load_SkillLine();
     load_SkillLineAbility();
     load_SkillRaceClassInfo();
+    load_SkillTiers();
 
     initialize_Additional_Data();
 }
@@ -2957,6 +2959,44 @@ void DBCMgr::load_SkillRaceClassInfo() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_SkillRaceClassInfo failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SkillTiers() {
+    auto log = Logger::get();
+    _skillTiersMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SKILLTIERS");
+        auto rows = server_->db()->execute_sync_many<DbcSkillTiers>(stmt);
+        for (const auto &row: rows) {
+            SkillTiersDBC st;
+            st.ID = row.id;
+
+            st.Value[0] = row.value_1;
+            st.Value[1] = row.value_2;
+            st.Value[2] = row.value_3;
+            st.Value[3] = row.value_4;
+            st.Value[4] = row.value_5;
+            st.Value[5] = row.value_6;
+            st.Value[6] = row.value_7;
+            st.Value[7] = row.value_8;
+            st.Value[8] = row.value_9;
+            st.Value[9] = row.value_10;
+            st.Value[10] = row.value_11;
+            st.Value[11] = row.value_12;
+            st.Value[12] = row.value_13;
+            st.Value[13] = row.value_14;
+            st.Value[14] = row.value_15;
+            st.Value[15] = row.value_16;
+
+            _skillTiersMap[row.id] = st;
+        }
+        log->info(">>> DBCMgr: loaded {} SkillTiers in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SkillTiers failed: {}", ex.what());
     }
 }
 

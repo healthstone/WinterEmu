@@ -127,7 +127,7 @@
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
 #include "database/mapper/dbc/PgDbcSkillLineAbility.hpp"
 #include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
-
+#include "database/mapper/dbc/PgDbcSkillTiers.hpp"
 
 #include "database/mapper/world/PgItemTemplate.hpp"
 

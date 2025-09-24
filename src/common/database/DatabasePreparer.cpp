@@ -891,7 +891,17 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                              "acquiremethod, trivialskilllinerankhigh, trivialskilllineranklow, "
                              "tradeskillcategoryid "
                              "FROM {}.dbc_skilllineability", dbc_schema));
-
+    conn.prepare("SELECT_DBC_SKILLTIERS",
+                 fmt::format(
+                         "SELECT id, "
+                         "cost_1, cost_2, cost_3, cost_4, cost_5, cost_6, cost_7, cost_8, cost_9, cost_10, "
+                         "cost_11, cost_12, cost_13, cost_14, cost_15, cost_16, "
+                         "value_1, value_2, value_3, value_4, value_5, value_6, value_7, value_8, value_9, value_10, "
+                         "value_11, value_12, value_13, value_14, value_15, value_16 "
+                         "FROM {}.dbc_skilltiers",
+                         dbc_schema
+                 )
+    );
 
 }
 
