@@ -124,8 +124,10 @@
 #include "database/mapper/dbc/PgDbcRandPropPoints.hpp"
 #include "database/mapper/dbc/PgDbcScalingStatDistribution.hpp"
 #include "database/mapper/dbc/PgDbcScalingStatValues.hpp"
-#include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
 #include "database/mapper/dbc/PgDbcSkillLine.hpp"
+#include "database/mapper/dbc/PgDbcSkillLineAbility.hpp"
+#include "database/mapper/dbc/PgDbcSkillRaceClassInfo.hpp"
+
 
 #include "database/mapper/world/PgItemTemplate.hpp"
 

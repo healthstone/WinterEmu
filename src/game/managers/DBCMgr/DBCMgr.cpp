@@ -107,8 +107,9 @@ void DBCMgr::cleanUpBeforeDelete() {
     _randPropPointsMap.clear();
     _scalingStatDistributionMap.clear();
     _scalingStatValuesMap.clear();
-    _skillRaceClassInfoMap.clear();
     _skillLineMap.clear();
+    _skillLineAbilityMap.clear();
+    _skillRaceClassInfoMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -197,8 +198,9 @@ void DBCMgr::initialize() {
     load_RandPropPoints();
     load_ScalingStatDistribution();
     load_ScalingStatValues();
-    load_SkillRaceClassInfo();
     load_SkillLine();
+    load_SkillLineAbility();
+    load_SkillRaceClassInfo();
 
     initialize_Additional_Data();
 }
@@ -2860,32 +2862,6 @@ void DBCMgr::load_ScalingStatValues() {
     }
 }
 
-void DBCMgr::load_SkillRaceClassInfo() {
-    auto log = Logger::get();
-    _skillRaceClassInfoMap.clear();
-    uint32_t oldMSTime = getMSTime();
-
-    try {
-        auto stmt = PreparedStatement("SELECT_DBC_SKILLRACECLASSINFO");
-        auto rows = server_->db()->execute_sync_many<DbcSkillRaceClassInfo>(stmt);
-        for (const auto &row: rows) {
-            SkillRaceClassInfoDBC srci;
-            srci.ID = row.ID;
-            srci.SkillID     = row.SkillID;
-            srci.RaceMask    = row.RaceMask;
-            srci.ClassMask   = row.ClassMask;
-            srci.Flags       = row.Flags;
-            srci.SkillTierID = row.SkillTierID;
-
-            _skillRaceClassInfoMap[row.ID] = srci;
-        }
-        log->info(">>> DBCMgr: loaded {} SkillRaceClassInfo in {} ms",
-                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
-    } catch (const std::exception &ex) {
-        log->error("DBCMgr::load_SkillRaceClassInfo failed: {}", ex.what());
-    }
-}
-
 void DBCMgr::load_SkillLine() {
     auto log = Logger::get();
     _skillLineMap.clear();
@@ -2925,6 +2901,62 @@ void DBCMgr::load_SkillLine() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_SkillLine failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SkillLineAbility() {
+    auto log = Logger::get();
+    _skillLineAbilityMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SKILLLINEABILITY");
+        auto rows = server_->db()->execute_sync_many<DbcSkillLineAbility>(stmt);
+        for (const auto &row: rows) {
+            SkillLineAbilityDBC sla;
+            sla.ID = row.id;
+            sla.SkillLine                = row.skillline;
+            sla.Spell                    = row.spell;
+            sla.RaceMask                 = row.racemask;
+            sla.ClassMask                = row.classmask;
+            sla.MinSkillLineRank         = row.minskilllinerank;
+            sla.SupercededBySpell        = row.supercededbyspell;
+            sla.AcquireMethod            = row.acquiremethod;
+            sla.TrivialSkillLineRankHigh = row.trivialskilllinerankhigh;
+            sla.TrivialSkillLineRankLow  = row.trivialskilllineranklow;
+
+            _skillLineAbilityMap[row.id] = sla;
+        }
+        log->info(">>> DBCMgr: loaded {} SkillLineAbility in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SkillLineAbility failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SkillRaceClassInfo() {
+    auto log = Logger::get();
+    _skillRaceClassInfoMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SKILLRACECLASSINFO");
+        auto rows = server_->db()->execute_sync_many<DbcSkillRaceClassInfo>(stmt);
+        for (const auto &row: rows) {
+            SkillRaceClassInfoDBC srci;
+            srci.ID = row.ID;
+            srci.SkillID     = row.SkillID;
+            srci.RaceMask    = row.RaceMask;
+            srci.ClassMask   = row.ClassMask;
+            srci.Flags       = row.Flags;
+            srci.SkillTierID = row.SkillTierID;
+
+            _skillRaceClassInfoMap[row.ID] = srci;
+        }
+        log->info(">>> DBCMgr: loaded {} SkillRaceClassInfo in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SkillRaceClassInfo failed: {}", ex.what());
     }
 }
 

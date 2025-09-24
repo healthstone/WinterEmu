@@ -93,8 +93,9 @@ typedef std::unordered_map<uint32_t /*ID*/, QuestXPDBC> QuestXPDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, RandPropPointsDBC> RandPropPointsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ScalingStatDistributionDBC> ScalingStatDistributionDBCMap;
 typedef std::unordered_map<uint32_t /*CharLevel*/, ScalingStatValuesDBC> ScalingStatValuesDBCMap;
-typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SkillLineDBC> SkillLineDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, SkillLineAbilityDBC> SkillLineAbilityDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, SkillRaceClassInfoDBC> SkillRaceClassInfoDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -882,6 +883,24 @@ public:
         return nullptr;
     }
 
+    SkillLineDBCMap const& getSkillLineDBCMap() const { return _skillLineMap; }
+    SkillLineDBC const* getSkillLineDBC(uint32_t ID)
+    {
+        auto itr = _skillLineMap.find(ID);
+        if (itr != _skillLineMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    SkillLineAbilityDBCMap const& getSkillLineAbilityDBCMap() const { return _skillLineAbilityMap; }
+    SkillLineAbilityDBC const* getSkillLineAbilityDBC(uint32_t ID)
+    {
+        auto itr = _skillLineAbilityMap.find(ID);
+        if (itr != _skillLineAbilityMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
     SkillRaceClassInfoDBC const* getSkillRaceClassInfo(uint32_t skill, uint8_t race, uint8_t class_)
     {
         SkillRaceClassInfoBounds bounds = _skillRaceClassInfoBySkill.equal_range(skill);
@@ -894,15 +913,6 @@ public:
 
             return itr->second;
         }
-        return nullptr;
-    }
-
-    SkillLineDBCMap const& getSkillLineDBCMap() const { return _skillLineMap; }
-    SkillLineDBC const* getSkillLineDBC(uint32_t ID)
-    {
-        auto itr = _skillLineMap.find(ID);
-        if (itr != _skillLineMap.end())
-            return &itr->second;
         return nullptr;
     }
 
@@ -989,8 +999,9 @@ private:
     void load_RandPropPoints();             // load RandPropPoints.dbc
     void load_ScalingStatDistribution();    // load ScalingStatDistribution.dbc
     void load_ScalingStatValues();          // load ScalingStatValues.dbc
-    void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
     void load_SkillLine();                  // load SkillLine.dbc
+    void load_SkillLineAbility();           // load SkillLineAbility.dbc
+    void load_SkillRaceClassInfo();         // load SkillRaceClassInfo.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1076,8 +1087,9 @@ private:
     RandPropPointsDBCMap _randPropPointsMap;
     ScalingStatDistributionDBCMap _scalingStatDistributionMap;
     ScalingStatValuesDBCMap _scalingStatValuesMap;
-    SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
     SkillLineDBCMap _skillLineMap;
+    SkillLineAbilityDBCMap _skillLineAbilityMap;
+    SkillRaceClassInfoDBCMap _skillRaceClassInfoMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;

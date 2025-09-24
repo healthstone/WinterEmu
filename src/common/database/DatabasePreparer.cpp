@@ -851,6 +851,21 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                              "superior_1, superior_2, superior_3, superior_4, superior_5, "
                              "good_1, good_2, good_3, good_4, good_5 "
                              "FROM {}.dbc_randproppoints", dbc_schema));
+    conn.prepare("SELECT_DBC_SCALINGSTATDISTRIBUTION",
+                 fmt::format("SELECT id, statid_1, statid_2, statid_3, statid_4, statid_5, "
+                             "statid_6, statid_7, statid_8, statid_9, statid_10, "
+                             "bonus_1, bonus_2, bonus_3, bonus_4, bonus_5, bonus_6, bonus_7, bonus_8, bonus_9, bonus_10, "
+                             "maxlevel "
+                             "FROM {}.dbc_scalingstatdistribution",
+                             dbc_schema));
+    conn.prepare("SELECT_DBC_SCALINGSTATVALUES",
+                 fmt::format("SELECT id, charlevel, shoulderbudget, trinketbudget, weaponbudget1h, rangedbudget, "
+                             "clothshoulderarmor, leathershoulderarmor, mailshoulderarmor, plateshoulderarmor, "
+                             "weapondps1h, weapondps2h, spellcasterdps1h, spellcasterdps2h, "
+                             "rangeddps, wanddps, spellpower, primarybudget, tertiarybudget, "
+                             "clothcloakarmor, clothchestarmor, leatherchestarmor, mailchestarmor, platechestarmor "
+                             "FROM {}.dbc_scalingstatvalues",
+                             dbc_schema));
     conn.prepare("SELECT_DBC_SKILLLINE",
                  fmt::format("SELECT "
                              "id, categoryid, skillcostsid, "
@@ -870,21 +885,14 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                              "canlink "
                              "FROM {}.dbc_skillline",
                              dbc_schema));
-    conn.prepare("SELECT_DBC_SCALINGSTATDISTRIBUTION",
-                 fmt::format("SELECT id, statid_1, statid_2, statid_3, statid_4, statid_5, "
-                         "statid_6, statid_7, statid_8, statid_9, statid_10, "
-                         "bonus_1, bonus_2, bonus_3, bonus_4, bonus_5, bonus_6, bonus_7, bonus_8, bonus_9, bonus_10, "
-                         "maxlevel "
-                         "FROM {}.dbc_scalingstatdistribution",
-                         dbc_schema));
-    conn.prepare("SELECT_DBC_SCALINGSTATVALUES",
-                 fmt::format("SELECT id, charlevel, shoulderbudget, trinketbudget, weaponbudget1h, rangedbudget, "
-                         "clothshoulderarmor, leathershoulderarmor, mailshoulderarmor, plateshoulderarmor, "
-                         "weapondps1h, weapondps2h, spellcasterdps1h, spellcasterdps2h, "
-                         "rangeddps, wanddps, spellpower, primarybudget, tertiarybudget, "
-                         "clothcloakarmor, clothchestarmor, leatherchestarmor, mailchestarmor, platechestarmor "
-                         "FROM {}.dbc_scalingstatvalues",
-                         dbc_schema));
+    conn.prepare("SELECT_DBC_SKILLLINEABILITY",
+                 fmt::format("SELECT id, skillline, spell, racemask, classmask, "
+                             "excluderace, excludeclass, minskilllinerank, supercededbyspell, "
+                             "acquiremethod, trivialskilllinerankhigh, trivialskilllineranklow, "
+                             "tradeskillcategoryid "
+                             "FROM {}.dbc_skilllineability", dbc_schema));
+
+
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {
