@@ -115,6 +115,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _spellMap.clear();
     _spellCastTimesMap.clear();
     _spellCategoryMap.clear();
+    _spellDiffucultyMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -212,6 +213,7 @@ void DBCMgr::initialize() {
     load_Spells();
     load_SpellCastTimes();
     load_SpellCategory();
+    load_SpellDifficulty();
 
     initialize_Additional_Data();
 }
@@ -3206,6 +3208,31 @@ void DBCMgr::load_SpellCategory() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_SpellCategory failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SpellDifficulty() {
+    auto log = Logger::get();
+    _spellDiffucultyMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SPELLDIFFICULTY");
+        auto rows = server_->db()->execute_sync_many<DbcSpellDifficulty>(stmt);
+        for (const auto &row: rows) {
+            SpellDifficultyDBC sd;
+            sd.ID = row.id;
+            sd.DifficultySpellID[0] = row.difficulty_spell_id_1;
+            sd.DifficultySpellID[1] = row.difficulty_spell_id_2;
+            sd.DifficultySpellID[2] = row.difficulty_spell_id_3;
+            sd.DifficultySpellID[3] = row.difficulty_spell_id_4;
+
+            _spellDiffucultyMap[row.id] = sd;
+        }
+        log->info(">>> DBCMgr: loaded {} SpellDifficulty in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SpellDifficulty failed: {}", ex.what());
     }
 }
 
