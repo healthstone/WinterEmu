@@ -114,6 +114,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _soundEntriesMap.clear();
     _spellMap.clear();
     _spellCastTimesMap.clear();
+    _spellCategoryMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -210,6 +211,7 @@ void DBCMgr::initialize() {
     load_SoundEntries();
     load_Spells();
     load_SpellCastTimes();
+    load_SpellCategory();
 
     initialize_Additional_Data();
 }
@@ -3182,6 +3184,28 @@ void DBCMgr::load_SpellCastTimes() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_SpellCastTimes failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SpellCategory() {
+    auto log = Logger::get();
+    _spellCategoryMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SPELLCATEGORY");
+        auto rows = server_->db()->execute_sync_many<DbcSpellCategory>(stmt);
+        for (const auto &row: rows) {
+            SpellCategoryDBC sc;
+            sc.ID = row.id;
+            sc.Flags = row.flags;
+
+            _spellCategoryMap[row.id] = sc;
+        }
+        log->info(">>> DBCMgr: loaded {} SpellCategory in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SpellCategory failed: {}", ex.what());
     }
 }
 

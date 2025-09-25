@@ -100,6 +100,7 @@ typedef std::unordered_map<uint32_t /*ID*/, SkillTiersDBC> SkillTiersDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SoundEntriesDBC> SoundEntriesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SpellDBC> SpellDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SpellCastTimesDBC> SpellCastTimesDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, SpellCategoryDBC> SpellCategoryDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -954,6 +955,14 @@ public:
         return nullptr;
     }
 
+    SpellCategoryDBC const* getSpellCategoryDBC(uint32_t ID)
+    {
+        auto itr = _spellCategoryMap.find(ID);
+        if (itr != _spellCategoryMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1044,6 +1053,7 @@ private:
     void load_SoundEntries();               // load SkillTiers.dbc
     void load_Spells();                     // load Spell.dbc
     void load_SpellCastTimes();             // load SpellCastTimes.dbc
+    void load_SpellCategory();              // load SpellCategory.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1136,6 +1146,7 @@ private:
     SoundEntriesDBCMap _soundEntriesMap;
     SpellDBCMap _spellMap;
     SpellCastTimesDBCMap _spellCastTimesMap;
+    SpellCategoryDBCMap _spellCategoryMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;

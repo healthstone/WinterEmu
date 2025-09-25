@@ -131,6 +131,7 @@
 #include "database/mapper/dbc/PgDbcSoundEntries.hpp"
 #include "database/mapper/dbc/PgDbcSpell.hpp"
 #include "database/mapper/dbc/PgDbcSpellCastTimes.hpp"
+#include "database/mapper/dbc/PgDbcSpellCategory.hpp"
 
 #include "database/mapper/world/PgItemTemplate.hpp"
 
