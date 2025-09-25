@@ -906,6 +906,8 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                              "freq_5, freq_6, freq_7, freq_8, freq_9, freq_10, directorybase, "
                              "volumefloat, flags, mindistance, distancecutoff, eaxdef, soundentriesadvancedid "
                              "FROM {}.dbc_soundentries", dbc_schema));
+    conn.prepare("SELECT_DBC_SPELL",
+                 fmt::format("SELECT * FROM {}.dbc_spell", dbc_schema));
 
 }
 

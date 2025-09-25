@@ -112,9 +112,11 @@ void DBCMgr::cleanUpBeforeDelete() {
     _skillRaceClassInfoMap.clear();
     _skillTiersMap.clear();
     _soundEntriesMap.clear();
+    _spellMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
+    _spellHighestID = 0;
 }
 
 void DBCMgr::initialize() {
@@ -205,6 +207,7 @@ void DBCMgr::initialize() {
     load_SkillRaceClassInfo();
     load_SkillTiers();
     load_SoundEntries();
+    load_Spells();
 
     initialize_Additional_Data();
 }
@@ -3020,6 +3023,140 @@ void DBCMgr::load_SoundEntries() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_SoundEntries failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_Spells() {
+    auto log = Logger::get();
+    _spellMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SPELL");
+        auto rows = server_->db()->execute_sync_many<DbcSpell>(stmt);
+        for (const auto &row: rows) {
+            SpellDBC spell;
+            spell.ID = row.id;
+            spell.Category = row.category;
+            spell.DispelType = row.dispelType;
+            spell.Mechanic = row.mechanic;
+            spell.Attributes = row.attributes;
+            spell.AttributesEx = row.attributesEx;
+            spell.AttributesExB = row.attributesExB;
+            spell.AttributesExC = row.attributesExC;
+            spell.AttributesExD = row.attributesExD;
+            spell.AttributesExE = row.attributesExE;
+            spell.AttributesExF = row.attributesExF;
+            spell.AttributesExG = row.attributesExG;
+            spell.ShapeshiftMask = {row.shapeshiftMask1, row.shapeshiftMask2};
+            spell.ShapeshiftExclude = {row.shapeshiftExclude1, row.shapeshiftExclude2};
+            spell.Targets = row.targets;
+            spell.TargetCreatureType = row.targetCreatureType;
+            spell.RequiresSpellFocus = row.requiresSpellFocus;
+            spell.FacingCasterFlags = row.facingCasterFlags;
+            spell.CasterAuraState = row.casterAuraState;
+            spell.TargetAuraState = row.targetAuraState;
+            spell.ExcludeCasterAuraState = row.excludeCasterAuraState;
+            spell.ExcludeTargetAuraState = row.excludeTargetAuraState;
+            spell.CasterAuraSpell = row.casterAuraSpell;
+            spell.TargetAuraSpell = row.targetAuraSpell;
+            spell.ExcludeCasterAuraSpell = row.excludeCasterAuraSpell;
+            spell.ExcludeTargetAuraSpell = row.excludeTargetAuraSpell;
+            spell.CastingTimeIndex = row.castingTimeIndex;
+            spell.RecoveryTime = row.recoveryTime;
+            spell.CategoryRecoveryTime = row.categoryRecoveryTime;
+            spell.InterruptFlags = row.interruptFlags;
+            spell.AuraInterruptFlags = row.auraInterruptFlags;
+            spell.ChannelInterruptFlags = row.channelInterruptFlags;
+            spell.ProcTypeMask = row.procTypeMask;
+            spell.ProcChance = row.procChance;
+            spell.ProcCharges = row.procCharges;
+            spell.MaxLevel = row.maxLevel;
+            spell.BaseLevel = row.baseLevel;
+            spell.SpellLevel = row.spellLevel;
+            spell.DurationIndex = row.durationIndex;
+            spell.PowerType = row.powerType;
+            spell.ManaCost = row.manaCost;
+            spell.ManaCostPerLevel = row.manaCostPerLevel;
+            spell.ManaPerSecond = row.manaPerSecond;
+            spell.ManaPerSecondPerLevel = row.manaPerSecondPerLevel;
+            spell.RangeIndex = row.rangeIndex;
+            spell.Speed = row.speed;
+            spell.CumulativeAura = row.cumulativeAura;
+            spell.Totem = {row.totem1, row.totem2};
+            spell.Reagent = {row.reagent1, row.reagent2, row.reagent3, row.reagent4, row.reagent5, row.reagent6, row.reagent7, row.reagent8};
+            spell.ReagentCount = {row.reagentCount1, row.reagentCount2, row.reagentCount3, row.reagentCount4, row.reagentCount5, row.reagentCount6, row.reagentCount7, row.reagentCount8};
+            spell.EquippedItemClass = row.equippedItemClass;
+            spell.EquippedItemSubclass = row.equippedItemSubclass;
+            spell.EquippedItemInvTypes = row.equippedItemInvTypes;
+            spell.Effect = {row.effect1, row.effect2, row.effect3};
+            spell.EffectDieSides = {row.effectDieSides1, row.effectDieSides2, row.effectDieSides3};
+            spell.EffectRealPointsPerLevel = {row.effectRealPointsPerLevel1, row.effectRealPointsPerLevel2, row.effectRealPointsPerLevel3};
+            spell.EffectBasePoints = {row.effectBasePoints1, row.effectBasePoints2, row.effectBasePoints3};
+            spell.EffectMechanic = {row.effectMechanic1, row.effectMechanic2, row.effectMechanic3};
+            spell.EffectImplicitTargetA = {row.implicitTargetA1, row.implicitTargetA2, row.implicitTargetA3};
+            spell.EffectImplicitTargetB = {row.implicitTargetB1, row.implicitTargetB2, row.implicitTargetB3};
+            spell.EffectRadiusIndex = {row.effectRadiusIndex1, row.effectRadiusIndex2, row.effectRadiusIndex3};
+            spell.EffectAura = {row.effectAura1, row.effectAura2, row.effectAura3};
+            spell.EffectAuraPeriod = {row.effectAuraPeriod1, row.effectAuraPeriod2, row.effectAuraPeriod3};
+            spell.EffectAmplitude = {row.effectAmplitude1, row.effectAmplitude2, row.effectAmplitude3};
+            spell.EffectChainTargets = {row.effectChainTargets1, row.effectChainTargets2, row.effectChainTargets3};
+            spell.EffectItemType = {row.effectItemType1, row.effectItemType2, row.effectItemType3};
+            spell.EffectMiscValue = {row.effectMiscValue1, row.effectMiscValue2, row.effectMiscValue3};
+            spell.EffectMiscValueB = {row.effectMiscValueB1, row.effectMiscValueB2, row.effectMiscValueB3};
+            spell.EffectTriggerSpell = {row.effectTriggerSpell1, row.effectTriggerSpell2, row.effectTriggerSpell3};
+            spell.EffectPointsPerCombo = {row.effectPointsPerCombo1, row.effectPointsPerCombo2, row.effectPointsPerCombo3};
+            spell.EffectSpellClassMask = {
+                    flag96(row.effectSpellClassMaskA1, row.effectSpellClassMaskB1, row.effectSpellClassMaskC1),
+                    flag96(row.effectSpellClassMaskA2, row.effectSpellClassMaskB2, row.effectSpellClassMaskC2),
+                    flag96(row.effectSpellClassMaskA3, row.effectSpellClassMaskB3, row.effectSpellClassMaskC3)
+            };
+            spell.SpellVisualID = {row.spellVisualID1, row.spellVisualID2};
+            spell.SpellIconID = row.spellIconID;
+            spell.ActiveIconID = row.activeIconID;
+            spell.SpellPriority = row.spellPriority;
+            // Заполнение локализованных имен
+            if (row.nameLangEnUS) spell.Name[LOCALE_enUS] = *row.nameLangEnUS;
+            if (row.nameLangEnGB) spell.Name[LOCALE_enGB] = *row.nameLangEnGB;
+            if (row.nameLangKoKR) spell.Name[LOCALE_koKR] = *row.nameLangKoKR;
+            if (row.nameLangFrFR) spell.Name[LOCALE_frFR] = *row.nameLangFrFR;
+            if (row.nameLangDeDE) spell.Name[LOCALE_deDE] = *row.nameLangDeDE;
+            if (row.nameLangEnCN) spell.Name[LOCALE_enCN] = *row.nameLangEnCN;
+            if (row.nameLangZhCN) spell.Name[LOCALE_zhCN] = *row.nameLangZhCN;
+            if (row.nameLangEnTW) spell.Name[LOCALE_enTW] = *row.nameLangEnTW;
+            if (row.nameLangZhTW) spell.Name[LOCALE_zhTW] = *row.nameLangZhTW;
+            if (row.nameLangEsES) spell.Name[LOCALE_esES] = *row.nameLangEsES;
+            if (row.nameLangEsMX) spell.Name[LOCALE_esMX] = *row.nameLangEsMX;
+            if (row.nameLangRuRU) spell.Name[LOCALE_ruRU] = *row.nameLangRuRU;
+            if (row.nameLangPtPT) spell.Name[LOCALE_ptPT] = *row.nameLangPtPT;
+            if (row.nameLangPtBR) spell.Name[LOCALE_ptBR] = *row.nameLangPtBR;
+            if (row.nameLangItIT) spell.Name[LOCALE_itIT] = *row.nameLangItIT;
+
+            spell.ManaCostPct = row.manaCostPct;
+            spell.StartRecoveryCategory = row.startRecoveryCategory;
+            spell.StartRecoveryTime = row.startRecoveryTime;
+            spell.MaxTargetLevel = row.maxTargetLevel;
+            spell.SpellClassSet = row.spellClassSet;
+            spell.SpellClassMask = flag96(row.spellClassMask1, row.spellClassMask2, row.spellClassMask3);
+            spell.MaxTargets = row.maxTargets;
+            spell.DefenseType = row.defenseType;
+            spell.PreventionType = row.preventionType;
+            spell.EffectChainAmplitude = {row.effectChainAmplitude1, row.effectChainAmplitude2, row.effectChainAmplitude3};
+            spell.RequiredTotemCategoryID = {row.requiredTotemCategoryId1, row.requiredTotemCategoryId2};
+            spell.RequiredAreasID = row.requiredAreasId;
+            spell.SchoolMask = row.schoolMask;
+            spell.RuneCostID = row.runeCostId;
+            spell.EffectBonusCoefficient = {row.effectBonusCoefficient1, row.effectBonusCoefficient2, row.effectBonusCoefficient3};
+
+            _spellMap[row.id] = spell;
+
+            if (!_spellHighestID || _spellHighestID < row.id)
+                _spellHighestID = row.id;
+        }
+        log->info(">>> DBCMgr: loaded {} Spells in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_Spells failed: {}", ex.what());
     }
 }
 

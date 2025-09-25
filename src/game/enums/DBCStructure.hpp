@@ -1384,7 +1384,7 @@ struct SpellDBC {
     uint32_t CumulativeAura;                                              // 49
     std::array<uint32_t, 2> Totem;                                        // 50-51
     std::array<int32_t, MAX_SPELL_REAGENTS> Reagent;                      // 52-59
-    std::array<uint32_t, MAX_SPELL_REAGENTS> ReagentCount;                // 60-67
+    std::array<int32_t, MAX_SPELL_REAGENTS> ReagentCount;                 // 60-67
     int32_t EquippedItemClass;                                            // 68
     int32_t EquippedItemSubclass;                                         // 69
     int32_t EquippedItemInvTypes;                                         // 70
@@ -1437,7 +1437,7 @@ struct SpellDBC {
     uint32_t SchoolMask;                                                  // 225
     uint32_t RuneCostID;                                                  // 226
     //uint32_t SpellMissileID;                                            // 227
-    //uint32_t PowerDisplayID;                                            // 228
+    //int32_t PowerDisplayID;                                             // 228
     std::array<float, MAX_SPELL_EFFECTS> EffectBonusCoefficient;          // 229-231
     //uint32_t DescriptionVariablesID;                                    // 232
     //uint32_t Difficulty;                                                // 233
