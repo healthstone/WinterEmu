@@ -113,6 +113,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _skillTiersMap.clear();
     _soundEntriesMap.clear();
     _spellMap.clear();
+    _spellCastTimesMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -208,6 +209,7 @@ void DBCMgr::initialize() {
     load_SkillTiers();
     load_SoundEntries();
     load_Spells();
+    load_SpellCastTimes();
 
     initialize_Additional_Data();
 }
@@ -3030,6 +3032,7 @@ void DBCMgr::load_Spells() {
     auto log = Logger::get();
     _spellMap.clear();
     uint32_t oldMSTime = getMSTime();
+    log->info("loading spell.dbc...");
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELL");
@@ -3157,6 +3160,28 @@ void DBCMgr::load_Spells() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_Spells failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SpellCastTimes() {
+    auto log = Logger::get();
+    _spellCastTimesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SPELLCASTTIMES");
+        auto rows = server_->db()->execute_sync_many<DbcSpellCastTimes>(stmt);
+        for (const auto &row: rows) {
+            SpellCastTimesDBC sct;
+            sct.ID = row.id;
+            sct.Base = row.base;
+
+            _spellCastTimesMap[row.id] = sct;
+        }
+        log->info(">>> DBCMgr: loaded {} SpellCastTimes in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SpellCastTimes failed: {}", ex.what());
     }
 }
 

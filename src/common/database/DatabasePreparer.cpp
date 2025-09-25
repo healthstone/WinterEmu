@@ -908,6 +908,8 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                              "FROM {}.dbc_soundentries", dbc_schema));
     conn.prepare("SELECT_DBC_SPELL",
                  fmt::format("SELECT * FROM {}.dbc_spell", dbc_schema));
+    conn.prepare("SELECT_DBC_SPELLCASTTIMES",
+            fmt::format("SELECT id, base, perlevel, minimum FROM {}.dbc_spellcasttimes", dbc_schema));
 
 }
 
