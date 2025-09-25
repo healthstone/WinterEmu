@@ -899,9 +899,13 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                          "value_1, value_2, value_3, value_4, value_5, value_6, value_7, value_8, value_9, value_10, "
                          "value_11, value_12, value_13, value_14, value_15, value_16 "
                          "FROM {}.dbc_skilltiers",
-                         dbc_schema
-                 )
-    );
+                         dbc_schema));
+    conn.prepare("SELECT_DBC_SOUNDENTRIES",
+                 fmt::format("SELECT id, soundtype, name, file_1, file_2, file_3, file_4, file_5, "
+                             "file_6, file_7, file_8, file_9, file_10, freq_1, freq_2, freq_3, freq_4, "
+                             "freq_5, freq_6, freq_7, freq_8, freq_9, freq_10, directorybase, "
+                             "volumefloat, flags, mindistance, distancecutoff, eaxdef, soundentriesadvancedid "
+                             "FROM {}.dbc_soundentries", dbc_schema));
 
 }
 

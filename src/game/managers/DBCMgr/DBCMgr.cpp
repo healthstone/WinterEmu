@@ -111,6 +111,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _skillLineAbilityMap.clear();
     _skillRaceClassInfoMap.clear();
     _skillTiersMap.clear();
+    _soundEntriesMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -203,6 +204,7 @@ void DBCMgr::initialize() {
     load_SkillLineAbility();
     load_SkillRaceClassInfo();
     load_SkillTiers();
+    load_SoundEntries();
 
     initialize_Additional_Data();
 }
@@ -2997,6 +2999,27 @@ void DBCMgr::load_SkillTiers() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_SkillTiers failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SoundEntries() {
+    auto log = Logger::get();
+    _soundEntriesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SOUNDENTRIES");
+        auto rows = server_->db()->execute_sync_many<DbcSoundEntries>(stmt);
+        for (const auto &row: rows) {
+            SoundEntriesDBC se;
+            se.ID = row.id;
+
+            _soundEntriesMap[row.id] = se;
+        }
+        log->info(">>> DBCMgr: loaded {} SoundEntries in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SoundEntries failed: {}", ex.what());
     }
 }
 

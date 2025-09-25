@@ -1,0 +1,35 @@
+DROP TABLE IF EXISTS dbc.dbc_soundentries;
+
+CREATE TABLE dbc.dbc_soundentries
+(
+    id                     INTEGER PRIMARY KEY DEFAULT 0,
+    soundtype              INTEGER NOT NULL    DEFAULT 0,
+    name                   TEXT,
+    file_1                 TEXT,
+    file_2                 TEXT,
+    file_3                 TEXT,
+    file_4                 TEXT,
+    file_5                 TEXT,
+    file_6                 TEXT,
+    file_7                 TEXT,
+    file_8                 TEXT,
+    file_9                 TEXT,
+    file_10                TEXT,
+    freq_1                 INTEGER NOT NULL    DEFAULT 0,
+    freq_2                 INTEGER NOT NULL    DEFAULT 0,
+    freq_3                 INTEGER NOT NULL    DEFAULT 0,
+    freq_4                 INTEGER NOT NULL    DEFAULT 0,
+    freq_5                 INTEGER NOT NULL    DEFAULT 0,
+    freq_6                 INTEGER NOT NULL    DEFAULT 0,
+    freq_7                 INTEGER NOT NULL    DEFAULT 0,
+    freq_8                 INTEGER NOT NULL    DEFAULT 0,
+    freq_9                 INTEGER NOT NULL    DEFAULT 0,
+    freq_10                INTEGER NOT NULL    DEFAULT 0,
+    directorybase          TEXT,
+    volumefloat            float4  NOT NULL    DEFAULT 0,
+    flags                  INTEGER NOT NULL    DEFAULT 0,
+    mindistance            float4  NOT NULL    DEFAULT 0,
+    distancecutoff         float4  NOT NULL    DEFAULT 0,
+    eaxdef                 INTEGER NOT NULL    DEFAULT 0,
+    soundentriesadvancedid INTEGER NOT NULL    DEFAULT 0
+);
