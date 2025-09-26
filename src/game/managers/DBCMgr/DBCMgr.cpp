@@ -118,10 +118,12 @@ void DBCMgr::cleanUpBeforeDelete() {
     _spellDiffucultyMap.clear();
     _spellDurationMap.clear();
     _spellFocusObjectMap.clear();
+    _spellItemEnchantmentMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
     _spellHighestID = 0;
+    _spellItemEnchantmentHighestID = 0;
 }
 
 void DBCMgr::initialize() {
@@ -218,6 +220,7 @@ void DBCMgr::initialize() {
     load_SpellDifficulty();
     load_SpellDuration();
     load_SpellFocusObject();
+    load_SpellItemEnchantment();
 
     initialize_Additional_Data();
 }
@@ -3282,6 +3285,65 @@ void DBCMgr::load_SpellFocusObject() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_SpellFocusObject failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SpellItemEnchantment() {
+    auto log = Logger::get();
+    _spellItemEnchantmentMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SPELLITEMENCHANTMENT");
+        auto rows = server_->db()->execute_sync_many<DbcSpellItemEnchantment>(stmt);
+        for (const auto &row: rows) {
+            SpellItemEnchantmentDBC sie;
+            sie.ID = row.id;
+
+            // эффекты
+            sie.Effect[0] = row.effect_1;
+            sie.Effect[1] = row.effect_2;
+            sie.Effect[2] = row.effect_3;
+
+            sie.EffectPointsMin[0] = row.effectpointsmin_1;
+            sie.EffectPointsMin[1] = row.effectpointsmin_2;
+            sie.EffectPointsMin[2] = row.effectpointsmin_3;
+
+            sie.EffectArg[0] = row.effectarg_1;
+            sie.EffectArg[1] = row.effectarg_2;
+            sie.EffectArg[2] = row.effectarg_3;
+
+            // локализованные названия
+            sie.Name[LOCALE_enUS] = row.name_lang_enus.value_or("");
+            sie.Name[LOCALE_enGB] = row.name_lang_engb.value_or("");
+            sie.Name[LOCALE_koKR] = row.name_lang_kokr.value_or("");
+            sie.Name[LOCALE_frFR] = row.name_lang_frfr.value_or("");
+            sie.Name[LOCALE_deDE] = row.name_lang_dede.value_or("");
+            sie.Name[LOCALE_enCN] = row.name_lang_encn.value_or("");
+            sie.Name[LOCALE_zhCN] = row.name_lang_zhcn.value_or("");
+            sie.Name[LOCALE_enTW] = row.name_lang_entw.value_or("");
+            sie.Name[LOCALE_zhTW] = row.name_lang_zhtw.value_or("");
+            sie.Name[LOCALE_esES] = row.name_lang_eses.value_or("");
+            sie.Name[LOCALE_esMX] = row.name_lang_esmx.value_or("");
+            sie.Name[LOCALE_ruRU] = row.name_lang_ruru.value_or("");
+            sie.Name[LOCALE_ptPT] = row.name_lang_ptpt.value_or("");
+            sie.Name[LOCALE_ptBR] = row.name_lang_ptbr.value_or("");
+            sie.Name[LOCALE_itIT] = row.name_lang_itit.value_or("");
+
+            sie.ItemVisual        = row.itemvisual;
+            sie.Flags             = row.flags;
+            sie.SrcItemID         = row.src_itemid;
+            sie.ConditionID       = row.condition_id;
+            sie.RequiredSkillID   = row.requiredskillid;
+            sie.RequiredSkillRank = row.requiredskillrank;
+            sie.MinLevel          = row.minlevel;
+
+            _spellItemEnchantmentMap[row.id] = sie;
+        }
+        log->info(">>> DBCMgr: loaded {} SpellItemEnchantment in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SpellItemEnchantment failed: {}", ex.what());
     }
 }
 

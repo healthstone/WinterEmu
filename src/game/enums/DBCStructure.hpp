@@ -898,12 +898,12 @@ struct ItemLimitCategoryDBC {
 };
 
 // load ItemRandomProperties.dbc
-#define MAX_ITEM_ENCHANTMENT_EFFECTS 5
+#define MAX_ITEMRANDOM_ENCHANTMENT_EFFECTS 5
 
 struct ItemRandomPropertiesDBC {
     uint32_t ID;                                                          // 0
     //char const* InternalName;                                           // 1
-    std::array<uint32_t, MAX_ITEM_ENCHANTMENT_EFFECTS> Enchantment;       // 2-4
+    std::array<uint32_t, MAX_ITEMRANDOM_ENCHANTMENT_EFFECTS> Enchantment;       // 2-4
     //std::array<uint32_t, 2> UnusedEnchantment;                          // 5-6
     std::string Name[TOTAL_LOCALES];                                      // 7-22
     //uint32_t Name_lang_mask;                                            // 23
@@ -915,9 +915,9 @@ struct ItemRandomSuffixDBC {
     std::string Name[TOTAL_LOCALES];                                      // 1-16
     //uint32_t Name_lang_mask;                                            // 17
     //char const* InternalName;                                           // 18
-    std::array<uint32_t, MAX_ITEM_ENCHANTMENT_EFFECTS> Enchantment;       // 19-21
+    std::array<uint32_t, MAX_ITEMRANDOM_ENCHANTMENT_EFFECTS> Enchantment;       // 19-21
     //std::array<uint32_t, 2> UnusedEnchantment;                          // 22-23
-    std::array<uint32_t, MAX_ITEM_ENCHANTMENT_EFFECTS> AllocationPct;     // 24-26
+    std::array<uint32_t, MAX_ITEMRANDOM_ENCHANTMENT_EFFECTS> AllocationPct;     // 24-26
     //std::array<uint32_t, 2> UnusedAllocationPct;                        // 27-28
 };
 
@@ -1457,17 +1457,19 @@ struct SpellCategoryDBC {
     uint32_t Flags;                                           // 1
 };
 
+#define MAX_ITEM_ENCHANTMENT_EFFECTS 3
+
 // load SpellItemEnchantment.dbc
 struct SpellItemEnchantmentDBC {
     uint32_t ID;                                              // 0
     //uint32_t Charges;                                       // 1
     uint32_t Effect[MAX_ITEM_ENCHANTMENT_EFFECTS];            // 2-4
-    uint32_t EffectPointsMin[MAX_ITEM_ENCHANTMENT_EFFECTS];   // 5-7
-    //uint32_t EffectPointsMax[MAX_ITEM_ENCHANTMENT_EFFECTS]  // 8-10
+    int32_t EffectPointsMin[MAX_ITEM_ENCHANTMENT_EFFECTS];    // 5-7
+    //int32_t EffectPointsMax[MAX_ITEM_ENCHANTMENT_EFFECTS]   // 8-10
     uint32_t EffectArg[MAX_ITEM_ENCHANTMENT_EFFECTS];         // 11-13
     std::string Name[TOTAL_LOCALES];                          // 14-29
     //uint32_t Name_lang_mask;                                // 30
-    uint32_t ItemVisual;                                      // 31
+    int32_t ItemVisual;                                       // 31
     uint32_t Flags;                                           // 32
     uint32_t SrcItemID;                                       // 33
     uint32_t ConditionID;                                     // 34
