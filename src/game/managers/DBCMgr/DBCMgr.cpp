@@ -116,6 +116,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _spellCastTimesMap.clear();
     _spellCategoryMap.clear();
     _spellDiffucultyMap.clear();
+    _spellDurationMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -214,6 +215,7 @@ void DBCMgr::initialize() {
     load_SpellCastTimes();
     load_SpellCategory();
     load_SpellDifficulty();
+    load_SpellDuration();
 
     initialize_Additional_Data();
 }
@@ -3233,6 +3235,30 @@ void DBCMgr::load_SpellDifficulty() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_SpellDifficulty failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SpellDuration() {
+    auto log = Logger::get();
+    _spellDurationMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SPELLDURATION");
+        auto rows = server_->db()->execute_sync_many<DbcSpellDuration>(stmt);
+        for (const auto &row: rows) {
+            SpellDurationDBC sd;
+            sd.ID = row.id;
+            sd.Duration         = row.duration;
+            sd.DurationPerLevel = row.duration_per_level;
+            sd.MaxDuration      = row.max_duration;
+
+            _spellDurationMap[row.id] = sd;
+        }
+        log->info(">>> DBCMgr: loaded {} SpellDuration in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SpellDuration failed: {}", ex.what());
     }
 }
 

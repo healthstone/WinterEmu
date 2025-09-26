@@ -133,6 +133,7 @@
 #include "database/mapper/dbc/PgDbcSpellCastTimes.hpp"
 #include "database/mapper/dbc/PgDbcSpellCategory.hpp"
 #include "database/mapper/dbc/PgDbcSpellDifficulty.hpp"
+#include "database/mapper/dbc/PgDbcSpellDuration.hpp"
 
 #include "database/mapper/world/PgItemTemplate.hpp"
 
