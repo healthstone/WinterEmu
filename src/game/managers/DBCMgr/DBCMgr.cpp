@@ -119,6 +119,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _spellDurationMap.clear();
     _spellFocusObjectMap.clear();
     _spellItemEnchantmentMap.clear();
+    _spellItemEnchantmentConditionMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -221,6 +222,7 @@ void DBCMgr::initialize() {
     load_SpellDuration();
     load_SpellFocusObject();
     load_SpellItemEnchantment();
+    load_SpellItemEnchantmentCondition();
 
     initialize_Additional_Data();
 }
@@ -3339,11 +3341,59 @@ void DBCMgr::load_SpellItemEnchantment() {
             sie.MinLevel          = row.minlevel;
 
             _spellItemEnchantmentMap[row.id] = sie;
+
+            if (!_spellItemEnchantmentHighestID || _spellItemEnchantmentHighestID < row.id)
+                _spellItemEnchantmentHighestID = row.id;
         }
         log->info(">>> DBCMgr: loaded {} SpellItemEnchantment in {} ms",
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_SpellItemEnchantment failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SpellItemEnchantmentCondition() {
+    auto log = Logger::get();
+    _spellItemEnchantmentConditionMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SPELLITEMENCHANTMENTCONDITION");
+        auto rows = server_->db()->execute_sync_many<DbcSpellItemEnchantmentCondition>(stmt);
+        for (const auto &row: rows) {
+            SpellItemEnchantmentConditionDBC siec;
+            siec.ID = row.id;
+
+            siec.LtOperandType[0] = row.lt_operand_1;
+            siec.LtOperandType[1] = row.lt_operand_2;
+            siec.LtOperandType[2] = row.lt_operand_3;
+            siec.LtOperandType[3] = row.lt_operand_4;
+            siec.LtOperandType[4] = row.lt_operand_5;
+
+            siec.Operator[0] = row.operator_1;
+            siec.Operator[1] = row.operator_2;
+            siec.Operator[2] = row.operator_3;
+            siec.Operator[3] = row.operator_4;
+            siec.Operator[4] = row.operator_5;
+
+            siec.RtOperandType[0] = row.rt_operandtype_1;
+            siec.RtOperandType[1] = row.rt_operandtype_2;
+            siec.RtOperandType[2] = row.rt_operandtype_3;
+            siec.RtOperandType[3] = row.rt_operandtype_4;
+            siec.RtOperandType[4] = row.rt_operandtype_5;
+
+            siec.RtOperand[0] = row.rt_operand_1;
+            siec.RtOperand[1] = row.rt_operand_2;
+            siec.RtOperand[2] = row.rt_operand_3;
+            siec.RtOperand[3] = row.rt_operand_4;
+            siec.RtOperand[4] = row.rt_operand_5;
+
+            _spellItemEnchantmentConditionMap[row.id] = siec;
+        }
+        log->info(">>> DBCMgr: loaded {} SpellItemEnchantmentCondition in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SpellItemEnchantmentCondition failed: {}", ex.what());
     }
 }
 

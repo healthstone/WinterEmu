@@ -136,6 +136,7 @@
 #include "database/mapper/dbc/PgDbcSpellDuration.hpp"
 #include "database/mapper/dbc/PgDbcSpellFocusObject.hpp"
 #include "database/mapper/dbc/PgDbcSpellItemEnchantment.hpp"
+#include "database/mapper/dbc/PgDbcSpellItemEnchantmentCondition.hpp"
 
 #include "database/mapper/world/PgItemTemplate.hpp"
 

@@ -936,6 +936,15 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
             "name_lang_mask, itemvisual, flags, src_itemid, condition_id, "
             "requiredskillid, requiredskillrank, minlevel "
             "FROM {}.dbc_spellitemenchantment", dbc_schema));
+    conn.prepare("SELECT_DBC_SPELLITEMENCHANTMENTCONDITION",
+                 fmt::format("SELECT id, lt_operandtype_1, lt_operandtype_2, lt_operandtype_3, lt_operandtype_4, lt_operandtype_5, "
+                         "lt_operand_1, lt_operand_2, lt_operand_3, lt_operand_4, lt_operand_5, "
+                         "operator_1, operator_2, operator_3, operator_4, operator_5, "
+                         "rt_operandtype_1, rt_operandtype_2, rt_operandtype_3, rt_operandtype_4, rt_operandtype_5, "
+                         "rt_operand_1, rt_operand_2, rt_operand_3, rt_operand_4, rt_operand_5, "
+                         "logic_1, logic_2, logic_3, logic_4, logic_5 "
+                         "FROM {}.dbc_spellitemenchantmentcondition",
+                         dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {
