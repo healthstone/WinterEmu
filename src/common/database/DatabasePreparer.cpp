@@ -916,6 +916,14 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                  fmt::format("SELECT id, difficulty_spell_id_1, difficulty_spell_id_2, difficulty_spell_id_3, difficulty_spell_id_4 FROM {}.dbc_spelldifficulty", dbc_schema));
     conn.prepare("SELECT_DBC_SPELLDURATION",
                  fmt::format("SELECT id, duration, duration_per_level, max_duration FROM {}.dbc_spellduration", dbc_schema));
+    conn.prepare("SELECT_DBC_SPELLFOCUSOBJECT",
+                 fmt::format("SELECT id, name_lang_enus, name_lang_engb, name_lang_kokr, "
+                         "name_lang_frfr, name_lang_dede, name_lang_encn, name_lang_zhcn, "
+                         "name_lang_entw, name_lang_zhtw, name_lang_eses, name_lang_esmx, "
+                         "name_lang_ruru, name_lang_ptpt, name_lang_ptbr, name_lang_itit, "
+                         "name_lang_unk, name_lang_mask "
+                         "FROM {}.dbc_spellfocusobject",
+                         dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {

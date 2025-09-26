@@ -117,6 +117,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _spellCategoryMap.clear();
     _spellDiffucultyMap.clear();
     _spellDurationMap.clear();
+    _spellFocusObjectMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -216,6 +217,7 @@ void DBCMgr::initialize() {
     load_SpellCategory();
     load_SpellDifficulty();
     load_SpellDuration();
+    load_SpellFocusObject();
 
     initialize_Additional_Data();
 }
@@ -3259,6 +3261,27 @@ void DBCMgr::load_SpellDuration() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_SpellDuration failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SpellFocusObject() {
+    auto log = Logger::get();
+    _spellFocusObjectMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SPELLFOCUSOBJECT");
+        auto rows = server_->db()->execute_sync_many<DbcSpellFocusObject>(stmt);
+        for (const auto &row: rows) {
+            SpellFocusObjectDBC sfo;
+            sfo.ID = row.id;
+
+            _spellFocusObjectMap[row.id] = sfo;
+        }
+        log->info(">>> DBCMgr: loaded {} SpellFocusObject in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SpellFocusObject failed: {}", ex.what());
     }
 }
 
