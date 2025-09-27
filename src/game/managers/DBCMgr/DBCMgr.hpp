@@ -106,6 +106,8 @@ typedef std::unordered_map<uint32_t /*ID*/, SpellDurationDBC> SpellDurationDBCMa
 typedef std::unordered_map<uint32_t /*ID*/, SpellFocusObjectDBC> SpellFocusObjectDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SpellItemEnchantmentDBC> SpellItemEnchantmentDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SpellItemEnchantmentConditionDBC> SpellItemEnchantmentConditionDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, SpellRadiusDBC> SpellRadiusDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, SpellRangeDBC> SpellRangeDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -1010,6 +1012,22 @@ public:
         return nullptr;
     }
 
+    SpellRadiusDBC const* getSpellRadiusDBC(uint32_t ID)
+    {
+        auto itr = _spellRadiusMap.find(ID);
+        if (itr != _spellRadiusMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    SpellRangeDBC const* getSpellRangeDBC(uint32_t ID)
+    {
+        auto itr = _spellRangeMap.find(ID);
+        if (itr != _spellRangeMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1106,6 +1124,8 @@ private:
     void load_SpellFocusObject();           // load SpellFocusObject.dbc
     void load_SpellItemEnchantment();       // load SpellItemEnchantment.dbc
     void load_SpellItemEnchantmentCondition();// load SpellItemEnchantmentCondition.dbc
+    void load_SpellRadius();                // load SpellRadius.dbc
+    void load_SpellRange();                 // load SpellRange.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1204,6 +1224,8 @@ private:
     SpellFocusObjectDBCMap _spellFocusObjectMap;
     SpellItemEnchantmentDBCMap _spellItemEnchantmentMap;
     SpellItemEnchantmentConditionDBCMap _spellItemEnchantmentConditionMap;
+    SpellRadiusDBCMap _spellRadiusMap;
+    SpellRangeDBCMap _spellRangeMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;

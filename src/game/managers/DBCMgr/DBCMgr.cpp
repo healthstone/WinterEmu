@@ -120,6 +120,8 @@ void DBCMgr::cleanUpBeforeDelete() {
     _spellFocusObjectMap.clear();
     _spellItemEnchantmentMap.clear();
     _spellItemEnchantmentConditionMap.clear();
+    _spellRadiusMap.clear();
+    _spellRangeMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -223,6 +225,8 @@ void DBCMgr::initialize() {
     load_SpellFocusObject();
     load_SpellItemEnchantment();
     load_SpellItemEnchantmentCondition();
+    load_SpellRadius();
+    load_SpellRange();
 
     initialize_Additional_Data();
 }
@@ -3394,6 +3398,59 @@ void DBCMgr::load_SpellItemEnchantmentCondition() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_SpellItemEnchantmentCondition failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SpellRadius() {
+    auto log = Logger::get();
+    _spellRadiusMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SPELLRADIUS");
+        auto rows = server_->db()->execute_sync_many<DbcSpellRadius>(stmt);
+        for (const auto &row: rows) {
+            SpellRadiusDBC sr;
+            sr.ID = row.id;
+            sr.Radius         = row.radius;
+            sr.RadiusPerLevel = row.radius_per_level;
+            sr.RadiusMax      = row.radius_max;
+
+            _spellRadiusMap[row.id] = sr;
+        }
+        log->info(">>> DBCMgr: loaded {} SpellRadius in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SpellRadius failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SpellRange() {
+    auto log = Logger::get();
+    _spellRangeMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SPELLRANGE");
+        auto rows = server_->db()->execute_sync_many<DbcSpellRange>(stmt);
+        for (const auto &row: rows) {
+            SpellRangeDBC sr;
+            sr.ID = row.id;
+
+            sr.RangeMin[0] = row.rangemin_1;
+            sr.RangeMin[1] = row.rangemin_2;
+
+            sr.RangeMax[0] = row.rangemax_1;
+            sr.RangeMax[1] = row.rangemax_2;
+
+            sr.Flags = row.flags;
+
+            _spellRangeMap[row.id] = sr;
+        }
+        log->info(">>> DBCMgr: loaded {} SpellRange in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SpellRange failed: {}", ex.what());
     }
 }
 
