@@ -124,6 +124,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _spellRangeMap.clear();
     _spellRuneCostMap.clear();
     _spellShapeShiftFormMap.clear();
+    _spellVisualMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -231,6 +232,7 @@ void DBCMgr::initialize() {
     load_SpellRange();
     load_SpellRuneCost();
     load_SpellShapeshiftForm();
+    load_SpellVisual();
 
     initialize_Additional_Data();
 }
@@ -3521,6 +3523,29 @@ void DBCMgr::load_SpellShapeshiftForm() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_SpellShapeshiftForm failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SpellVisual() {
+    auto log = Logger::get();
+    _spellVisualMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SPELLVISUAL");
+        auto rows = server_->db()->execute_sync_many<DbcSpellVisual>(stmt);
+        for (const auto &row: rows) {
+            SpellVisualDBC sv{};
+            sv.ID = row.id;
+            sv.HasMissile   = row.hasmissile;
+            sv.MissileModel = row.missilemodel;
+
+            _spellVisualMap[row.id] = sv;
+        }
+        log->info(">>> DBCMgr: loaded {} SpellVisual in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SpellVisual failed: {}", ex.what());
     }
 }
 

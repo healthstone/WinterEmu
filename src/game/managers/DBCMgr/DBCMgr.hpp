@@ -110,6 +110,7 @@ typedef std::unordered_map<uint32_t /*ID*/, SpellRadiusDBC> SpellRadiusDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SpellRangeDBC> SpellRangeDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SpellRuneCostDBC> SpellRuneCostDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SpellShapeshiftFormDBC> SpellShapeshiftFormDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, SpellVisualDBC> SpellVisualDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -1046,6 +1047,14 @@ public:
         return nullptr;
     }
 
+    SpellVisualDBC const* getSpellVisualDBC(uint32_t ID)
+    {
+        auto itr = _spellVisualMap.find(ID);
+        if (itr != _spellVisualMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1146,6 +1155,7 @@ private:
     void load_SpellRange();                 // load SpellRange.dbc
     void load_SpellRuneCost();              // load SpellRuneCost.dbc
     void load_SpellShapeshiftForm();        // load SpellShapeshiftForm.dbc
+    void load_SpellVisual();                // load SpellVisual.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1248,6 +1258,7 @@ private:
     SpellRangeDBCMap _spellRangeMap;
     SpellRuneCostDBCMap _spellRuneCostMap;
     SpellShapeshiftFormDBCMap _spellShapeShiftFormMap;
+    SpellVisualDBCMap _spellVisualMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;

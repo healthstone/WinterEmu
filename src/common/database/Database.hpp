@@ -141,6 +141,7 @@
 #include "database/mapper/dbc/PgDbcSpellRange.hpp"
 #include "database/mapper/dbc/PgDbcSpellRuneCost.hpp"
 #include "database/mapper/dbc/PgDbcSpellShapeshiftForm.hpp"
+#include "database/mapper/dbc/PgDbcSpellVisual.hpp"
 
 #include "database/mapper/world/PgItemTemplate.hpp"
 

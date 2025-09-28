@@ -40,21 +40,30 @@ void DatabasePreparer::prepareAuthSchema(pqxx::connection &conn) {
                              "mutetime, mutereason, muteby, locale, os, timezone_offset, recruiter, coins "
                              "FROM {}.accounts WHERE username = $1", auth_schema));
     conn.prepare("SELECT_BUILD_INFO",
-                 fmt::format("SELECT majorVersion, minorVersion, bugfixVersion, hotfixVersion, build FROM {}.build_info ORDER BY build ASC", auth_schema));
+                 fmt::format(
+                         "SELECT majorVersion, minorVersion, bugfixVersion, hotfixVersion, build FROM {}.build_info ORDER BY build ASC",
+                         auth_schema));
     conn.prepare("SELECT_BUILD_EXECUTABLE_HASH",
                  fmt::format("SELECT build, platform, executableHash FROM {}.build_executable_hash", auth_schema));
     conn.prepare("SELECT_REALMLIST",
-                 fmt::format("SELECT id, name, address, local_address, local_subnet_mask, port, icon, flag, timezone, allowed_security_level, population, gamebuild FROM {}.realmlist WHERE flag <> 3 ORDER BY name", auth_schema));
+                 fmt::format(
+                         "SELECT id, name, address, local_address, local_subnet_mask, port, icon, flag, timezone, allowed_security_level, population, gamebuild FROM {}.realmlist WHERE flag <> 3 ORDER BY name",
+                         auth_schema));
     conn.prepare("SELECT_REALMLIST_BY_ID",
-                 fmt::format("SELECT id, name, address, local_address, local_subnet_mask, port, icon, flag, timezone, allowed_security_level, population, gamebuild FROM {}.realmlist WHERE id = $1", auth_schema));
+                 fmt::format(
+                         "SELECT id, name, address, local_address, local_subnet_mask, port, icon, flag, timezone, allowed_security_level, population, gamebuild FROM {}.realmlist WHERE id = $1",
+                         auth_schema));
     conn.prepare("SELECT_REALM_CHARACTERS",
                  fmt::format("SELECT realmid, numchars FROM {}.realmcharacters WHERE acctid = $1", auth_schema));
     conn.prepare("UPDATE_LOGIN_LOGONPROOF",
-                 fmt::format("UPDATE {}.accounts SET session_key_auth = decode($1, 'hex'), last_ip = $2, last_login = NOW(), locale = $3, os = $4, timezone_offset = $5 WHERE username = $6", auth_schema));
+                 fmt::format(
+                         "UPDATE {}.accounts SET session_key_auth = decode($1, 'hex'), last_ip = $2, last_login = NOW(), locale = $3, os = $4, timezone_offset = $5 WHERE username = $6",
+                         auth_schema));
     conn.prepare("UPDATE_REALMLIST",
                  fmt::format("UPDATE {}.realmlist SET flag = $1, population = $2 WHERE id = $3", auth_schema));
     conn.prepare("INSERT_REALM_CHARACTERS",
-                 fmt::format("INSERT INTO {}.realmcharacters (realmid, acctid, numchars) VALUES ($1, $2, $3)", auth_schema));
+                 fmt::format("INSERT INTO {}.realmcharacters (realmid, acctid, numchars) VALUES ($1, $2, $3)",
+                             auth_schema));
     conn.prepare("UPDATE_REALM_CHARACTERS",
                  fmt::format("UPDATE {}.realmcharacters SET numchars = $1 WHERE acctid = $2", auth_schema));
 }
@@ -69,12 +78,14 @@ void DatabasePreparer::prepareRelaySchema(pqxx::connection &conn) {
                              "time = EXCLUDED.time, data = EXCLUDED.data",
                              relay_schema));
     conn.prepare("SELECT_ACCOUNT_DATA",
-                 fmt::format("SELECT account_id, type, time, data FROM {}.account_data WHERE account_id = $1", relay_schema));
+                 fmt::format("SELECT account_id, type, time, data FROM {}.account_data WHERE account_id = $1",
+                             relay_schema));
 
     conn.prepare("SELECT_ADDONS",
                  fmt::format("SELECT name, crc FROM {}.addons", relay_schema));
     conn.prepare("SELECT_BANNED_ADDONS",
-                 fmt::format("SELECT id, name, version, timestamp FROM {}.banned_addons ORDER BY timestamp", relay_schema));
+                 fmt::format("SELECT id, name, version, timestamp FROM {}.banned_addons ORDER BY timestamp",
+                             relay_schema));
 
     conn.prepare("REPLACE_CHARACTER_ACCOUNT_DATA",
                  fmt::format("INSERT INTO {}.character_account_data (guid, type, time, data) "
@@ -83,54 +94,62 @@ void DatabasePreparer::prepareRelaySchema(pqxx::connection &conn) {
                              "time = EXCLUDED.time, data = EXCLUDED.data",
                              relay_schema));
     conn.prepare("SELECT_CHARACTER_ACCOUNT_DATA",
-                 fmt::format("SELECT guid, type, time, data FROM {}.character_account_data WHERE guid = $1", relay_schema));
+                 fmt::format("SELECT guid, type, time, data FROM {}.character_account_data WHERE guid = $1",
+                             relay_schema));
 
     conn.prepare("SELECT_ACCOUNT_TUTORIALS",
-                 fmt::format("SELECT account_id, tut0, tut1, tut2, tut3, tut4, tut5, tut6, tut7 FROM {}.account_tutorial WHERE account_id = $1", relay_schema));
+                 fmt::format(
+                         "SELECT account_id, tut0, tut1, tut2, tut3, tut4, tut5, tut6, tut7 FROM {}.account_tutorial WHERE account_id = $1",
+                         relay_schema));
 
     conn.prepare("SELECT_CHAR_ENUM",
-                 fmt::format("SELECT c.guid, c.name, c.race, c.class, c.gender, c.skin, c.face, c.hairStyle, c.hairColor, c.facialStyle, "
-                             "c.level, c.zone, c.map, c.position_x, c.position_y, c.position_z, c.orientation, c.equipmentCache, c.playerFlags, c.at_login, c.istransfer, "
-                             "gm.guildid as guild_guildid, "
-                             "cp.entry as pet_entry, cp.modelid as pet_modelid, cp.level as pet_level, "
-                             "cb.guid as banned_guid "
-                             "FROM {}.characters AS c "
-                             "LEFT JOIN {}.character_pet AS cp ON c.guid = cp.owner AND cp.slot = $1 "
-                             "LEFT JOIN {}.guild_member AS gm ON c.guid = gm.guid "
-                             "LEFT JOIN {}.character_banned AS cb ON c.guid = cb.guid AND cb.active = 1 "
-                             "WHERE c.account = $2 AND c.deleteInfos_Name IS NULL "
-                             "ORDER BY c.guid",
-                             relay_schema, relay_schema, relay_schema, relay_schema));
+                 fmt::format(
+                         "SELECT c.guid, c.name, c.race, c.class, c.gender, c.skin, c.face, c.hairStyle, c.hairColor, c.facialStyle, "
+                         "c.level, c.zone, c.map, c.position_x, c.position_y, c.position_z, c.orientation, c.equipmentCache, c.playerFlags, c.at_login, c.istransfer, "
+                         "gm.guildid as guild_guildid, "
+                         "cp.entry as pet_entry, cp.modelid as pet_modelid, cp.level as pet_level, "
+                         "cb.guid as banned_guid "
+                         "FROM {}.characters AS c "
+                         "LEFT JOIN {}.character_pet AS cp ON c.guid = cp.owner AND cp.slot = $1 "
+                         "LEFT JOIN {}.guild_member AS gm ON c.guid = gm.guid "
+                         "LEFT JOIN {}.character_banned AS cb ON c.guid = cb.guid AND cb.active = 1 "
+                         "WHERE c.account = $2 AND c.deleteInfos_Name IS NULL "
+                         "ORDER BY c.guid",
+                         relay_schema, relay_schema, relay_schema, relay_schema));
     conn.prepare("SELECT_COUNT_CHARS_BY_USERNAME",
                  fmt::format("SELECT COUNT(*) "
                              "FROM {}.characters WHERE name = $1", relay_schema));
 
     conn.prepare("INSERT_CHARACTER",
             //                                         1       2    3      4      5       6     7    8     9     10      11         12          13          14         15          16
-                 fmt::format("INSERT INTO {}.characters (account, name, race, class, gender, level, xp, money, skin, face, hairstyle, haircolor, facialstyle, bankslots, reststate, playerflags, "
-                             //17       18              19              20          21          22          23         24      25        26       27        28
-                             "map, instance_id, instance_mode_mask, position_x, position_y, position_z, orientation, trans_x, trans_y, trans_z, trans_o, transguid, "
-                             // 29         30
-                             "taximask, cinematic, "
-                             //   31        32          33          34              35                 36                  37
-                             "totaltime, leveltime, rest_bonus, logout_time, is_logout_resting, resettalents_cost, resettalents_time, "
-                             //   38             39         40      41
-                             "extra_flags, stable_slots, at_login, zone, "
-                             //     42              43          44              45                46                47                 48
-                             "death_expire_time, taxi_path, arenapoints, totalhonorpoints, todayhonorpoints, yesterdayhonorpoints, totalkills, "
-                             //    49           50            51              52              53         54     55       56      57     58
-                             "todaykills, yesterdaykills, chosentitle, knowncurrencies, watchedfaction, drunk, health, power1, power2, power3, "
-                             // 59      60      61      62      63              64                65               66             67          68         69          70            71
-                             "power4, power5, power6, power7, latency, talentgroupscount, activetalentgroup, exploredzones, equipmentcache, ammoid, knowntitles, actionbars, grantablelevels) "
-                             "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56, $57, $58, $59, $60, $61, $62, $63, $64, $65, $66, $67, $68, $69, $70, $71)",
-                             relay_schema));
+                 fmt::format(
+                         "INSERT INTO {}.characters (account, name, race, class, gender, level, xp, money, skin, face, hairstyle, haircolor, facialstyle, bankslots, reststate, playerflags, "
+                         //17       18              19              20          21          22          23         24      25        26       27        28
+                         "map, instance_id, instance_mode_mask, position_x, position_y, position_z, orientation, trans_x, trans_y, trans_z, trans_o, transguid, "
+                         // 29         30
+                         "taximask, cinematic, "
+                         //   31        32          33          34              35                 36                  37
+                         "totaltime, leveltime, rest_bonus, logout_time, is_logout_resting, resettalents_cost, resettalents_time, "
+                         //   38             39         40      41
+                         "extra_flags, stable_slots, at_login, zone, "
+                         //     42              43          44              45                46                47                 48
+                         "death_expire_time, taxi_path, arenapoints, totalhonorpoints, todayhonorpoints, yesterdayhonorpoints, totalkills, "
+                         //    49           50            51              52              53         54     55       56      57     58
+                         "todaykills, yesterdaykills, chosentitle, knowncurrencies, watchedfaction, drunk, health, power1, power2, power3, "
+                         // 59      60      61      62      63              64                65               66             67          68         69          70            71
+                         "power4, power5, power6, power7, latency, talentgroupscount, activetalentgroup, exploredzones, equipmentcache, ammoid, knowntitles, actionbars, grantablelevels) "
+                         "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56, $57, $58, $59, $60, $61, $62, $63, $64, $65, $66, $67, $68, $69, $70, $71)",
+                         relay_schema));
 
     conn.prepare("SELECT_PLAYER_CREATE_INFO",
-                 fmt::format("SELECT race, class, map, zone, position_x, position_y, position_z, orientation FROM {}.playercreateinfo", relay_schema));
+                 fmt::format(
+                         "SELECT race, class, map, zone, position_x, position_y, position_z, orientation FROM {}.playercreateinfo",
+                         relay_schema));
     conn.prepare("SELECT_PLAYER_CREATE_INFO_ITEM",
                  fmt::format("SELECT race, class, itemid, amount FROM {}.playercreateinfo_item", relay_schema));
     conn.prepare("SELECT_PLAYER_CREATE_INFO_SKILLS",
-                 fmt::format("SELECT racemask, classmask, skill, rank, comment FROM {}.playercreateinfo_skills", relay_schema));
+                 fmt::format("SELECT racemask, classmask, skill, rank, comment FROM {}.playercreateinfo_skills",
+                             relay_schema));
 
 }
 
@@ -646,11 +665,12 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                  fmt::format("SELECT id, data FROM {}.dbc_gtregenmpperspt", dbc_schema)
     );
     conn.prepare("SELECT_DBC_HOLIDAYS",
-                 fmt::format("SELECT id, duration_1, duration_2, duration_3, duration_4, duration_5, duration_6, duration_7, duration_8, duration_9, duration_10, "
-                             "date_1, date_2, date_3, date_4, date_5, date_6, date_7, date_8, date_9, date_10, date_11, date_12, date_13, date_14, date_15, date_16, date_17, date_18, date_19, date_20, date_21, date_22, date_23, date_24, date_25, date_26, "
-                             "region, looping, calendarflags_1, calendarflags_2, calendarflags_3, calendarflags_4, calendarflags_5, calendarflags_6, calendarflags_7, calendarflags_8, calendarflags_9, calendarflags_10, "
-                             "holidaynameid, holidaydescriptionid, texturefilename, priority, calendarfiltertype, flags "
-                             "FROM {}.dbc_holidays", dbc_schema));
+                 fmt::format(
+                         "SELECT id, duration_1, duration_2, duration_3, duration_4, duration_5, duration_6, duration_7, duration_8, duration_9, duration_10, "
+                         "date_1, date_2, date_3, date_4, date_5, date_6, date_7, date_8, date_9, date_10, date_11, date_12, date_13, date_14, date_15, date_16, date_17, date_18, date_19, date_20, date_21, date_22, date_23, date_24, date_25, date_26, "
+                         "region, looping, calendarflags_1, calendarflags_2, calendarflags_3, calendarflags_4, calendarflags_5, calendarflags_6, calendarflags_7, calendarflags_8, calendarflags_9, calendarflags_10, "
+                         "holidaynameid, holidaydescriptionid, texturefilename, priority, calendarfiltertype, flags "
+                         "FROM {}.dbc_holidays", dbc_schema));
     conn.prepare("SELECT_DBC_ITEM",
                  fmt::format("SELECT id, class_id, subclass_id, sound_override_subclassid, "
                              "material, display_info_id, inventory_type, sheathe_type "
@@ -909,21 +929,24 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
     conn.prepare("SELECT_DBC_SPELL",
                  fmt::format("SELECT * FROM {}.dbc_spell", dbc_schema));
     conn.prepare("SELECT_DBC_SPELLCASTTIMES",
-            fmt::format("SELECT id, base, perlevel, minimum FROM {}.dbc_spellcasttimes", dbc_schema));
+                 fmt::format("SELECT id, base, perlevel, minimum FROM {}.dbc_spellcasttimes", dbc_schema));
     conn.prepare("SELECT_DBC_SPELLCATEGORY",
-            fmt::format("SELECT id, flags FROM {}.dbc_spellcategory", dbc_schema));
+                 fmt::format("SELECT id, flags FROM {}.dbc_spellcategory", dbc_schema));
     conn.prepare("SELECT_DBC_SPELLDIFFICULTY",
-                 fmt::format("SELECT id, difficulty_spell_id_1, difficulty_spell_id_2, difficulty_spell_id_3, difficulty_spell_id_4 FROM {}.dbc_spelldifficulty", dbc_schema));
+                 fmt::format(
+                         "SELECT id, difficulty_spell_id_1, difficulty_spell_id_2, difficulty_spell_id_3, difficulty_spell_id_4 FROM {}.dbc_spelldifficulty",
+                         dbc_schema));
     conn.prepare("SELECT_DBC_SPELLDURATION",
-                 fmt::format("SELECT id, duration, duration_per_level, max_duration FROM {}.dbc_spellduration", dbc_schema));
+                 fmt::format("SELECT id, duration, duration_per_level, max_duration FROM {}.dbc_spellduration",
+                             dbc_schema));
     conn.prepare("SELECT_DBC_SPELLFOCUSOBJECT",
                  fmt::format("SELECT id, name_lang_enus, name_lang_engb, name_lang_kokr, "
-                         "name_lang_frfr, name_lang_dede, name_lang_encn, name_lang_zhcn, "
-                         "name_lang_entw, name_lang_zhtw, name_lang_eses, name_lang_esmx, "
-                         "name_lang_ruru, name_lang_ptpt, name_lang_ptbr, name_lang_itit, "
-                         "name_lang_unk, name_lang_mask "
-                         "FROM {}.dbc_spellfocusobject",
-                         dbc_schema));
+                             "name_lang_frfr, name_lang_dede, name_lang_encn, name_lang_zhcn, "
+                             "name_lang_entw, name_lang_zhtw, name_lang_eses, name_lang_esmx, "
+                             "name_lang_ruru, name_lang_ptpt, name_lang_ptbr, name_lang_itit, "
+                             "name_lang_unk, name_lang_mask "
+                             "FROM {}.dbc_spellfocusobject",
+                             dbc_schema));
     conn.prepare("SELECT_DBC_SPELLITEMENCHANTMENT", fmt::format(
             "SELECT id, charges, effect_1, effect_2, effect_3, "
             "effectpointsmin_1, effectpointsmin_2, effectpointsmin_3, "
@@ -937,7 +960,8 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
             "requiredskillid, requiredskillrank, minlevel "
             "FROM {}.dbc_spellitemenchantment", dbc_schema));
     conn.prepare("SELECT_DBC_SPELLITEMENCHANTMENTCONDITION",
-                 fmt::format("SELECT id, lt_operandtype_1, lt_operandtype_2, lt_operandtype_3, lt_operandtype_4, lt_operandtype_5, "
+                 fmt::format(
+                         "SELECT id, lt_operandtype_1, lt_operandtype_2, lt_operandtype_3, lt_operandtype_4, lt_operandtype_5, "
                          "lt_operand_1, lt_operand_2, lt_operand_3, lt_operand_4, lt_operand_5, "
                          "operator_1, operator_2, operator_3, operator_4, operator_5, "
                          "rt_operandtype_1, rt_operandtype_2, rt_operandtype_3, rt_operandtype_4, rt_operandtype_5, "
@@ -946,22 +970,22 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                          "FROM {}.dbc_spellitemenchantmentcondition",
                          dbc_schema));
     conn.prepare("SELECT_DBC_SPELLRADIUS",
-            fmt::format(
-                    "SELECT id, radius, radius_per_level, radius_max "
-                    "FROM {}.dbc_spellradius",
-                    dbc_schema));
+                 fmt::format(
+                         "SELECT id, radius, radius_per_level, radius_max "
+                         "FROM {}.dbc_spellradius",
+                         dbc_schema));
     conn.prepare("SELECT_DBC_SPELLRANGE",
-            fmt::format("SELECT id, rangemin_1, rangemin_2, rangemax_1, rangemax_2, flags, "
-                    "displayname_lang_enus, displayname_lang_engb, displayname_lang_kokr, displayname_lang_frfr, "
-                    "displayname_lang_dede, displayname_lang_encn, displayname_lang_zhcn, displayname_lang_entw, displayname_lang_zhtw, "
-                    "displayname_lang_eses, displayname_lang_esmx, displayname_lang_ruru, displayname_lang_ptpt, displayname_lang_ptbr, "
-                    "displayname_lang_itit, displayname_lang_unk, displayname_lang_mask, "
-                    "displaynameshort_lang_enus, displaynameshort_lang_engb, displaynameshort_lang_kokr, displaynameshort_lang_frfr, "
-                    "displaynameshort_lang_dede, displaynameshort_lang_encn, displaynameshort_lang_zhcn, displaynameshort_lang_entw, displaynameshort_lang_zhtw, "
-                    "displaynameshort_lang_eses, displaynameshort_lang_esmx, displaynameshort_lang_ruru, displaynameshort_lang_ptpt, displaynameshort_lang_ptbr, "
-                    "displaynameshort_lang_itit, displaynameshort_lang_unk, displaynameshort_lang_mask "
-                    "FROM {}.dbc_spellrange",
-                    dbc_schema));
+                 fmt::format("SELECT id, rangemin_1, rangemin_2, rangemax_1, rangemax_2, flags, "
+                             "displayname_lang_enus, displayname_lang_engb, displayname_lang_kokr, displayname_lang_frfr, "
+                             "displayname_lang_dede, displayname_lang_encn, displayname_lang_zhcn, displayname_lang_entw, displayname_lang_zhtw, "
+                             "displayname_lang_eses, displayname_lang_esmx, displayname_lang_ruru, displayname_lang_ptpt, displayname_lang_ptbr, "
+                             "displayname_lang_itit, displayname_lang_unk, displayname_lang_mask, "
+                             "displaynameshort_lang_enus, displaynameshort_lang_engb, displaynameshort_lang_kokr, displaynameshort_lang_frfr, "
+                             "displaynameshort_lang_dede, displaynameshort_lang_encn, displaynameshort_lang_zhcn, displaynameshort_lang_entw, displaynameshort_lang_zhtw, "
+                             "displaynameshort_lang_eses, displaynameshort_lang_esmx, displaynameshort_lang_ruru, displaynameshort_lang_ptpt, displaynameshort_lang_ptbr, "
+                             "displaynameshort_lang_itit, displaynameshort_lang_unk, displaynameshort_lang_mask "
+                             "FROM {}.dbc_spellrange",
+                             dbc_schema));
     conn.prepare("SELECT_DBC_SPELLRUNE_COST",
                  fmt::format("SELECT id, blood, unholy, frost, runicpower FROM {}.dbc_spellrunecost", dbc_schema));
     conn.prepare("SELECT_DBC_SPELLSHAPESHIFTFORM",
@@ -974,6 +998,17 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                              "presetspellid_1, presetspellid_2, presetspellid_3, presetspellid_4, "
                              "presetspellid_5, presetspellid_6, presetspellid_7, presetspellid_8 "
                              "FROM {}.dbc_spellshapeshiftform", dbc_schema));
+    conn.prepare("SELECT_DBC_SPELLVISUAL",
+                 fmt::format("SELECT id, precastkit, castkit, impactkit, statekit, statedonekit,"
+                             "channelkit, hasmissile, missilemodel, missilepathtype,"
+                             "missiledestinationattachment, missilesound, animeventsoundid,"
+                             "flags, casterimpactkit, targetimpactkit, missileattachment,"
+                             "missilefollowgroundheight, missilefollowgrounddropspeed,"
+                             "missilefollowgroundapproach, missilefollowgroundflags,"
+                             "misslemotion, missiletargetingkit, instantareakit, impactareakit,"
+                             "persistentareakit, missilecastoffsetx, missilecastoffsety,"
+                             "missilecastoffsetz, missileimpactoffsetx, missileimpactoffsety, missileimpactoffsetz "
+                             "FROM {}.dbc_spellvisual", dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {

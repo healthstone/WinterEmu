@@ -1,0 +1,37 @@
+DROP TABLE IF EXISTS dbc.dbc_spellvisual;
+
+CREATE TABLE dbc.dbc_spellvisual
+(
+    id                           INTEGER PRIMARY KEY DEFAULT 0,
+    precastkit                   INTEGER NOT NULL    DEFAULT 0,
+    castkit                      INTEGER NOT NULL    DEFAULT 0,
+    impactkit                    INTEGER NOT NULL    DEFAULT 0,
+    statekit                     INTEGER NOT NULL    DEFAULT 0,
+    statedonekit                 INTEGER NOT NULL    DEFAULT 0,
+    channelkit                   INTEGER NOT NULL    DEFAULT 0,
+    hasmissile                   INTEGER NOT NULL    DEFAULT 0,
+    missilemodel                 INTEGER NOT NULL    DEFAULT 0,
+    missilepathtype              INTEGER NOT NULL    DEFAULT 0,
+    missiledestinationattachment INTEGER NOT NULL    DEFAULT 0,
+    missilesound                 INTEGER NOT NULL    DEFAULT 0,
+    animeventsoundid             INTEGER NOT NULL    DEFAULT 0,
+    flags                        INTEGER NOT NULL    DEFAULT 0,
+    casterimpactkit              INTEGER NOT NULL    DEFAULT 0,
+    targetimpactkit              INTEGER NOT NULL    DEFAULT 0,
+    missileattachment            INTEGER NOT NULL    DEFAULT 0,
+    missilefollowgroundheight    INTEGER NOT NULL    DEFAULT 0,
+    missilefollowgrounddropspeed INTEGER NOT NULL    DEFAULT 0,
+    missilefollowgroundapproach  INTEGER NOT NULL    DEFAULT 0,
+    missilefollowgroundflags     INTEGER NOT NULL    DEFAULT 0,
+    misslemotion                 INTEGER NOT NULL    DEFAULT 0,
+    missiletargetingkit          INTEGER NOT NULL    DEFAULT 0,
+    instantareakit               INTEGER NOT NULL    DEFAULT 0,
+    impactareakit                INTEGER NOT NULL    DEFAULT 0,
+    persistentareakit            INTEGER NOT NULL    DEFAULT 0,
+    missilecastoffsetx           REAL    NOT NULL    DEFAULT 0,
+    missilecastoffsety           REAL    NOT NULL    DEFAULT 0,
+    missilecastoffsetz           REAL    NOT NULL    DEFAULT 0,
+    missileimpactoffsetx         REAL    NOT NULL    DEFAULT 0,
+    missileimpactoffsety         REAL    NOT NULL    DEFAULT 0,
+    missileimpactoffsetz         REAL    NOT NULL    DEFAULT 0
+);
