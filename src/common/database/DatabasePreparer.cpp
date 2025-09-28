@@ -1037,6 +1037,10 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                          "name_lang_itit, name_lang_unk, name_lang_mask, "
                          "mountcreatureid_1, mountcreatureid_2 "
                          "FROM {}.dbc_taxinodes", dbc_schema));
+    conn.prepare("SELECT_DBC_TAXIPATH",
+            fmt::format("SELECT id, fromtaxinode, totaxinode, cost "
+                    "FROM {}.dbc_taxipath",
+                    dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {

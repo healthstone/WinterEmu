@@ -119,6 +119,7 @@ typedef std::unordered_map<uint32_t /*ID*/, SummonPropertiesDBC> SummonPropertie
 typedef std::unordered_map<uint32_t /*ID*/, TalentDBC> TalentDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TalentTabDBC> TalentTabDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TaxiNodesDBC> TaxiNodesDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, TaxiPathDBC> TaxiPathDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -1133,6 +1134,14 @@ public:
         return nullptr;
     }
 
+    TaxiPathDBC const* getTaxiPathDBC(uint32_t ID)
+    {
+        auto itr = _taxiPathMap.find(ID);
+        if (itr != _taxiPathMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1239,6 +1248,7 @@ private:
     void load_Talent();                     // load Talent.dbc
     void load_TalentTab();                  // load TalentTab.dbc
     void load_TaxiNodes();                  // load TaxiNodes.dbc
+    void load_TaxiPath();                   // load TaxiNodes.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1347,11 +1357,13 @@ private:
     TalentDBCMap _talentMap;
     TalentTabDBCMap _talentTabMap;
     TaxiNodesDBCMap _taxiNodesMap;
+    TaxiPathDBCMap _taxiPathMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;
     uint32_t _spellHighestID;
     uint32_t _spellItemEnchantmentHighestID;
+    uint32_t _taxiPathHighestID;
 
     // store absolute bit position for first rank for talent inspect
     uint32_t _talentTabPages[MAX_CLASSES][3];

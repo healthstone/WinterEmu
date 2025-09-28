@@ -1658,8 +1658,8 @@ struct TaxiNodesDBC {
 // load TaxiPath.dbc
 struct TaxiPathDBC {
     uint32_t ID;                                              // 0
-    uint32_t FromTaxiNode;                                    // 1
-    uint32_t ToTaxiNode;                                      // 2
+    int32_t FromTaxiNode;                                    // 1
+    int32_t ToTaxiNode;                                      // 2
     uint32_t Cost;                                            // 3
 };
 

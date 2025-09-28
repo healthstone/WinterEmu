@@ -136,11 +136,13 @@ void DBCMgr::cleanUpBeforeDelete() {
     _talentMap.clear();
     _talentTabMap.clear();
     _taxiNodesMap.clear();
+    _taxiPathMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
     _spellHighestID = 0;
     _spellItemEnchantmentHighestID = 0;
+    _taxiPathHighestID = 0;
 }
 
 void DBCMgr::initialize() {
@@ -249,6 +251,7 @@ void DBCMgr::initialize() {
     load_Talent();
     load_TalentTab();
     load_TaxiNodes();
+    load_TaxiPath();
 
     initialize_Additional_Data();
 }
@@ -3711,6 +3714,33 @@ void DBCMgr::load_TaxiNodes() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_TaxiNodes failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_TaxiPath() {
+    auto log = Logger::get();
+    _taxiPathMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_TAXIPATH");
+        auto rows = server_->db()->execute_sync_many<DbcTaxiPath>(stmt);
+        for (const auto &row: rows) {
+            TaxiPathDBC tp{};
+            tp.ID = row.id;
+            tp.FromTaxiNode = row.fromtaxinode;
+            tp.ToTaxiNode   = row.totaxinode;
+            tp.Cost         = row.cost;
+
+            _taxiPathMap[row.id] = tp;
+
+            if (!_taxiPathHighestID || _taxiPathHighestID < row.id)
+                _taxiPathHighestID = row.id;
+        }
+        log->info(">>> DBCMgr: loaded {} TaxiPath in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_TaxiPath failed: {}", ex.what());
     }
 }
 

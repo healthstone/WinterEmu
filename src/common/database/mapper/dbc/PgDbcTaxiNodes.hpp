@@ -28,7 +28,7 @@ struct DbcTaxiNodes {
     std::optional<std::string> name_lang_itit;
     std::optional<std::string> name_lang_unk;
 
-    uint64_t name_lang_mask;
+    uint32_t name_lang_mask;
     uint32_t mountcreatureid_1;
     uint32_t mountcreatureid_2;
 };
@@ -60,7 +60,7 @@ struct PgRowMapper<DbcTaxiNodes> {
         obj.name_lang_itit    = get_optional_string(r, "name_lang_itit");
         obj.name_lang_unk     = get_optional_string(r, "name_lang_unk");
 
-        obj.name_lang_mask    = r["name_lang_mask"].as<uint64_t>();
+        obj.name_lang_mask    = r["name_lang_mask"].as<uint32_t>();
         obj.mountcreatureid_1 = r["mountcreatureid_1"].as<uint32_t>();
         obj.mountcreatureid_2 = r["mountcreatureid_2"].as<uint32_t>();
         return obj;
