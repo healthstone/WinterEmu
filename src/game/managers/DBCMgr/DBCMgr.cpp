@@ -17,12 +17,18 @@ void DBCMgr::cleanUpBeforeDelete() {
     _lfgDungeonByDouble.clear();
     _mapDifficultyByDouble.clear();
     _skillRaceClassInfoBySkill.clear();
+    _talentSpellPos.clear();
+    _petTalentSpells.clear();
 
     // handle additional containers
     for (uint8_t i = 0; i < TOTAL_LOCALES; i++) {
         _namesProfaneValidators[i].clear();
         _namesReservedValidators[i].clear();
     }
+
+    for (uint8_t i = 0; i < MAX_CLASSES; i++)
+        for (uint8_t j = 0; j < 3; j++)
+            _talentTabPages[i][j] = 0;
 
     // Потом уже сами основные мапы
     _achievementMap.clear();
@@ -127,6 +133,8 @@ void DBCMgr::cleanUpBeforeDelete() {
     _spellVisualMap.clear();
     _stableSlotPricesMap.clear();
     _summonPropertiesMap.clear();
+    _talentMap.clear();
+    _talentTabMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -237,6 +245,8 @@ void DBCMgr::initialize() {
     load_SpellVisual();
     load_StableSlotPrices();
     load_SummonProperties();
+    load_Talent();
+    load_TalentTab();
 
     initialize_Additional_Data();
 }
@@ -3601,6 +3611,63 @@ void DBCMgr::load_SummonProperties() {
     }
 }
 
+void DBCMgr::load_Talent() {
+    auto log = Logger::get();
+    _talentMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_TALENT");
+        auto rows = server_->db()->execute_sync_many<DbcTalent>(stmt);
+        for (const auto &row: rows) {
+            TalentDBC t{};
+            t.ID = row.id;
+            t.TabID       = row.tabid;
+            t.TierID      = row.tierid;
+            t.ColumnIndex = row.columnindex;
+
+            t.SpellRank[0] = row.spellrank_1;
+            t.SpellRank[1] = row.spellrank_2;
+            t.SpellRank[2] = row.spellrank_3;
+            t.SpellRank[3] = row.spellrank_4;
+            t.SpellRank[4] = row.spellrank_5;
+
+            t.PrereqTalent = row.prereqtalent_1;
+            t.PrereqRank   = row.prerekrank_1;
+
+            _talentMap[row.id] = t;
+        }
+        log->info(">>> DBCMgr: loaded {} Talent in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_Talent failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_TalentTab() {
+    auto log = Logger::get();
+    _talentTabMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_TALENTTAB");
+        auto rows = server_->db()->execute_sync_many<DbcTalentTab>(stmt);
+        for (const auto &row: rows) {
+            TalentTabDBC tt{};
+            tt.ID = row.id;
+            tt.ClassMask     = row.class_mask;
+            tt.PetTalentMask = row.pet_talent_mask;
+            tt.OrderIndex    = row.order_index;
+
+            _talentTabMap[row.id] = tt;
+        }
+        log->info(">>> DBCMgr: loaded {} TalentTab in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_TalentTab failed: {}", ex.what());
+    }
+}
+
 void DBCMgr::initialize_Additional_Data() {
     handle_CharacterFacialHairStylesByTripple();
     handle_CharSectionsByPenta();
@@ -3611,6 +3678,8 @@ void DBCMgr::initialize_Additional_Data() {
     handle_NamesProfanityRegex();
     handle_NamesReservedRegex();
     handle_SkillRaceClassInfo();
+    handle_TalentTabPages();
+    handle_TalentSpellPosStore();
 }
 
 void DBCMgr::handle_CharacterFacialHairStylesByTripple() {
@@ -3710,5 +3779,44 @@ void DBCMgr::handle_SkillRaceClassInfo() {
         if (SkillRaceClassInfoDBC const* entry = &srciID.second)
             if (getSkillLineDBC(entry->SkillID))
                 _skillRaceClassInfoBySkill.emplace(entry->SkillID, entry);
+    }
+}
+
+void DBCMgr::handle_TalentTabPages() {
+    // prepare fast data access to bit pos of talent ranks for use at inspecting
+    // now have all max ranks (and then bit amount used for store talent ranks in inspect)
+    for (const auto& ttabID : _talentTabMap)
+    {
+        if (TalentTabDBC const* talentTabInfo = &ttabID.second)
+        {
+            // prevent memory corruption; otherwise cls will become 12 below
+            if ((talentTabInfo->ClassMask & CLASSMASK_ALL_PLAYABLE) == 0)
+                continue;
+
+            // store class talent tab pages
+            for (uint8_t cls = 1; cls < MAX_CLASSES; ++cls)
+                if (talentTabInfo->ClassMask & (1 << (cls - 1)))
+                    _talentTabPages[cls][talentTabInfo->OrderIndex] = talentTabInfo->ID;
+        }
+    }
+}
+
+void DBCMgr::handle_TalentSpellPosStore() {
+    // create talent spells set
+    for (const auto& talentID : _talentMap)
+    {
+        if (TalentDBC const* talentInfo = &talentID.second)
+        {
+            TalentTabDBC const* talentTab = getTalentTabDBC(talentInfo->TabID);
+            for (uint8_t j = 0; j < MAX_TALENT_RANK; ++j)
+            {
+                if (talentInfo->SpellRank[j])
+                {
+                    _talentSpellPos[talentInfo->SpellRank[j]] = TalentSpellPos(talentInfo->ID, j);
+                    if (talentTab && talentTab->PetTalentMask)
+                        _petTalentSpells.insert(talentInfo->SpellRank[j]);
+                }
+            }
+        }
     }
 }

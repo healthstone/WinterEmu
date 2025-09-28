@@ -144,6 +144,8 @@
 #include "database/mapper/dbc/PgDbcSpellVisual.hpp"
 #include "database/mapper/dbc/PgDbcStableSlotPrices.hpp"
 #include "database/mapper/dbc/PgDbcSummonProperties.hpp"
+#include "database/mapper/dbc/PgDbcTalent.hpp"
+#include "database/mapper/dbc/PgDbcTalentTab.hpp"
 
 #include "database/mapper/world/PgItemTemplate.hpp"
 

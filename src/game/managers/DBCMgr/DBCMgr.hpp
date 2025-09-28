@@ -3,13 +3,16 @@
 #include <string>
 #include <array>
 #include <unordered_map>
+#include <unordered_set>
 #include <memory>
 #include <map>
 #include <vector>
 #include <boost/regex.hpp>
+
 #include "src/game/enums/DBCStructure.hpp"
 #include "src/game/enums/Team.hpp"
 #include "src/game/enums/ResponseCodes.hpp"
+#include "src/game/enums/Classes.hpp"
 
 typedef std::unordered_map<uint32_t /*ID*/, AchievementDBC> AchievementDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, AchievementCriteriaDBC> AchievementCriteriaDBCMap;
@@ -113,6 +116,8 @@ typedef std::unordered_map<uint32_t /*ID*/, SpellShapeshiftFormDBC> SpellShapesh
 typedef std::unordered_map<uint32_t /*ID*/, SpellVisualDBC> SpellVisualDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, StableSlotPricesDBC> StableSlotPricesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SummonPropertiesDBC> SummonPropertiesDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, TalentDBC> TalentDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, TalentTabDBC> TalentTabDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -145,6 +150,11 @@ typedef std::array<std::vector<boost::wregex>, TOTAL_LOCALES> NameValidationRege
 // SkillRaceClassInfoBounds
 typedef std::unordered_multimap<uint32_t, SkillRaceClassInfoDBC const*> SkillRaceClassInfoMap;
 typedef std::pair<SkillRaceClassInfoMap::iterator, SkillRaceClassInfoMap::iterator> SkillRaceClassInfoBounds;
+
+// TalentSpellPos
+typedef std::unordered_map<uint32_t, TalentSpellPos> TalentSpellPosMap;
+// PetTalentSpells
+typedef std::unordered_set<uint32_t> PetTalentSpells;
 
 class BaseServer;
 
@@ -1073,6 +1083,46 @@ public:
         return nullptr;
     }
 
+    TalentDBCMap const& getTalentDBCMap() const { return _talentMap; }
+    TalentDBC const* getTalentDBC(uint32_t ID)
+    {
+        auto itr = _talentMap.find(ID);
+        if (itr != _talentMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    TalentTabDBCMap const& getTalentTabDBCMap() const { return _talentTabMap; }
+    TalentTabDBC const* getTalentTabDBC(uint32_t ID)
+    {
+        auto itr = _talentTabMap.find(ID);
+        if (itr != _talentTabMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    uint32_t const* getTalentTabPages(uint8_t cls)
+    {
+        return _talentTabPages[cls];
+    }
+
+    TalentSpellPos const* getTalentSpellPos(uint32_t spellId)
+    {
+        auto itr = _talentSpellPos.find(spellId);
+        if (itr == _talentSpellPos.end())
+            return nullptr;
+        return &itr->second;
+    }
+
+    uint32_t getTalentSpellCost(uint32_t spellId)
+    {
+        if (TalentSpellPos const* pos = getTalentSpellPos(spellId))
+            return pos->rank + 1;
+        return 0;
+    }
+
+    PetTalentSpells const& getPetTalentSpells() { return _petTalentSpells; }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1176,6 +1226,8 @@ private:
     void load_SpellVisual();                // load SpellVisual.dbc
     void load_StableSlotPrices();           // load StableSlotPrices.dbc
     void load_SummonProperties();           // load SummonProperties.dbc
+    void load_Talent();                     // load Talent.dbc
+    void load_TalentTab();                  // load TalentTab.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1281,11 +1333,16 @@ private:
     SpellVisualDBCMap _spellVisualMap;
     StableSlotPricesDBCMap _stableSlotPricesMap;
     SummonPropertiesDBCMap _summonPropertiesMap;
+    TalentDBCMap _talentMap;
+    TalentTabDBCMap _talentTabMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;
     uint32_t _spellHighestID;
     uint32_t _spellItemEnchantmentHighestID;
+
+    // store absolute bit position for first rank for talent inspect
+    uint32_t _talentTabPages[MAX_CLASSES][3];
 
     // Handle others containers
     void initialize_Additional_Data();
@@ -1298,6 +1355,8 @@ private:
     void handle_NamesProfanityRegex();
     void handle_NamesReservedRegex();
     void handle_SkillRaceClassInfo();
+    void handle_TalentTabPages();
+    void handle_TalentSpellPosStore();
 
     CharacterFacialHairStylesByTripple _characterFacialHairStylesByTripple;
     CharSectionsByPenta _charSectionsByPenta;
@@ -1308,4 +1367,6 @@ private:
     NameValidationRegexContainer _namesProfaneValidators;
     NameValidationRegexContainer _namesReservedValidators;
     SkillRaceClassInfoMap _skillRaceClassInfoBySkill;
+    TalentSpellPosMap _talentSpellPos;
+    PetTalentSpells _petTalentSpells;
 };

@@ -1013,6 +1013,21 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                  fmt::format("SELECT id, cost FROM {}.dbc_stableslotprices", dbc_schema));
     conn.prepare("SELECT_DBC_SUMMONPROPERTIES",
                  fmt::format("SELECT id, control, faction, title, slot, flags FROM {}.dbc_summonproperties", dbc_schema));
+    conn.prepare("SELECT_DBC_TALENT",
+                 fmt::format("SELECT id, tabid, tierid, columnindex,"
+                             "spellrank_1, spellrank_2, spellrank_3, spellrank_4, spellrank_5, "
+                             "spellrank_6, spellrank_7, spellrank_8, spellrank_9,"
+                             "prereqtalent_1, prereqtalent_2, prereqtalent_3,"
+                             "prerekrank_1, prerekrank_2, prerekrank_3,"
+                             "flags, requiredspellid, categorymask_1, categorymask_2 "
+                             "FROM {}.dbc_talent", dbc_schema));
+    conn.prepare("SELECT_DBC_TALENTTAB",
+                 fmt::format(
+                         "SELECT id, name_lang_enus, name_lang_engb, name_lang_kokr, name_lang_frfr,"
+                         "name_lang_dede, name_lang_encn, name_lang_zhcn, name_lang_entw, name_lang_zhtw,"
+                         "name_lang_eses, name_lang_esmx, name_lang_ruru, name_lang_ptpt, name_lang_ptbr,"
+                         "name_lang_itit, name_lang_unk, name_lang_mask, spelliconid, racemask, classmask,"
+                         "pettalentmask, orderindex, backgroundfile FROM {}.dbc_talenttab", dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {
