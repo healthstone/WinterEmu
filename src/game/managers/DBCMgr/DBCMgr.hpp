@@ -108,6 +108,8 @@ typedef std::unordered_map<uint32_t /*ID*/, SpellItemEnchantmentDBC> SpellItemEn
 typedef std::unordered_map<uint32_t /*ID*/, SpellItemEnchantmentConditionDBC> SpellItemEnchantmentConditionDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SpellRadiusDBC> SpellRadiusDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SpellRangeDBC> SpellRangeDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, SpellRuneCostDBC> SpellRuneCostDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, SpellShapeshiftFormDBC> SpellShapeshiftFormDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -1028,6 +1030,22 @@ public:
         return nullptr;
     }
 
+    SpellRuneCostDBC const* getSpellRuneCostDBC(uint32_t ID)
+    {
+        auto itr = _spellRuneCostMap.find(ID);
+        if (itr != _spellRuneCostMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    SpellShapeshiftFormDBC const* getSpellShapeshiftFormDBC(uint32_t ID)
+    {
+        auto itr = _spellShapeShiftFormMap.find(ID);
+        if (itr != _spellShapeShiftFormMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1126,6 +1144,8 @@ private:
     void load_SpellItemEnchantmentCondition();// load SpellItemEnchantmentCondition.dbc
     void load_SpellRadius();                // load SpellRadius.dbc
     void load_SpellRange();                 // load SpellRange.dbc
+    void load_SpellRuneCost();              // load SpellRuneCost.dbc
+    void load_SpellShapeshiftForm();        // load SpellShapeshiftForm.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1226,6 +1246,8 @@ private:
     SpellItemEnchantmentConditionDBCMap _spellItemEnchantmentConditionMap;
     SpellRadiusDBCMap _spellRadiusMap;
     SpellRangeDBCMap _spellRangeMap;
+    SpellRuneCostDBCMap _spellRuneCostMap;
+    SpellShapeshiftFormDBCMap _spellShapeShiftFormMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;

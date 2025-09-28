@@ -961,9 +961,19 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                     "displaynameshort_lang_eses, displaynameshort_lang_esmx, displaynameshort_lang_ruru, displaynameshort_lang_ptpt, displaynameshort_lang_ptbr, "
                     "displaynameshort_lang_itit, displaynameshort_lang_unk, displaynameshort_lang_mask "
                     "FROM {}.dbc_spellrange",
-                    dbc_schema
-            )
-    );
+                    dbc_schema));
+    conn.prepare("SELECT_DBC_SPELLRUNE_COST",
+                 fmt::format("SELECT id, blood, unholy, frost, runicpower FROM {}.dbc_spellrunecost", dbc_schema));
+    conn.prepare("SELECT_DBC_SPELLSHAPESHIFTFORM",
+                 fmt::format("SELECT id, bonusactionbar, "
+                             "name_lang_enus, name_lang_engb, name_lang_kokr, name_lang_frfr, name_lang_dede, "
+                             "name_lang_encn, name_lang_zhcn, name_lang_entw, name_lang_zhtw, name_lang_eses, "
+                             "name_lang_esmx, name_lang_ruru, name_lang_ptpt, name_lang_ptbr, name_lang_itit, "
+                             "name_lang_unk, name_lang_mask, flags, creaturetype, attackiconid, combatroundtime, "
+                             "creaturedisplayid_1, creaturedisplayid_2, creaturedisplayid_3, creaturedisplayid_4, "
+                             "presetspellid_1, presetspellid_2, presetspellid_3, presetspellid_4, "
+                             "presetspellid_5, presetspellid_6, presetspellid_7, presetspellid_8 "
+                             "FROM {}.dbc_spellshapeshiftform", dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {
