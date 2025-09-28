@@ -125,6 +125,8 @@ void DBCMgr::cleanUpBeforeDelete() {
     _spellRuneCostMap.clear();
     _spellShapeShiftFormMap.clear();
     _spellVisualMap.clear();
+    _stableSlotPricesMap.clear();
+    _summonPropertiesMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -233,6 +235,8 @@ void DBCMgr::initialize() {
     load_SpellRuneCost();
     load_SpellShapeshiftForm();
     load_SpellVisual();
+    load_StableSlotPrices();
+    load_SummonProperties();
 
     initialize_Additional_Data();
 }
@@ -3546,6 +3550,54 @@ void DBCMgr::load_SpellVisual() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_SpellVisual failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_StableSlotPrices() {
+    auto log = Logger::get();
+    _stableSlotPricesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_STABLESLOTPRICES");
+        auto rows = server_->db()->execute_sync_many<DbcStableSlotPrices>(stmt);
+        for (const auto &row: rows) {
+            StableSlotPricesDBC ssp{};
+            ssp.ID = row.id;
+            ssp.Cost = row.cost;
+
+            _stableSlotPricesMap[row.id] = ssp;
+        }
+        log->info(">>> DBCMgr: loaded {} StableSlotPrices in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_StableSlotPrices failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_SummonProperties() {
+    auto log = Logger::get();
+    _summonPropertiesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_SUMMONPROPERTIES");
+        auto rows = server_->db()->execute_sync_many<DbcSummonProperties>(stmt);
+        for (const auto &row: rows) {
+            SummonPropertiesDBC sp{};
+            sp.ID = row.id;
+            sp.Control = row.control;
+            sp.Faction = row.faction;
+            sp.Title   = row.title;
+            sp.Slot    = row.slot;
+            sp.Flags   = row.flags;
+
+            _summonPropertiesMap[row.id] = sp;
+        }
+        log->info(">>> DBCMgr: loaded {} SummonProperties in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_SummonProperties failed: {}", ex.what());
     }
 }
 

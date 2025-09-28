@@ -111,6 +111,8 @@ typedef std::unordered_map<uint32_t /*ID*/, SpellRangeDBC> SpellRangeDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SpellRuneCostDBC> SpellRuneCostDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SpellShapeshiftFormDBC> SpellShapeshiftFormDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, SpellVisualDBC> SpellVisualDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, StableSlotPricesDBC> StableSlotPricesDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, SummonPropertiesDBC> SummonPropertiesDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -1055,6 +1057,22 @@ public:
         return nullptr;
     }
 
+    StableSlotPricesDBC const* getStableSlotPricesDBC(uint32_t ID)
+    {
+        auto itr = _stableSlotPricesMap.find(ID);
+        if (itr != _stableSlotPricesMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    SummonPropertiesDBC const* getSummonPropertiesDBC(uint32_t ID)
+    {
+        auto itr = _summonPropertiesMap.find(ID);
+        if (itr != _summonPropertiesMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1156,6 +1174,8 @@ private:
     void load_SpellRuneCost();              // load SpellRuneCost.dbc
     void load_SpellShapeshiftForm();        // load SpellShapeshiftForm.dbc
     void load_SpellVisual();                // load SpellVisual.dbc
+    void load_StableSlotPrices();           // load StableSlotPrices.dbc
+    void load_SummonProperties();           // load SummonProperties.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1259,6 +1279,8 @@ private:
     SpellRuneCostDBCMap _spellRuneCostMap;
     SpellShapeshiftFormDBCMap _spellShapeShiftFormMap;
     SpellVisualDBCMap _spellVisualMap;
+    StableSlotPricesDBCMap _stableSlotPricesMap;
+    SummonPropertiesDBCMap _summonPropertiesMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;

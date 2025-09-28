@@ -1009,6 +1009,10 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                              "persistentareakit, missilecastoffsetx, missilecastoffsety,"
                              "missilecastoffsetz, missileimpactoffsetx, missileimpactoffsety, missileimpactoffsetz "
                              "FROM {}.dbc_spellvisual", dbc_schema));
+    conn.prepare("SELECT_DBC_STABLESLOTPRICES",
+                 fmt::format("SELECT id, cost FROM {}.dbc_stableslotprices", dbc_schema));
+    conn.prepare("SELECT_DBC_SUMMONPROPERTIES",
+                 fmt::format("SELECT id, control, faction, title, slot, flags FROM {}.dbc_summonproperties", dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {
