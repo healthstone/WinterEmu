@@ -135,6 +135,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _summonPropertiesMap.clear();
     _talentMap.clear();
     _talentTabMap.clear();
+    _taxiNodesMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -247,6 +248,7 @@ void DBCMgr::initialize() {
     load_SummonProperties();
     load_Talent();
     load_TalentTab();
+    load_TaxiNodes();
 
     initialize_Additional_Data();
 }
@@ -3665,6 +3667,50 @@ void DBCMgr::load_TalentTab() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_TalentTab failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_TaxiNodes() {
+    auto log = Logger::get();
+    _taxiNodesMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_TAXINODES");
+        auto rows = server_->db()->execute_sync_many<DbcTaxiNodes>(stmt);
+        for (const auto &row: rows) {
+            TaxiNodesDBC tn;
+            tn.ID = row.id;
+            tn.ContinentID = row.continentid;
+            tn.Pos.X       = row.x;
+            tn.Pos.Y       = row.y;
+            tn.Pos.Z       = row.z;
+
+            tn.Name[LOCALE_enUS] = row.name_lang_enus.value_or("");
+            tn.Name[LOCALE_enGB] = row.name_lang_engb.value_or("");
+            tn.Name[LOCALE_koKR] = row.name_lang_kokr.value_or("");
+            tn.Name[LOCALE_frFR] = row.name_lang_frfr.value_or("");
+            tn.Name[LOCALE_deDE] = row.name_lang_dede.value_or("");
+            tn.Name[LOCALE_enCN] = row.name_lang_encn.value_or("");
+            tn.Name[LOCALE_zhCN] = row.name_lang_zhcn.value_or("");
+            tn.Name[LOCALE_enTW] = row.name_lang_entw.value_or("");
+            tn.Name[LOCALE_zhTW] = row.name_lang_zhtw.value_or("");
+            tn.Name[LOCALE_esES] = row.name_lang_eses.value_or("");
+            tn.Name[LOCALE_esMX] = row.name_lang_esmx.value_or("");
+            tn.Name[LOCALE_ruRU] = row.name_lang_ruru.value_or("");
+            tn.Name[LOCALE_ptPT] = row.name_lang_ptpt.value_or("");
+            tn.Name[LOCALE_ptBR] = row.name_lang_ptbr.value_or("");
+            tn.Name[LOCALE_itIT] = row.name_lang_itit.value_or("");
+
+            tn.MountCreatureID[0] = row.mountcreatureid_1;
+            tn.MountCreatureID[1] = row.mountcreatureid_2;
+
+            _taxiNodesMap[row.id] = tn;
+        }
+        log->info(">>> DBCMgr: loaded {} TaxiNodes in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_TaxiNodes failed: {}", ex.what());
     }
 }
 

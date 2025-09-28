@@ -118,6 +118,7 @@ typedef std::unordered_map<uint32_t /*ID*/, StableSlotPricesDBC> StableSlotPrice
 typedef std::unordered_map<uint32_t /*ID*/, SummonPropertiesDBC> SummonPropertiesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TalentDBC> TalentDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TalentTabDBC> TalentTabDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, TaxiNodesDBC> TaxiNodesDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -1123,6 +1124,15 @@ public:
 
     PetTalentSpells const& getPetTalentSpells() { return _petTalentSpells; }
 
+    TaxiNodesDBCMap const& getTaxiNodesDBCMap() const { return _taxiNodesMap; }
+    TaxiNodesDBC const* getTaxiNodesDBC(uint32_t ID)
+    {
+        auto itr = _taxiNodesMap.find(ID);
+        if (itr != _taxiNodesMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1228,6 +1238,7 @@ private:
     void load_SummonProperties();           // load SummonProperties.dbc
     void load_Talent();                     // load Talent.dbc
     void load_TalentTab();                  // load TalentTab.dbc
+    void load_TaxiNodes();                  // load TaxiNodes.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1335,6 +1346,7 @@ private:
     SummonPropertiesDBCMap _summonPropertiesMap;
     TalentDBCMap _talentMap;
     TalentTabDBCMap _talentTabMap;
+    TaxiNodesDBCMap _taxiNodesMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;
