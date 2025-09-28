@@ -1043,6 +1043,8 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                     dbc_schema));
     conn.prepare("SELECT_DBC_TAXIPATHNODE",
                  fmt::format("SELECT id, pathid, nodeindex, continentid, locx, locy, locz, flags, delay, arrivaleventid, departureeventid FROM {}.dbc_taxipathnode", dbc_schema));
+    conn.prepare("SELECT_DBC_TEAMCONTRIBUTIONPOINTS",
+                 fmt::format("SELECT id, data FROM {}.dbc_teamcontributionpoints", dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {

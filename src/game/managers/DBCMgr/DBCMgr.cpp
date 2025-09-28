@@ -152,6 +152,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _taxiNodesMap.clear();
     _taxiPathMap.clear();
     _taxiPathNodeMap.clear();
+    _teamContributionPointsMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -268,6 +269,7 @@ void DBCMgr::initialize() {
     load_TaxiNodes();
     load_TaxiPath();
     load_TaxiPathNode();
+    load_TeamContributionPoints();
 
     initialize_Additional_Data();
 }
@@ -3791,6 +3793,28 @@ void DBCMgr::load_TaxiPathNode() {
     }
 }
 
+void DBCMgr::load_TeamContributionPoints() {
+    auto log = Logger::get();
+    _teamContributionPointsMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_TEAMCONTRIBUTIONPOINTS");
+        auto rows = server_->db()->execute_sync_many<DbcTeamContributionPoints>(stmt);
+        for (const auto &row: rows) {
+            TeamContributionPointsDBC tcp{};
+            tcp.ID = row.id;
+            tcp.Data = row.data;
+
+            _teamContributionPointsMap[row.id] = tcp;
+        }
+        log->info(">>> DBCMgr: loaded {} TeamContributionPoints in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_TeamContributionPoints failed: {}", ex.what());
+    }
+}
+
 void DBCMgr::initialize_Additional_Data() {
     handle_CharacterFacialHairStylesByTripple();
     handle_CharSectionsByPenta();
@@ -4001,7 +4025,7 @@ void DBCMgr::handle_TaxiNodesMask() {
     {
         if (TaxiNodesDBC const* node = &tnID.second)
         {
-            TaxiPathSetBySource::const_iterator src_i = _taxiPathSetBySource.find(node->ID);
+            auto src_i = _taxiPathSetBySource.find(node->ID);
             if (src_i != _taxiPathSetBySource.end() && !src_i->second.empty())
             {
                 bool ok = false;

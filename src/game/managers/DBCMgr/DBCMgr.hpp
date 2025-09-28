@@ -121,6 +121,7 @@ typedef std::unordered_map<uint32_t /*ID*/, TalentTabDBC> TalentTabDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TaxiNodesDBC> TaxiNodesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TaxiPathDBC> TaxiPathDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TaxiPathNodeDBC> TaxiPathNodeDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, TeamContributionPointsDBC> TeamContributionPointsDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -1168,6 +1169,14 @@ public:
     TaxiPathSetBySource const& getTaxiPathSetBySource() { return _taxiPathSetBySource; }
     TaxiPathNodesByPath const& getTaxiPathNodesByPath() { return _taxiPathNodesByPath; }
 
+    TeamContributionPointsDBC const* getTeamContributionPointsDBC(uint32_t ID)
+    {
+        auto itr = _teamContributionPointsMap.find(ID);
+        if (itr != _teamContributionPointsMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1276,6 +1285,7 @@ private:
     void load_TaxiNodes();                  // load TaxiNodes.dbc
     void load_TaxiPath();                   // load TaxiNodes.dbc
     void load_TaxiPathNode();               // load TaxiPathNode.dbc
+    void load_TeamContributionPoints();     // load TeamContributionPoints.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1386,6 +1396,7 @@ private:
     TaxiNodesDBCMap _taxiNodesMap;
     TaxiPathDBCMap _taxiPathMap;
     TaxiPathNodeDBCMap _taxiPathNodeMap;
+    TeamContributionPointsDBCMap _teamContributionPointsMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;
