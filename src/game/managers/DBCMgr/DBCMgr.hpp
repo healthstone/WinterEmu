@@ -120,6 +120,7 @@ typedef std::unordered_map<uint32_t /*ID*/, TalentDBC> TalentDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TalentTabDBC> TalentTabDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TaxiNodesDBC> TaxiNodesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TaxiPathDBC> TaxiPathDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, TaxiPathNodeDBC> TaxiPathNodeDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -157,6 +158,14 @@ typedef std::pair<SkillRaceClassInfoMap::iterator, SkillRaceClassInfoMap::iterat
 typedef std::unordered_map<uint32_t, TalentSpellPos> TalentSpellPosMap;
 // PetTalentSpells
 typedef std::unordered_set<uint32_t> PetTalentSpells;
+
+// TaxiPathSetBySource
+typedef std::unordered_map<uint32_t, TaxiPathBySourceAndDestination> TaxiPathSetForSource;
+typedef std::unordered_map<uint32_t, TaxiPathSetForSource> TaxiPathSetBySource;
+
+// TaxiPathNodesByPath
+typedef std::vector<TaxiPathNodeDBC const*> TaxiPathNodeList;
+typedef std::vector<TaxiPathNodeList> TaxiPathNodesByPath;
 
 class BaseServer;
 
@@ -1142,6 +1151,23 @@ public:
         return nullptr;
     }
 
+    TaxiPathNodeDBC const* getTaxiPathNodeDBC(uint32_t ID)
+    {
+        auto itr = _taxiPathNodeMap.find(ID);
+        if (itr != _taxiPathNodeMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    TaxiMask getTaxiNodesMask() { return _taxiNodesMask; }
+    TaxiMask getOldContinentsNodesMask() { return _oldContinentsNodesMask; }
+    TaxiMask getHordeTaxiNodesMask() { return _hordeTaxiNodesMask; }
+    TaxiMask getAllianceTaxiNodesMask() { return _allianceTaxiNodesMask; }
+    TaxiMask getDeathKnightTaxiNodesMask() { return _deathKnightTaxiNodesMask; }
+
+    TaxiPathSetBySource const& getTaxiPathSetBySource() { return _taxiPathSetBySource; }
+    TaxiPathNodesByPath const& getTaxiPathNodesByPath() { return _taxiPathNodesByPath; }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1249,6 +1275,7 @@ private:
     void load_TalentTab();                  // load TalentTab.dbc
     void load_TaxiNodes();                  // load TaxiNodes.dbc
     void load_TaxiPath();                   // load TaxiNodes.dbc
+    void load_TaxiPathNode();               // load TaxiPathNode.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1358,6 +1385,7 @@ private:
     TalentTabDBCMap _talentTabMap;
     TaxiNodesDBCMap _taxiNodesMap;
     TaxiPathDBCMap _taxiPathMap;
+    TaxiPathNodeDBCMap _taxiPathNodeMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;
@@ -1367,6 +1395,14 @@ private:
 
     // store absolute bit position for first rank for talent inspect
     uint32_t _talentTabPages[MAX_CLASSES][3];
+
+    TaxiMask _taxiNodesMask;
+    TaxiMask _oldContinentsNodesMask;
+    TaxiMask _hordeTaxiNodesMask;
+    TaxiMask _allianceTaxiNodesMask;
+    TaxiMask _deathKnightTaxiNodesMask;
+    TaxiPathSetBySource _taxiPathSetBySource;
+    TaxiPathNodesByPath _taxiPathNodesByPath;
 
     // Handle others containers
     void initialize_Additional_Data();
@@ -1381,6 +1417,9 @@ private:
     void handle_SkillRaceClassInfo();
     void handle_TalentTabPages();
     void handle_TalentSpellPosStore();
+    void handle_TaxiPathSetBySource();
+    void handle_TaxiPathNodesByPath();
+    void handle_TaxiNodesMask();
 
     CharacterFacialHairStylesByTripple _characterFacialHairStylesByTripple;
     CharSectionsByPenta _charSectionsByPenta;

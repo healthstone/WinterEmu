@@ -1041,6 +1041,8 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
             fmt::format("SELECT id, fromtaxinode, totaxinode, cost "
                     "FROM {}.dbc_taxipath",
                     dbc_schema));
+    conn.prepare("SELECT_DBC_TAXIPATHNODE",
+                 fmt::format("SELECT id, pathid, nodeindex, continentid, locx, locy, locz, flags, delay, arrivaleventid, departureeventid FROM {}.dbc_taxipathnode", dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {

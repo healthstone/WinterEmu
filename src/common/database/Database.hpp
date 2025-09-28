@@ -148,6 +148,7 @@
 #include "database/mapper/dbc/PgDbcTalentTab.hpp"
 #include "database/mapper/dbc/PgDbcTaxiNodes.hpp"
 #include "database/mapper/dbc/PgDbcTaxiPath.hpp"
+#include "database/mapper/dbc/PgDbcTaxiPathNode.hpp"
 
 #include "database/mapper/world/PgItemTemplate.hpp"
 

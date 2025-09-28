@@ -3,6 +3,7 @@
 #include "Logger.hpp"
 #include "BaseServer.hpp"
 #include "utils/utf8utils/UTF8Utils.hpp"
+#include "src/game/enums/SpellEffects.hpp"
 
 DBCMgr::~DBCMgr() {
     cleanUpBeforeDelete();
@@ -29,6 +30,19 @@ void DBCMgr::cleanUpBeforeDelete() {
     for (uint8_t i = 0; i < MAX_CLASSES; i++)
         for (uint8_t j = 0; j < 3; j++)
             _talentTabPages[i][j] = 0;
+
+    _taxiNodesMask.fill(0);
+    _oldContinentsNodesMask.fill(0);
+    _hordeTaxiNodesMask.fill(0);
+    _allianceTaxiNodesMask.fill(0);
+    _deathKnightTaxiNodesMask.fill(0);
+
+    for (auto& tpsID : _taxiPathSetBySource)
+        tpsID.second.clear();
+    _taxiPathSetBySource.clear();
+
+    for (uint32_t i = 1; i < _taxiPathNodesByPath.size(); ++i)
+        _taxiPathNodesByPath[i].clear();
 
     // Потом уже сами основные мапы
     _achievementMap.clear();
@@ -137,6 +151,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _talentTabMap.clear();
     _taxiNodesMap.clear();
     _taxiPathMap.clear();
+    _taxiPathNodeMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -252,6 +267,7 @@ void DBCMgr::initialize() {
     load_TalentTab();
     load_TaxiNodes();
     load_TaxiPath();
+    load_TaxiPathNode();
 
     initialize_Additional_Data();
 }
@@ -3744,6 +3760,37 @@ void DBCMgr::load_TaxiPath() {
     }
 }
 
+void DBCMgr::load_TaxiPathNode() {
+    auto log = Logger::get();
+    _taxiPathNodeMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_TAXIPATHNODE");
+        auto rows = server_->db()->execute_sync_many<DbcTaxiPathNode>(stmt);
+        for (const auto &row: rows) {
+            TaxiPathNodeDBC tp{};
+            tp.ID = row.id;
+            tp.PathID           = row.pathid;
+            tp.NodeIndex        = row.nodeindex;
+            tp.ContinentID      = row.continentid;
+            tp.Loc.X            = row.locx;
+            tp.Loc.Y            = row.locy;
+            tp.Loc.Z            = row.locz;
+            tp.Flags            = row.flags;
+            tp.Delay            = row.delay;
+            tp.ArrivalEventID   = row.arrivaleventid;
+            tp.DepartureEventID = row.departureeventid;
+
+            _taxiPathNodeMap[row.id] = tp;
+        }
+        log->info(">>> DBCMgr: loaded {} TaxiPathNode in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_TaxiPathNode failed: {}", ex.what());
+    }
+}
+
 void DBCMgr::initialize_Additional_Data() {
     handle_CharacterFacialHairStylesByTripple();
     handle_CharSectionsByPenta();
@@ -3756,6 +3803,10 @@ void DBCMgr::initialize_Additional_Data() {
     handle_SkillRaceClassInfo();
     handle_TalentTabPages();
     handle_TalentSpellPosStore();
+
+    handle_TaxiPathSetBySource();
+    handle_TaxiPathNodesByPath();
+    handle_TaxiNodesMask();
 }
 
 void DBCMgr::handle_CharacterFacialHairStylesByTripple() {
@@ -3895,4 +3946,99 @@ void DBCMgr::handle_TalentSpellPosStore() {
             }
         }
     }
+}
+
+void DBCMgr::handle_TaxiPathSetBySource() {
+    for (const auto& tpID : _taxiPathMap)
+    {
+        if (TaxiPathDBC const* entry = &tpID.second)
+            _taxiPathSetBySource[entry->FromTaxiNode][entry->ToTaxiNode] = TaxiPathBySourceAndDestination(entry->ID, entry->Cost);
+    }
+}
+
+void DBCMgr::handle_TaxiPathNodesByPath() {
+    uint32_t pathCount = _taxiPathHighestID + 1;
+    // Calculate path nodes count
+    std::vector<uint32_t> pathLength;
+    pathLength.resize(pathCount);                           // 0 and some other indexes not used
+    for (const auto& tpnID : _taxiPathNodeMap)
+    {
+        if (TaxiPathNodeDBC const* entry = &tpnID.second)
+            if (pathLength[entry->PathID] < entry->NodeIndex + 1)
+                pathLength[entry->PathID] = entry->NodeIndex + 1;
+    }
+
+    // Set path length
+    _taxiPathNodesByPath.resize(pathCount);                 // 0 and some other indexes not used
+    for (uint32_t i = 1; i < _taxiPathNodesByPath.size(); ++i)
+        _taxiPathNodesByPath[i].resize(pathLength[i]);
+    // fill data
+    for (const auto& tpnID : _taxiPathNodeMap)
+    {
+        if (TaxiPathNodeDBC const* entry = &tpnID.second)
+            _taxiPathNodesByPath[entry->PathID][entry->NodeIndex] = entry;
+    }
+}
+
+void DBCMgr::handle_TaxiNodesMask() {
+    // Initialize global taxinodes mask
+    // include existed nodes that have at least single not spell base (scripted) path
+    std::set<uint32_t> spellPaths;
+    SpellDBCMap const& spellMap = getSpellDBCMap();
+    for (const auto& sID : spellMap)
+        if (SpellDBC const* sInfo = &sID.second)
+            for (uint8_t j = 0; j < MAX_SPELL_EFFECTS; ++j)
+                if (sInfo->Effect[j] == SPELL_EFFECT_SEND_TAXI)
+                    spellPaths.insert(sInfo->EffectMiscValue[j]);
+
+    _taxiNodesMask.fill(0);
+    _oldContinentsNodesMask.fill(0);
+    _hordeTaxiNodesMask.fill(0);
+    _allianceTaxiNodesMask.fill(0);
+    _deathKnightTaxiNodesMask.fill(0);
+
+    for (const auto& tnID : _taxiNodesMap)
+    {
+        if (TaxiNodesDBC const* node = &tnID.second)
+        {
+            TaxiPathSetBySource::const_iterator src_i = _taxiPathSetBySource.find(node->ID);
+            if (src_i != _taxiPathSetBySource.end() && !src_i->second.empty())
+            {
+                bool ok = false;
+                for (TaxiPathSetForSource::const_iterator dest_i = src_i->second.begin(); dest_i != src_i->second.end(); ++dest_i)
+                {
+                    // not spell path
+                    if (dest_i->second.price || spellPaths.find(dest_i->second.ID) == spellPaths.end())
+                    {
+                        ok = true;
+                        break;
+                    }
+                }
+
+                if (!ok)
+                    continue;
+            }
+
+            // valid taxi network node
+            uint8_t field = (uint8_t)((node->ID - 1) / 32);
+            uint32_t submask = 1 << ((node->ID - 1) % 32);
+            _taxiNodesMask[field] |= submask;
+
+            if (node->MountCreatureID[0] && node->MountCreatureID[0] != 32981)
+                _hordeTaxiNodesMask[field] |= submask;
+            if (node->MountCreatureID[1] && node->MountCreatureID[1] != 32981)
+                _allianceTaxiNodesMask[field] |= submask;
+            if (node->MountCreatureID[0] == 32981 || node->MountCreatureID[1] == 32981)
+                _deathKnightTaxiNodesMask[field] |= submask;
+
+            // old continent node (+ nodes virtually at old continents, check explicitly to avoid loading map files for zone info)
+            if (node->ContinentID < 2 || node->ID == 82 || node->ID == 83 || node->ID == 93 || node->ID == 94)
+                _oldContinentsNodesMask[field] |= submask;
+
+            // fix DK node at Ebon Hold and Shadow Vault flight master
+            if (node->ID == 315 || node->ID == 333)
+                const_cast<TaxiNodesDBC*>(node)->MountCreatureID[1] = 32981;
+        }
+    }
+    spellPaths.clear();
 }
