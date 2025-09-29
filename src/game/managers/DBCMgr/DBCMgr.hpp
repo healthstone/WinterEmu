@@ -122,6 +122,7 @@ typedef std::unordered_map<uint32_t /*ID*/, TaxiNodesDBC> TaxiNodesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TaxiPathDBC> TaxiPathDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TaxiPathNodeDBC> TaxiPathNodeDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TeamContributionPointsDBC> TeamContributionPointsDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, TotemCategoryDBC> TotemCategoryDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -1177,6 +1178,34 @@ public:
         return nullptr;
     }
 
+    TotemCategoryDBC const* getTotemCategoryDBC(uint32_t ID)
+    {
+        auto itr = _totemCategoryMap.find(ID);
+        if (itr != _totemCategoryMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    bool isTotemCategoryCompatiableWith(uint32_t itemTotemCategoryId, uint32_t requiredTotemCategoryId)
+    {
+        if (requiredTotemCategoryId == 0)
+            return true;
+        if (itemTotemCategoryId == 0)
+            return false;
+
+        TotemCategoryDBC const* itemEntry = getTotemCategoryDBC(itemTotemCategoryId);
+        if (!itemEntry)
+            return false;
+        TotemCategoryDBC const* reqEntry = getTotemCategoryDBC(requiredTotemCategoryId);
+        if (!reqEntry)
+            return false;
+
+        if (itemEntry->TotemCategoryType != reqEntry->TotemCategoryType)
+            return false;
+
+        return (itemEntry->TotemCategoryMask & reqEntry->TotemCategoryMask) == reqEntry->TotemCategoryMask;
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1286,6 +1315,7 @@ private:
     void load_TaxiPath();                   // load TaxiNodes.dbc
     void load_TaxiPathNode();               // load TaxiPathNode.dbc
     void load_TeamContributionPoints();     // load TeamContributionPoints.dbc
+    void load_TotemCategory();              // load TotemCategory.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1397,6 +1427,7 @@ private:
     TaxiPathDBCMap _taxiPathMap;
     TaxiPathNodeDBCMap _taxiPathNodeMap;
     TeamContributionPointsDBCMap _teamContributionPointsMap;
+    TotemCategoryDBCMap _totemCategoryMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;

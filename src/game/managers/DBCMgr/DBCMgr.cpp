@@ -153,6 +153,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _taxiPathMap.clear();
     _taxiPathNodeMap.clear();
     _teamContributionPointsMap.clear();
+    _totemCategoryMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -270,6 +271,7 @@ void DBCMgr::initialize() {
     load_TaxiPath();
     load_TaxiPathNode();
     load_TeamContributionPoints();
+    load_TotemCategory();
 
     initialize_Additional_Data();
 }
@@ -3812,6 +3814,29 @@ void DBCMgr::load_TeamContributionPoints() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_TeamContributionPoints failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_TotemCategory() {
+    auto log = Logger::get();
+    _totemCategoryMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_TOTEMCATEGORY");
+        auto rows = server_->db()->execute_sync_many<DbcTotemCategory>(stmt);
+        for (const auto &row: rows) {
+            TotemCategoryDBC tc{};
+            tc.ID = row.id;
+            tc.TotemCategoryType = row.totemcategorytype;
+            tc.TotemCategoryMask = row.totemcategorymask;
+
+            _totemCategoryMap[row.id] = tc;
+        }
+        log->info(">>> DBCMgr: loaded {} TotemCategory in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_TotemCategory failed: {}", ex.what());
     }
 }
 

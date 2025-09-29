@@ -1045,6 +1045,14 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                  fmt::format("SELECT id, pathid, nodeindex, continentid, locx, locy, locz, flags, delay, arrivaleventid, departureeventid FROM {}.dbc_taxipathnode", dbc_schema));
     conn.prepare("SELECT_DBC_TEAMCONTRIBUTIONPOINTS",
                  fmt::format("SELECT id, data FROM {}.dbc_teamcontributionpoints", dbc_schema));
+    conn.prepare("SELECT_DBC_TOTEMCATEGORY",
+                 fmt::format(
+                         "SELECT id, name_lang_enus, name_lang_engb, name_lang_kokr, "
+                         "name_lang_frfr, name_lang_dede, name_lang_encn, name_lang_zhcn, "
+                         "name_lang_entw, name_lang_zhtw, name_lang_eses, name_lang_esmx, "
+                         "name_lang_ruru, name_lang_ptpt, name_lang_ptbr, name_lang_itit, "
+                         "name_lang_unk, name_lang_mask, totemcategorytype, totemcategorymask "
+                         "FROM {}.dbc_totemcategory", dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {
