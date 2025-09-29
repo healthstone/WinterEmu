@@ -1056,8 +1056,11 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
     conn.prepare("SELECT_DBC_TRANSPORTANIMATION",
             fmt::format(
                     "SELECT id, transportid, timeindex, posx, posy, posz, sequenceid "
-                    "FROM {}.dbc_transportanimation",
-                    dbc_schema));
+                    "FROM {}.dbc_transportanimation", dbc_schema));
+    conn.prepare("SELECT_DBC_TRANSPORTROTATION",
+                 fmt::format(
+                         "SELECT id, gameobjectsid, timeindex, rotx, roty, rotz, rotw "
+                         "FROM {}.dbc_transportrotation", dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {

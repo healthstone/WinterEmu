@@ -155,6 +155,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _teamContributionPointsMap.clear();
     _totemCategoryMap.clear();
     _transportAnimationMap.clear();
+    _transportRotationMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -274,6 +275,7 @@ void DBCMgr::initialize() {
     load_TeamContributionPoints();
     load_TotemCategory();
     load_TransportAnimation();
+    load_TransportRotation();
 
     initialize_Additional_Data();
 }
@@ -3865,6 +3867,33 @@ void DBCMgr::load_TransportAnimation() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_TransportAnimation failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_TransportRotation() {
+    auto log = Logger::get();
+    _transportRotationMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_TRANSPORTROTATION");
+        auto rows = server_->db()->execute_sync_many<DbcTransportRotation>(stmt);
+        for (const auto &row: rows) {
+            TransportRotationDBC tr{};
+            tr.ID = row.id;
+            tr.GameObjectsID = row.gameobjectsid;
+            tr.TimeIndex     = row.timeindex;
+            tr.X             = row.rotx;
+            tr.Y             = row.roty;
+            tr.Z             = row.rotz;
+            tr.W             = row.rotw;
+
+            _transportRotationMap[row.id] = tr;
+        }
+        log->info(">>> DBCMgr: loaded {} TransportRotation in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_TransportRotation failed: {}", ex.what());
     }
 }
 

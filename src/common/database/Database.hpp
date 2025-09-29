@@ -152,6 +152,7 @@
 #include "database/mapper/dbc/PgDbcTeamContributionPoints.hpp"
 #include "database/mapper/dbc/PgDbcTotemCategory.hpp"
 #include "database/mapper/dbc/PgDbcTransportAnimation.hpp"
+#include "database/mapper/dbc/PgDbcTransportRotation.hpp"
 
 #include "database/mapper/world/PgItemTemplate.hpp"
 
