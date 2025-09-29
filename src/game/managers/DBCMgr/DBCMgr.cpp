@@ -154,6 +154,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _taxiPathNodeMap.clear();
     _teamContributionPointsMap.clear();
     _totemCategoryMap.clear();
+    _transportAnimationMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -272,6 +273,7 @@ void DBCMgr::initialize() {
     load_TaxiPathNode();
     load_TeamContributionPoints();
     load_TotemCategory();
+    load_TransportAnimation();
 
     initialize_Additional_Data();
 }
@@ -3837,6 +3839,32 @@ void DBCMgr::load_TotemCategory() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_TotemCategory failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_TransportAnimation() {
+    auto log = Logger::get();
+    _transportAnimationMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_TRANSPORTANIMATION");
+        auto rows = server_->db()->execute_sync_many<DbcTransportAnimation>(stmt);
+        for (const auto &row: rows) {
+            TransportAnimationDBC ta{};
+            ta.ID = row.id;
+            ta.TransportID = row.transportid;
+            ta.TimeIndex   = row.timeindex;
+            ta.Pos.X       = row.posx;
+            ta.Pos.Y       = row.posy;
+            ta.Pos.Z       = row.posz;
+
+            _transportAnimationMap[row.id] = ta;
+        }
+        log->info(">>> DBCMgr: loaded {} TransportAnimation in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_TransportAnimation failed: {}", ex.what());
     }
 }
 

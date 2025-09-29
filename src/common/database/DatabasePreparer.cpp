@@ -1053,6 +1053,11 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                          "name_lang_ruru, name_lang_ptpt, name_lang_ptbr, name_lang_itit, "
                          "name_lang_unk, name_lang_mask, totemcategorytype, totemcategorymask "
                          "FROM {}.dbc_totemcategory", dbc_schema));
+    conn.prepare("SELECT_DBC_TRANSPORTANIMATION",
+            fmt::format(
+                    "SELECT id, transportid, timeindex, posx, posy, posz, sequenceid "
+                    "FROM {}.dbc_transportanimation",
+                    dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {

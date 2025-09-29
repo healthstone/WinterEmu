@@ -123,6 +123,7 @@ typedef std::unordered_map<uint32_t /*ID*/, TaxiPathDBC> TaxiPathDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TaxiPathNodeDBC> TaxiPathNodeDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TeamContributionPointsDBC> TeamContributionPointsDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, TotemCategoryDBC> TotemCategoryDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, TransportAnimationDBC> TransportAnimationDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -1206,6 +1207,15 @@ public:
         return (itemEntry->TotemCategoryMask & reqEntry->TotemCategoryMask) == reqEntry->TotemCategoryMask;
     }
 
+    TransportAnimationDBCMap const& getTransportAnimationDBCMap() const { return _transportAnimationMap; }
+    TransportAnimationDBC const* getTransportAnimationDBC(uint32_t ID)
+    {
+        auto itr = _transportAnimationMap.find(ID);
+        if (itr != _transportAnimationMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1316,6 +1326,7 @@ private:
     void load_TaxiPathNode();               // load TaxiPathNode.dbc
     void load_TeamContributionPoints();     // load TeamContributionPoints.dbc
     void load_TotemCategory();              // load TotemCategory.dbc
+    void load_TransportAnimation();
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1428,6 +1439,7 @@ private:
     TaxiPathNodeDBCMap _taxiPathNodeMap;
     TeamContributionPointsDBCMap _teamContributionPointsMap;
     TotemCategoryDBCMap _totemCategoryMap;
+    TransportAnimationDBCMap _transportAnimationMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;
