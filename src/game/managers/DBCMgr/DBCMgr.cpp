@@ -156,6 +156,8 @@ void DBCMgr::cleanUpBeforeDelete() {
     _totemCategoryMap.clear();
     _transportAnimationMap.clear();
     _transportRotationMap.clear();
+    _vehicleMap.clear();
+    _vehicleSeatMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -276,6 +278,8 @@ void DBCMgr::initialize() {
     load_TotemCategory();
     load_TransportAnimation();
     load_TransportRotation();
+    load_Vehicle();
+    load_VehicleSeat();
 
     initialize_Additional_Data();
 }
@@ -3894,6 +3898,136 @@ void DBCMgr::load_TransportRotation() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_TransportRotation failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_Vehicle() {
+    auto log = Logger::get();
+    _vehicleMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_VEHICLE");
+        auto rows = server_->db()->execute_sync_many<DbcVehicle>(stmt);
+        for (const auto &row: rows) {
+            VehicleDBC v;
+            v.ID = row.id;
+            v.Flags      = row.flags;
+            v.TurnSpeed  = row.turnspeed;
+            v.PitchSpeed = row.pitchspeed;
+            v.PitchMin   = row.pitchmin;
+            v.PitchMax   = row.pitchmax;
+
+            v.SeatID[0] = row.seatid_1;
+            v.SeatID[1] = row.seatid_2;
+            v.SeatID[2] = row.seatid_3;
+            v.SeatID[3] = row.seatid_4;
+            v.SeatID[4] = row.seatid_5;
+            v.SeatID[5] = row.seatid_6;
+            v.SeatID[6] = row.seatid_7;
+            v.SeatID[7] = row.seatid_8;
+
+            v.MouseLookOffsetPitch    = row.mouselookoffsetpitch;
+            v.CameraFadeDistScalarMin = row.camerafadedistscalarmin;
+            v.CameraFadeDistScalarMax = row.camerafadedistscalarmax;
+            v.CameraPitchOffset       = row.camerapitchoffset;
+            v.FacingLimitRight        = row.facinglimitright;
+            v.FacingLimitLeft         = row.facinglimitleft;
+            v.MsslTrgtTurnLingering   = row.mssltrgtturnlingering;
+            v.MsslTrgtPitchLingering  = row.mssltrgtpitchlingering;
+            v.MsslTrgtMouseLingering  = row.mssltrgtmouselingering;
+            v.MsslTrgtEndOpacity      = row.mssltrgtendopacity;
+            v.MsslTrgtArcSpeed        = row.mssltrgtarcspeed;
+            v.MsslTrgtArcRepeat       = row.mssltrgtarcrepeat;
+            v.MsslTrgtArcWidth        = row.mssltrgtarcwidth;
+
+            v.MsslTrgtImpactRadius[0] = row.mssltrgtimpactradius_1;
+            v.MsslTrgtImpactRadius[1] = row.mssltrgtimpactradius_2;
+
+            v.MsslTrgtArcTexture    = row.mssltrgtarctexture.value_or("");
+            v.MsslTrgtImpactTexture = row.mssltrgtimpacttexture.value_or("");
+
+            v.MsslTrgtImpactModel[0] = row.mssltrgtimpactmodel_1.value_or("");
+            v.MsslTrgtImpactModel[1] = row.mssltrgtimpactmodel_2.value_or("");
+
+            v.CameraYawOffset         = row.camerayawoffset;
+            v.UiLocomotionType        = row.uilocomotiontype;
+            v.MsslTrgtImpactTexRadius = row.mssltrgtimpacttexradius;
+            v.VehicleUIIndicatorID    = row.vehicleuiindicatorid;
+            v.PowerDisplayID          = row.powerdisplayid_1;
+
+            _vehicleMap[row.id] = v;
+        }
+        log->info(">>> DBCMgr: loaded {} Vehicle in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_Vehicle failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_VehicleSeat() {
+    auto log = Logger::get();
+    _vehicleSeatMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_VEHICLESEAT");
+        auto rows = server_->db()->execute_sync_many<DbcVehicleSeat>(stmt);
+        for (const auto &row: rows) {
+            VehicleSeatDBC vs{};
+            vs.ID = row.id;
+            vs.Flags                   = row.flags;
+            vs.AttachmentID            = row.attachment_id;
+            vs.AttachmentOffset.X      = row.attachment_offset_x;
+            vs.AttachmentOffset.Y      = row.attachment_offset_y;
+            vs.AttachmentOffset.Z      = row.attachment_offset_z;
+            vs.EnterPreDelay           = row.enter_pre_delay;
+            vs.EnterSpeed              = row.enter_speed;
+            vs.EnterGravity            = row.enter_gravity;
+            vs.EnterMinDuration        = row.enter_min_duration;
+            vs.EnterMaxDuration        = row.enter_max_duration;
+            vs.EnterMinArcHeight       = row.enter_min_arc_height;
+            vs.EnterMaxArcHeight       = row.enter_max_arc_height;
+            vs.EnterAnimStart          = row.enter_anim_start;
+            vs.EnterAnimLoop           = row.enter_anim_loop;
+            vs.RideAnimStart           = row.ride_anim_start;
+            vs.RideAnimLoop            = row.ride_anim_loop;
+            vs.RideUpperAnimStart      = row.ride_upper_anim_start;
+            vs.RideUpperAnimLoop       = row.ride_upper_anim_loop;
+            vs.ExitPreDelay            = row.exit_pre_delay;
+            vs.ExitSpeed               = row.exit_speed;
+            vs.ExitGravity             = row.exit_gravity;
+            vs.ExitMinDuration         = row.exit_min_duration;
+            vs.ExitMaxDuration         = row.exit_max_duration;
+            vs.ExitMinArcHeight        = row.exit_min_arc_height;
+            vs.ExitMaxArcHeight        = row.exit_max_arc_height;
+            vs.ExitAnimStart           = row.exit_anim_start;
+            vs.ExitAnimLoop            = row.exit_anim_loop;
+            vs.ExitAnimEnd             = row.exit_anim_end;
+            vs.PassengerYaw            = row.passenger_yaw;
+            vs.PassengerPitch          = row.passenger_pitch;
+            vs.PassengerRoll           = row.passenger_roll;
+            vs.PassengerAttachmentID   = row.passenger_attachment_id;
+            vs.VehicleEnterAnim        = row.vehicle_enter_anim;
+            vs.VehicleExitAnim         = row.vehicle_exit_anim;
+            vs.VehicleRideAnimLoop     = row.vehicle_ride_anim_loop;
+            vs.VehicleEnterAnimBone    = row.vehicle_enter_anim_bone;
+            vs.VehicleExitAnimBone     = row.vehicle_exit_anim_bone;
+            vs.VehicleRideAnimLoopBone = row.vehicle_ride_anim_loop_bone;
+            vs.VehicleEnterAnimDelay   = row.vehicle_enter_anim_delay;
+            vs.VehicleExitAnimDelay    = row.vehicle_exit_anim_delay;
+            vs.VehicleAbilityDisplay   = row.vehicle_ability_display;
+            vs.EnterUISoundID          = row.enter_ui_sound_id;
+            vs.ExitUISoundID           = row.exit_ui_sound_id;
+            vs.UiSkin                  = row.ui_skin;
+            vs.FlagsB                  = row.flags_b;
+
+            _vehicleSeatMap[row.id] = vs;
+        }
+        log->info(">>> DBCMgr: loaded {} VehicleSeat in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_VehicleSeat failed: {}", ex.what());
     }
 }
 

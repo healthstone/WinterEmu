@@ -1061,6 +1061,32 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                  fmt::format(
                          "SELECT id, gameobjectsid, timeindex, rotx, roty, rotz, rotw "
                          "FROM {}.dbc_transportrotation", dbc_schema));
+    conn.prepare("SELECT_DBC_VEHICLE",
+                 fmt::format(
+                         "SELECT id, flags, turnspeed, pitchspeed, pitchmin, pitchmax, "
+                         "seatid_1, seatid_2, seatid_3, seatid_4, seatid_5, seatid_6, seatid_7, seatid_8, "
+                         "mouselookoffsetpitch, camerafadedistscalarmin, camerafadedistscalarmax, camerapitchoffset, "
+                         "facinglimitright, facinglimitleft, mssltrgtturnlingering, mssltrgtpitchlingering, "
+                         "mssltrgtmouselingering, mssltrgtendopacity, mssltrgtarcspeed, mssltrgtarcrepeat, mssltrgtarcwidth, "
+                         "mssltrgtimpactradius_1, mssltrgtimpactradius_2, mssltrgtarctexture, mssltrgtimpacttexture, "
+                         "mssltrgtimpactmodel_1, mssltrgtimpactmodel_2, camerayawoffset, uilocomotiontype, "
+                         "mssltrgtimpacttexradius, vehicleuiindicatorid, powerdisplayid_1, powerdisplayid_2, powerdisplayid_3 "
+                         "FROM {}.dbc_vehicle", dbc_schema));
+    conn.prepare("SELECT_DBC_VEHICLESEAT",
+                 fmt::format(
+                         "SELECT id, flags, attachment_id, attachment_offset_x, attachment_offset_y, attachment_offset_z, "
+                         "enter_pre_delay, enter_speed, enter_gravity, enter_min_duration, enter_max_duration, "
+                         "enter_min_arc_height, enter_max_arc_height, enter_anim_start, enter_anim_loop, ride_anim_start, "
+                         "ride_anim_loop, ride_upper_anim_start, ride_upper_anim_loop, exit_pre_delay, exit_speed, exit_gravity, "
+                         "exit_min_duration, exit_max_duration, exit_min_arc_height, exit_max_arc_height, exit_anim_start, "
+                         "exit_anim_loop, exit_anim_end, passenger_yaw, passenger_pitch, passenger_roll, passenger_attachment_id, "
+                         "vehicle_enter_anim, vehicle_exit_anim, vehicle_ride_anim_loop, vehicle_enter_anim_bone, "
+                         "vehicle_exit_anim_bone, vehicle_ride_anim_loop_bone, vehicle_enter_anim_delay, vehicle_exit_anim_delay, "
+                         "vehicle_ability_display, enter_ui_sound_id, exit_ui_sound_id, ui_skin, flags_b, camera_entering_delay, "
+                         "camera_entering_duration, camera_exiting_delay, camera_exiting_duration, camera_offset_x, "
+                         "camera_offset_y, camera_offset_z, camera_pos_chase_rate, camera_facing_chase_rate, camera_entering_zoom, "
+                         "camera_seat_zoom_min, camera_seat_zoom_max "
+                         "FROM {}.dbc_vehicleseat", dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {

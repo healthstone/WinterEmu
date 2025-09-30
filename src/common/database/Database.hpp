@@ -153,6 +153,8 @@
 #include "database/mapper/dbc/PgDbcTotemCategory.hpp"
 #include "database/mapper/dbc/PgDbcTransportAnimation.hpp"
 #include "database/mapper/dbc/PgDbcTransportRotation.hpp"
+#include "database/mapper/dbc/PgDbcVehicle.hpp"
+#include "database/mapper/dbc/PgDbcVehicleSeat.hpp"
 
 #include "database/mapper/world/PgItemTemplate.hpp"
 

@@ -1726,7 +1726,7 @@ struct TransportRotationDBC {
 
 struct VehicleDBC {
     uint32_t ID;                                            // 0
-    uint32_t Flags;                                         // 1
+    int32_t Flags;                                          // 1
     float TurnSpeed;                                        // 2
     float PitchSpeed;                                       // 3
     float PitchMin;                                         // 4
@@ -1746,21 +1746,21 @@ struct VehicleDBC {
     float MsslTrgtArcRepeat;                                // 25
     float MsslTrgtArcWidth;                                 // 26
     float MsslTrgtImpactRadius[2];                          // 27-28
-    char const *MsslTrgtArcTexture;                         // 29
-    char const *MsslTrgtImpactTexture;                      // 30
-    char const *MsslTrgtImpactModel[2];                     // 31-32
+    std::string MsslTrgtArcTexture;                         // 29
+    std::string MsslTrgtImpactTexture;                      // 30
+    std::string MsslTrgtImpactModel[2];                     // 31-32
     float CameraYawOffset;                                  // 33
     uint32_t UiLocomotionType;                              // 34
     float MsslTrgtImpactTexRadius;                          // 35
     uint32_t VehicleUIIndicatorID;                          // 36
-    uint32_t PowerDisplayID;                                // 37
-    //uint32_t PowerDisplayIDUnused[2];                     // 38-39
+    int32_t PowerDisplayID;                                 // 37
+    //int32_t PowerDisplayIDUnused[2];                      // 38-39
 };
 
 // load VehicleSeat.dbc
 struct VehicleSeatDBC {
     uint32_t ID;                                            // 0
-    uint32_t Flags;                                         // 1
+    int32_t Flags;                                          // 1
     int32_t AttachmentID;                                   // 2
     DBCPosition3D AttachmentOffset;                         // 3-5
     float EnterPreDelay;                                    // 6
