@@ -749,6 +749,11 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                              "setthreshold_5, setthreshold_6, setthreshold_7, setthreshold_8, "
                              "requiredskill, requiredskillrank "
                              "FROM {}.dbc_itemset", dbc_schema));
+    conn.prepare("SELECT_DBC_LFGDUNGEONEXPANSION",
+                 fmt::format(
+                         "SELECT id, lfg_id, expansion_level, random_id, hard_level_min, hard_level_max, "
+                         "target_level_min, target_level_max "
+                         "FROM {}.dbc_lfgdungeonexpansion", dbc_schema));
     conn.prepare("SELECT_DBC_LFGDUNGEONS",
                  fmt::format("SELECT "
                              "id, name_lang_enus, name_lang_engb, name_lang_kokr, name_lang_frfr, name_lang_dede, "

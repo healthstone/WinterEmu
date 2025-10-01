@@ -77,6 +77,7 @@ typedef std::unordered_map<uint32_t /*ID*/, ItemLimitCategoryDBC> ItemLimitCateg
 typedef std::unordered_map<uint32_t /*ID*/, ItemRandomPropertiesDBC> ItemRandomPropertiesDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ItemRandomSuffixDBC> ItemRandomSuffixDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, ItemSetDBC> ItemSetDBCMap;
+typedef std::unordered_map<uint32_t /*LfgId*/, LFGDungeonExpansionDBC> LFGDungeonExpansionDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, LFGDungeonDBC> LFGDungeonDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, LightDBC> LightDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, LiquidTypeDBC> LiquidTypeDBCMap;
@@ -735,6 +736,14 @@ public:
     {
         auto itr = _lfgDungeonMap.find(ID);
         if (itr != _lfgDungeonMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    LFGDungeonExpansionDBC const* getLFGDungeonExpansionDBC(uint32_t lfgId)
+    {
+        auto itr = _lfgDungeonExpansionMap.find(lfgId);
+        if (itr != _lfgDungeonExpansionMap.end())
             return &itr->second;
         return nullptr;
     }
@@ -1407,6 +1416,7 @@ private:
     void load_ItemRandomProperties();       // load ItemRandomProperties.dbc
     void load_ItemRandomSuffix();           // load ItemRandomSuffix.dbc
     void load_ItemSet();                    // load ItemSet.dbc
+    void load_LFGDungeonExpansion();        // load LFGDungeonExpansion.dbc
     void load_LFGDungeons();                // load LFGDungeons.dbc
     void load_Light();                      // load Light.dbc
     void load_LiquidType();                 // load LiquidType.dbc
@@ -1527,6 +1537,7 @@ private:
     ItemRandomPropertiesDBCMap _itemRandomPropertiesMap;
     ItemRandomSuffixDBCMap _itemRandomSuffixMap;
     ItemSetDBCMap _itemSetMap;
+    LFGDungeonExpansionDBCMap _lfgDungeonExpansionMap;
     LFGDungeonDBCMap _lfgDungeonMap;
     LightDBCMap _lightMap;
     LiquidTypeDBCMap _liquidTypeMap;

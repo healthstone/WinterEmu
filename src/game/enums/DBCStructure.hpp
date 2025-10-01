@@ -937,6 +937,19 @@ struct ItemSetDBC {
     uint32_t RequiredSkillRank;                               // 52
 };
 
+// load LFGDungeonExpansion.dbc
+struct LFGDungeonExpansionDBC
+{
+    uint32_t ID;                                              // 0
+    uint32_t LfgID;                                           // 1
+    uint32_t ExpansionLevel;                                  // 2
+    //uint32_t RandomID;                                      // 3
+    uint32_t HardLevelMin;                                    // 4
+    uint32_t HardLevelMax;                                    // 5
+    //uint32_t TargetLevelMin;                                // 6
+    //uint32_t TargetLevelMax;                                // 7
+};
+
 // load LFGDungeons.dbc
 struct LFGDungeonDBC {
     uint32_t ID;                                              // 0

@@ -105,6 +105,7 @@
 #include "database/mapper/dbc/PgDbcItemRandomProperties.hpp"
 #include "database/mapper/dbc/PgDbcItemRandomSuffix.hpp"
 #include "database/mapper/dbc/PgDbcItemSet.hpp"
+#include "database/mapper/dbc/PgDbcLfgDungeonExpansion.hpp"
 #include "database/mapper/dbc/PgDbcLfgDungeons.hpp"
 #include "database/mapper/dbc/PgDbcLight.hpp"
 #include "database/mapper/dbc/PgDbcLiquidType.hpp"

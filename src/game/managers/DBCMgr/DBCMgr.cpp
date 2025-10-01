@@ -108,6 +108,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _itemRandomPropertiesMap.clear();
     _itemRandomSuffixMap.clear();
     _itemSetMap.clear();
+    _lfgDungeonExpansionMap.clear();
     _lfgDungeonMap.clear();
     _lightMap.clear();
     _liquidTypeMap.clear();
@@ -234,6 +235,7 @@ void DBCMgr::initialize() {
     load_ItemRandomProperties();
     load_ItemRandomSuffix();
     load_ItemSet();
+    load_LFGDungeonExpansion();
     load_LFGDungeons();
     load_Light();
     load_LiquidType();
@@ -2294,6 +2296,31 @@ void DBCMgr::load_ItemSet() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_ItemSet: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_LFGDungeonExpansion() {
+    auto log = Logger::get();
+    _lfgDungeonExpansionMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_LFGDUNGEONEXPANSION");
+        auto rows = server_->db()->execute_sync_many<DbcLfgDungeonExpansion>(stmt);
+        for (const auto &row: rows) {
+            LFGDungeonExpansionDBC le{};
+            le.ID = row.id;
+            le.LfgID = row.lfg_id;
+            le.ExpansionLevel = row.expansion_level;
+            le.HardLevelMin = row.hard_level_min;
+            le.HardLevelMax = row.hard_level_max;
+
+            _lfgDungeonExpansionMap[row.lfg_id] = le;
+        }
+        log->info(">>> DBCMgr: loaded {} LFGDungeonExpansion in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_LFGDungeonExpansion failed: {}", ex.what());
     }
 }
 
