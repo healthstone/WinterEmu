@@ -1096,6 +1096,10 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                          "areaname_lang_eses, areaname_lang_esmx, areaname_lang_ruru, areaname_lang_ptpt, areaname_lang_ptbr, "
                          "areaname_lang_itit, areaname_lang_unk, areaname_lang_mask "
                          "FROM {}.dbc_wmoareatable", dbc_schema));
+    conn.prepare("SELECT_DBC_WORLDMAPAREA",
+                 fmt::format("SELECT id, mapid, areaid, areaname, locleft, locright, loctop, locbottom, "
+                             "displaymapid, defaultdungeonfloor, parentworldmapid "
+                             "FROM {}.dbc_worldmaparea", dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {

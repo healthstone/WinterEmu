@@ -128,6 +128,7 @@ typedef std::unordered_map<uint32_t /*ID*/, TransportRotationDBC> TransportRotat
 typedef std::unordered_map<uint32_t /*ID*/, VehicleDBC> VehicleDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, VehicleSeatDBC> VehicleSeatDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, WMOAreaTableDBC> WMOAreaTableDBCMap;
+typedef std::unordered_map<uint32_t /*AreaID*/, WorldMapAreaDBC> WorldMapAreaDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -175,6 +176,13 @@ typedef std::vector<TaxiPathNodeDBC const*> TaxiPathNodeList;
 typedef std::vector<TaxiPathNodeList> TaxiPathNodesByPath;
 
 class BaseServer;
+
+enum ContentLevels : uint8_t
+{
+    CONTENT_1_60 = 0,
+    CONTENT_61_70,
+    CONTENT_71_80
+};
 
 class DBCMgr {
 public:
@@ -1253,6 +1261,69 @@ public:
         return nullptr;
     }
 
+    WorldMapAreaDBC const* getWorldMapAreaDBCByAreaID(uint32_t AreaID)
+    {
+        auto itr = _worldMapAreaMap.find(AreaID);
+        if (itr != _worldMapAreaMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
+    uint32_t getVirtualMapForMapAndZone(uint32_t mapid, uint32_t zoneId)
+    {
+        if (mapid != 530 && mapid != 571)                        // speed for most cases
+            return mapid;
+
+        if (WorldMapAreaDBC const* wma = getWorldMapAreaDBCByAreaID(zoneId))
+            return wma->DisplayMapID >= 0 ? wma->DisplayMapID : wma->MapID;
+
+        return mapid;
+    }
+
+    ContentLevels getContentLevelsForMapAndZone(uint32_t mapid, uint32_t zoneId)
+    {
+        mapid = getVirtualMapForMapAndZone(mapid, zoneId);
+        if (mapid < 2)
+            return CONTENT_1_60;
+
+        MapDBC const* mapEntry = getMapDBC(mapid);
+        if (!mapEntry)
+            return CONTENT_1_60;
+
+        switch (mapEntry->Expansion())
+        {
+            default: return CONTENT_1_60;
+            case 1:  return CONTENT_61_70;
+            case 2:  return CONTENT_71_80;
+        }
+    }
+
+    void zone2MapCoordinates(float& x, float& y, uint32_t zone)
+    {
+        WorldMapAreaDBC const* maEntry = getWorldMapAreaDBCByAreaID(zone);
+
+        // if not listed then map coordinates (instance)
+        if (!maEntry)
+            return;
+
+        std::swap(x, y);                                         // at client map coords swapped
+        x = x * ((maEntry->LocBottom - maEntry->LocTop) / 100) + maEntry->LocTop;
+        y = y * ((maEntry->LocRight - maEntry->LocLeft) / 100) + maEntry->LocLeft;      // client y coord from top to down
+    }
+
+    void map2ZoneCoordinates(float& x, float& y, uint32_t zone)
+    {
+        WorldMapAreaDBC const* maEntry = getWorldMapAreaDBCByAreaID(zone);
+
+        // if not listed then map coordinates (instance)
+        if (!maEntry)
+            return;
+
+        x = (x - maEntry->LocTop) / ((maEntry->LocBottom - maEntry->LocTop) / 100);
+        y = (y - maEntry->LocLeft) / ((maEntry->LocRight - maEntry->LocLeft) / 100);    // client y coord from top to down
+        std::swap(x, y);                                         // client have map coords swapped
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1368,6 +1439,7 @@ private:
     void load_Vehicle();                    // load Vehicle.dbc
     void load_VehicleSeat();                // load VehicleSeat.dbc
     void load_WMOAreaTable();               // load WMOAreaTable.dbc
+    void load_WorldMapArea();               // load WMOAreaTable.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1485,6 +1557,7 @@ private:
     VehicleDBCMap _vehicleMap;
     VehicleSeatDBCMap _vehicleSeatMap;
     WMOAreaTableDBCMap _wmoAreaTableMap;
+    WorldMapAreaDBCMap _worldMapAreaMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;

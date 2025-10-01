@@ -159,6 +159,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _vehicleMap.clear();
     _vehicleSeatMap.clear();
     _wmoAreaTableMap.clear();
+    _worldMapAreaMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -282,6 +283,7 @@ void DBCMgr::initialize() {
     load_Vehicle();
     load_VehicleSeat();
     load_WMOAreaTable();
+    load_WorldMapArea();
 
     initialize_Additional_Data();
 }
@@ -4056,6 +4058,34 @@ void DBCMgr::load_WMOAreaTable() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_WMOAreaTable failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_WorldMapArea() {
+    auto log = Logger::get();
+    _worldMapAreaMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_WORLDMAPAREA");
+        auto rows = server_->db()->execute_sync_many<DbcWorldMapArea>(stmt);
+        for (const auto &row: rows) {
+            WorldMapAreaDBC wma{};
+            wma.ID = row.id;
+            wma.MapID        = row.mapid;
+            wma.AreaID       = row.areaid;
+            wma.LocLeft      = row.locleft;
+            wma.LocRight     = row.locright;
+            wma.LocTop       = row.loctop;
+            wma.LocBottom    = row.locbottom;
+            wma.DisplayMapID = row.displaymapid;
+
+            _worldMapAreaMap[row.areaid] = wma;
+        }
+        log->info(">>> DBCMgr: loaded {} WorldMapArea in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_WorldMapArea failed: {}", ex.what());
     }
 }
 
