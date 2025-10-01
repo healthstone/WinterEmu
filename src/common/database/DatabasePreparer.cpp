@@ -1106,6 +1106,14 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                          "mappointx, mappointy, texturename, texturewidth, textureheight, "
                          "offsetx, offsety, hitrecttop, hitrectleft, hitrectbottom, hitrectright "
                          "FROM {}.dbc_worldmapoverlay", dbc_schema));
+    conn.prepare("SELECT_DBC_WORLDSAFELOCS",
+                 fmt::format(
+                         "SELECT id, continent, loc_x, loc_y, loc_z, "
+                         "area_name_lang_enus, area_name_lang_engb, area_name_lang_kokr, area_name_lang_frfr, "
+                         "area_name_lang_dede, area_name_lang_encn, area_name_lang_zhcn, area_name_lang_entw, area_name_lang_zhtw, "
+                         "area_name_lang_eses, area_name_lang_esmx, area_name_lang_ruru, area_name_lang_ptpt, area_name_lang_ptbr, "
+                         "area_name_lang_itit, area_name_lang_unk, area_name_lang_mask "
+                         "FROM {}.dbc_worldsafelocs", dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {

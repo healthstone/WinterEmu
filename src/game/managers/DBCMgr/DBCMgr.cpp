@@ -161,6 +161,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _wmoAreaTableMap.clear();
     _worldMapAreaMap.clear();
     _worldMapOverlayMap.clear();
+    _worldSafeLocsMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -286,6 +287,7 @@ void DBCMgr::initialize() {
     load_WMOAreaTable();
     load_WorldMapArea();
     load_WorldMapOverlay();
+    load_WorldSafeLocs();
 
     initialize_Additional_Data();
 }
@@ -4114,6 +4116,31 @@ void DBCMgr::load_WorldMapOverlay() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_WorldMapOverlay failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_WorldSafeLocs() {
+    auto log = Logger::get();
+    _worldSafeLocsMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_WORLDSAFELOCS");
+        auto rows = server_->db()->execute_sync_many<DbcWorldSafeLocs>(stmt);
+        for (const auto &row: rows) {
+            WorldSafeLocsDBC wsl{};
+            wsl.ID = row.id;
+            wsl.Continent = row.continent;
+            wsl.Loc.X     = row.loc_x;
+            wsl.Loc.Y     = row.loc_y;
+            wsl.Loc.Z     = row.loc_z;
+
+            _worldSafeLocsMap[row.id] = wsl;
+        }
+        log->info(">>> DBCMgr: loaded {} WorldSafeLocs in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_WorldSafeLocs failed: {}", ex.what());
     }
 }
 

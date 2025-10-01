@@ -158,6 +158,7 @@
 #include "database/mapper/dbc/PgDbcWmoAreaTable.hpp"
 #include "database/mapper/dbc/PgDbcWorldMapArea.hpp"
 #include "database/mapper/dbc/PgDbcWorldMapOverlay.hpp"
+#include "database/mapper/dbc/PgDbcWorldSafeLocs.hpp"
 
 #include "database/mapper/world/PgItemTemplate.hpp"
 
