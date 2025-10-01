@@ -155,6 +155,7 @@
 #include "database/mapper/dbc/PgDbcTransportRotation.hpp"
 #include "database/mapper/dbc/PgDbcVehicle.hpp"
 #include "database/mapper/dbc/PgDbcVehicleSeat.hpp"
+#include "database/mapper/dbc/PgDbcWmoAreaTable.hpp"
 
 #include "database/mapper/world/PgItemTemplate.hpp"
 

@@ -158,6 +158,7 @@ void DBCMgr::cleanUpBeforeDelete() {
     _transportRotationMap.clear();
     _vehicleMap.clear();
     _vehicleSeatMap.clear();
+    _wmoAreaTableMap.clear();
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -280,6 +281,7 @@ void DBCMgr::initialize() {
     load_TransportRotation();
     load_Vehicle();
     load_VehicleSeat();
+    load_WMOAreaTable();
 
     initialize_Additional_Data();
 }
@@ -4028,6 +4030,32 @@ void DBCMgr::load_VehicleSeat() {
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
     } catch (const std::exception &ex) {
         log->error("DBCMgr::load_VehicleSeat failed: {}", ex.what());
+    }
+}
+
+void DBCMgr::load_WMOAreaTable() {
+    auto log = Logger::get();
+    _wmoAreaTableMap.clear();
+    uint32_t oldMSTime = getMSTime();
+
+    try {
+        auto stmt = PreparedStatement("SELECT_DBC_WMOAREATABLE");
+        auto rows = server_->db()->execute_sync_many<DbcWmoAreaTable>(stmt);
+        for (const auto &row: rows) {
+            WMOAreaTableDBC wat{};
+            wat.ID = row.id;
+            wat.WMOID       = row.wmo_id;
+            wat.NameSetID   = row.name_set_id;
+            wat.WMOGroupID  = row.wmo_group_id;
+            wat.Flags       = row.flags;
+            wat.AreaTableID = row.area_table_id;
+
+            _wmoAreaTableMap[row.id] = wat;
+        }
+        log->info(">>> DBCMgr: loaded {} WMOAreaTable in {} ms",
+                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
+    } catch (const std::exception &ex) {
+        log->error("DBCMgr::load_WMOAreaTable failed: {}", ex.what());
     }
 }
 

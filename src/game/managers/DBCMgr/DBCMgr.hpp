@@ -127,6 +127,7 @@ typedef std::unordered_map<uint32_t /*ID*/, TransportAnimationDBC> TransportAnim
 typedef std::unordered_map<uint32_t /*ID*/, TransportRotationDBC> TransportRotationDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, VehicleDBC> VehicleDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, VehicleSeatDBC> VehicleSeatDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, WMOAreaTableDBC> WMOAreaTableDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -1244,6 +1245,14 @@ public:
         return nullptr;
     }
 
+    WMOAreaTableDBC const* getWMOAreaTableDBC(uint32_t ID)
+    {
+        auto itr = _wmoAreaTableMap.find(ID);
+        if (itr != _wmoAreaTableMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1358,6 +1367,7 @@ private:
     void load_TransportRotation();          // load TransportRotation.dbc
     void load_Vehicle();                    // load Vehicle.dbc
     void load_VehicleSeat();                // load VehicleSeat.dbc
+    void load_WMOAreaTable();               // load WMOAreaTable.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1474,6 +1484,7 @@ private:
     TransportRotationDBCMap _transportRotationMap;
     VehicleDBCMap _vehicleMap;
     VehicleSeatDBCMap _vehicleSeatMap;
+    WMOAreaTableDBCMap _wmoAreaTableMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;

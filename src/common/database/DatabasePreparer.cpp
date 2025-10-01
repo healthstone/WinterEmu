@@ -1087,6 +1087,15 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                          "camera_offset_y, camera_offset_z, camera_pos_chase_rate, camera_facing_chase_rate, camera_entering_zoom, "
                          "camera_seat_zoom_min, camera_seat_zoom_max "
                          "FROM {}.dbc_vehicleseat", dbc_schema));
+    conn.prepare("SELECT_DBC_WMOAREATABLE",
+                 fmt::format(
+                         "SELECT id, wmoid, namesetid, wmogroupid, soundproviderpref, soundproviderprefunderwater, "
+                         "ambienceid, zonemusic, introsound, flags, areatableid, "
+                         "areaname_lang_enus, areaname_lang_engb, areaname_lang_kokr, areaname_lang_frfr, "
+                         "areaname_lang_dede, areaname_lang_encn, areaname_lang_zhcn, areaname_lang_entw, areaname_lang_zhtw, "
+                         "areaname_lang_eses, areaname_lang_esmx, areaname_lang_ruru, areaname_lang_ptpt, areaname_lang_ptbr, "
+                         "areaname_lang_itit, areaname_lang_unk, areaname_lang_mask "
+                         "FROM {}.dbc_wmoareatable", dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {
