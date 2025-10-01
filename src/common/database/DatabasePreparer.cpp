@@ -1100,6 +1100,12 @@ void DatabasePreparer::prepareDBCSchema(pqxx::connection &conn) {
                  fmt::format("SELECT id, mapid, areaid, areaname, locleft, locright, loctop, locbottom, "
                              "displaymapid, defaultdungeonfloor, parentworldmapid "
                              "FROM {}.dbc_worldmaparea", dbc_schema));
+    conn.prepare("SELECT_DBC_WORLDMAPOVERLAY",
+                 fmt::format(
+                         "SELECT id, mapareaid, areaid_1, areaid_2, areaid_3, areaid_4, "
+                         "mappointx, mappointy, texturename, texturewidth, textureheight, "
+                         "offsetx, offsety, hitrecttop, hitrectleft, hitrectbottom, hitrectright "
+                         "FROM {}.dbc_worldmapoverlay", dbc_schema));
 }
 
 void DatabasePreparer::prepareWorldSchema(pqxx::connection &conn) {

@@ -129,6 +129,7 @@ typedef std::unordered_map<uint32_t /*ID*/, VehicleDBC> VehicleDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, VehicleSeatDBC> VehicleSeatDBCMap;
 typedef std::unordered_map<uint32_t /*ID*/, WMOAreaTableDBC> WMOAreaTableDBCMap;
 typedef std::unordered_map<uint32_t /*AreaID*/, WorldMapAreaDBC> WorldMapAreaDBCMap;
+typedef std::unordered_map<uint32_t /*ID*/, WorldMapOverlayDBC> WorldMapOverlayDBCMap;
 
 // tuples for the Fastest search by more indexes
 // CharacterFacialHairStylesByTripple
@@ -1324,6 +1325,14 @@ public:
         std::swap(x, y);                                         // client have map coords swapped
     }
 
+    WorldMapOverlayDBC const* getWorldMapOverlayDBC(uint32_t ID)
+    {
+        auto itr = _worldMapOverlayMap.find(ID);
+        if (itr != _worldMapOverlayMap.end())
+            return &itr->second;
+        return nullptr;
+    }
+
 private:
     void load_Achievement();                // load Achievement.dbc
     void load_AchievementCriteria();        // load Achievement_Criteria.dbc
@@ -1440,6 +1449,7 @@ private:
     void load_VehicleSeat();                // load VehicleSeat.dbc
     void load_WMOAreaTable();               // load WMOAreaTable.dbc
     void load_WorldMapArea();               // load WMOAreaTable.dbc
+    void load_WorldMapOverlay();            // load WorldMapOverlay.dbc
 
     std::shared_ptr<BaseServer> server_;
 
@@ -1558,6 +1568,7 @@ private:
     VehicleSeatDBCMap _vehicleSeatMap;
     WMOAreaTableDBCMap _wmoAreaTableMap;
     WorldMapAreaDBCMap _worldMapAreaMap;
+    WorldMapOverlayDBCMap _worldMapOverlayMap;
 
     uint32_t _bannedAddonsHighestID;
     uint32_t _itemRandomSuffixHighestID;
