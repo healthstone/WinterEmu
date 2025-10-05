@@ -48,10 +48,10 @@ TEST_CASE("ByteBuffer float/double BE/LE read/write") {
 
     buf.reset_read();
 
-    REQUIRE(buf.read_float_be() == Approx(fval).epsilon(0.0001));
-    REQUIRE(buf.read_float_le() == Approx(fval).epsilon(0.0001));
-    REQUIRE(buf.read_double_be() == Approx(dval).epsilon(0.0000001));
-    REQUIRE(buf.read_double_le() == Approx(dval).epsilon(0.0000001));
+    REQUIRE(buf.read_float_be() == Catch::Approx(fval).epsilon(0.0001));
+    REQUIRE(buf.read_float_le() == Catch::Approx(fval).epsilon(0.0001));
+    REQUIRE(buf.read_double_be() == Catch::Approx(dval).epsilon(0.0000001));
+    REQUIRE(buf.read_double_le() == Catch::Approx(dval).epsilon(0.0000001));
     std::cout << "✅ 'ByteBuffer float/double BE/LE read/write\n";
 }
 

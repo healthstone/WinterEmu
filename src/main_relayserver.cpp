@@ -1,12 +1,14 @@
 #include "relayserver/RelayServer.hpp"
 #include "Database.hpp"
 #include "Logger.hpp"
+#include "CrashHandler/CrashHandler.hpp"
 
 #include <boost/asio.hpp>
 #include <iostream>
 #include <csignal>
 
 int main() {
+    CrashHandler::setup();   // ✅ ставим обработчик падений
     Logger::init_thread_pool();  // Инициализировать thread pool до первого лога!
     auto log = Logger::get();
 
