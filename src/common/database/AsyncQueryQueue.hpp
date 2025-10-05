@@ -13,7 +13,7 @@
 
 class AsyncQueryQueue {
 public:
-    using Callback = std::function<void(std::unique_ptr<pqxx::connection>&)>;
+    using Callback = std::function<void(std::unique_ptr<pqxx::connection> &)>;
 
     struct QueuedQuery {
         PreparedStatement stmt;
@@ -23,14 +23,15 @@ public:
     };
 
     AsyncQueryQueue() = default;
+
     ~AsyncQueryQueue() { shutdown(); }
 
-    void enqueue(const std::string& queue_key, PreparedStatement stmt,
-                 Callback callback, const std::string& description = "") {
+    void enqueue(const std::string &queue_key, PreparedStatement stmt,
+                 Callback callback, const std::string &description = "") {
         std::lock_guard<std::mutex> lock(mutex_);
 
         // Нормализуем имя очереди
-        const std::string& actual_queue = queue_key.empty() ? "default" : queue_key;
+        const std::string &actual_queue = queue_key.empty() ? "default" : queue_key;
 
         queues_[actual_queue].push({std::move(stmt), std::move(callback),
                                     std::chrono::steady_clock::now(), description});
@@ -93,7 +94,7 @@ public:
         return std::nullopt;
     }
 
-    size_t get_queue_size(const std::string& queue_key) const {
+    size_t get_queue_size(const std::string &queue_key) const {
         std::lock_guard<std::mutex> lock(mutex_);
         auto it = queues_.find(queue_key);
         return it != queues_.end() ? it->second.size() : 0;
@@ -107,7 +108,7 @@ public:
     size_t get_total_queries() const {
         std::lock_guard<std::mutex> lock(mutex_);
         size_t total = 0;
-        for (const auto& [key, queue] : queues_) {
+        for (const auto &[key, queue]: queues_) {
             total += queue.size();
         }
         return total;
@@ -116,6 +117,8 @@ public:
     void shutdown() {
         std::lock_guard<std::mutex> lock(mutex_);
         shutdown_ = true;
+        // Явная очистка всех очередей для предотвращения утечек
+        queues_.clear();
         cv_.notify_all();
 
         Logger::get()->info("[AsyncQueryQueue] Shutdown completed");
@@ -127,7 +130,7 @@ public:
 
 private:
     bool has_queries() const {
-        for (const auto& [key, queue] : queues_) {
+        for (const auto &[key, queue]: queues_) {
             if (!queue.empty()) return true;
         }
         return false;

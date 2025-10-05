@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <vector>
 #include <memory>
+#include <mutex>
 #include <boost/asio.hpp>
 #include <random>
 #include "src/relayserver/Entity/NodeConnector/NodeConnector.hpp"
@@ -14,6 +15,7 @@ public:
 
     /// Добавить N коннекторов для данного NodeID.
     void add_connectors(uint8_t node_id, const std::string& host, int port, size_t count) {
+        std::lock_guard<std::mutex> lock(mutex_);
         auto& pool = connectors_[node_id];
         for (size_t i = 0; i < count; ++i) {
             auto connector = std::make_shared<NodeConnector>(io_, host, port, node_id);
@@ -24,6 +26,7 @@ public:
 
     /// Получить случайный коннектор для NodeID
     std::shared_ptr<NodeConnector> get_first_connector(uint8_t node_id) const {
+        std::lock_guard<std::mutex> lock(mutex_);
         auto it = connectors_.find(node_id);
         if (it != connectors_.end() && !it->second.empty()) {
             const auto& pool = it->second;
@@ -41,14 +44,18 @@ public:
     }
 
     /// Отдать весь пул коннекторов для NodeID
-    const std::vector<std::shared_ptr<NodeConnector>>& get_connectors(uint8_t node_id) const {
-        static const std::vector<std::shared_ptr<NodeConnector>> empty;
+    std::vector<std::shared_ptr<NodeConnector>> get_connectors(uint8_t node_id) const {
+        std::lock_guard<std::mutex> lock(mutex_);
         auto it = connectors_.find(node_id);
-        return (it != connectors_.end()) ? it->second : empty;
+        if (it != connectors_.end()) {
+            return it->second;
+        }
+        return {};
     }
 
     /// Запустить все коннекторы
     void start_all() {
+        std::lock_guard<std::mutex> lock(mutex_);
         for (auto& [node_id, pool] : connectors_) {
             for (auto& connector : pool) {
                 connector->start();
@@ -58,6 +65,7 @@ public:
 
     /// Остановить все коннекторы
     void stop_all() {
+        std::lock_guard<std::mutex> lock(mutex_);
         for (auto& [node_id, pool] : connectors_) {
             for (auto& connector : pool) {
                 connector->stop();
@@ -67,6 +75,7 @@ public:
 
     /// Удалить все коннекторы для NodeID
     void remove_connectors(uint8_t node_id) {
+        std::lock_guard<std::mutex> lock(mutex_);
         auto it = connectors_.find(node_id);
         if (it != connectors_.end()) {
             for (auto& connector : it->second) {
@@ -79,9 +88,9 @@ public:
 
     /// Отправить пакет на все ноды (по одному случайному коннектору для каждой ноды)
     void notify_all_nodes(const NodePacket& packet) {
+        std::lock_guard<std::mutex> lock(mutex_);
         for (const auto& [node_id, connectors] : connectors_) {
             if (!connectors.empty()) {
-                // Выбираем случайный коннектор для текущей ноды
                 static thread_local std::mt19937 rng{std::random_device{}()};
                 std::uniform_int_distribution<size_t> dist(0, connectors.size() - 1);
                 size_t index = dist(rng);
@@ -95,4 +104,5 @@ private:
     boost::asio::io_context& io_;
     /// Пул коннекторов для каждого NodeID
     std::unordered_map<uint8_t, std::vector<std::shared_ptr<NodeConnector>>> connectors_;
+    mutable std::mutex mutex_;
 };

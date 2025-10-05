@@ -10,7 +10,7 @@ DBCMgr::~DBCMgr() {
 }
 
 void DBCMgr::cleanUpBeforeDelete() {
-    // Сначала чистим мультимапы и вторичные контейнеры
+    // Сначала чистим вторичные контейнеры, которые содержат указатели на основные данные
     _characterFacialHairStylesByTripple.clear();
     _charSectionsByPenta.clear();
     _charStartOutfitByTripple.clear();
@@ -27,24 +27,16 @@ void DBCMgr::cleanUpBeforeDelete() {
         _namesReservedValidators[i].clear();
     }
 
-    for (uint8_t i = 0; i < MAX_CLASSES; i++)
-        for (uint8_t j = 0; j < 3; j++)
-            _talentTabPages[i][j] = 0;
-
-    _taxiNodesMask.fill(0);
-    _oldContinentsNodesMask.fill(0);
-    _hordeTaxiNodesMask.fill(0);
-    _allianceTaxiNodesMask.fill(0);
-    _deathKnightTaxiNodesMask.fill(0);
-
+    // Очищаем контейнеры с указателями перед основными данными
     for (auto& tpsID : _taxiPathSetBySource)
         tpsID.second.clear();
     _taxiPathSetBySource.clear();
 
     for (uint32_t i = 1; i < _taxiPathNodesByPath.size(); ++i)
         _taxiPathNodesByPath[i].clear();
+    _taxiPathNodesByPath.clear();
 
-    // Потом уже сами основные мапы
+    // Затем очищаем основные контейнеры
     _achievementMap.clear();
     _achievementCriteriaMap.clear();
     _areaTableMap.clear();
@@ -338,7 +330,7 @@ void DBCMgr::load_Achievement() {
         auto stmt = PreparedStatement("SELECT_DBC_ACHIEVEMENT");
         auto rows = server_->db()->execute_sync_many<DbcAchievement>(stmt);
         for (const auto &row: rows) {
-            AchievementDBC ach;
+            AchievementDBC ach{};
             ach.ID              = row.ID;
             ach.Faction         = row.Faction;
             ach.InstanceID      = row.InstanceID;
@@ -384,7 +376,7 @@ void DBCMgr::load_AchievementCriteria() {
         auto stmt = PreparedStatement("SELECT_DBC_ACHIEVEMENT_CRITERIA");
         auto rows = server_->db()->execute_sync_many<DbcAchievementCriteria>(stmt);
         for (const auto &row: rows) {
-            AchievementCriteriaDBC achc;
+            AchievementCriteriaDBC achc{};
             achc.ID                  = row.ID;
             achc.AchievementID       = row.AchievementId;
             achc.Type                = row.Type;
@@ -437,7 +429,7 @@ void DBCMgr::load_AreaTable() {
         auto stmt = PreparedStatement("SELECT_DBC_AREATABLE");
         auto rows = server_->db()->execute_sync_many<DbcAreaTable>(stmt);
         for (const auto &row: rows) {
-            AreaTableDBC at;
+            AreaTableDBC at{};
             at.ID               = row.ID;
             at.ContinentID      = row.ContinentID;
             at.ParentAreaID     = row.ParentAreaID;
@@ -596,18 +588,14 @@ void DBCMgr::load_BannedAddOns() {
         auto stmt = PreparedStatement("SELECT_DBC_BANNEDADDONS");
         auto rows = server_->db()->execute_sync_many<DbcBannedAddons>(stmt);
         for (const auto &row: rows) {
-            BannedAddOnsDBC ba{};
+            BannedAddOnsDBC ba = {};
             ba.ID = row.ID;
 
             _bannedAddonsMap[row.ID] = ba;
 
-            if (_bannedAddonsHighestID)
-            {
-                if (_bannedAddonsHighestID < row.ID)
-                    _bannedAddonsHighestID = row.ID;
-            }
-            else
+            if (row.ID > _bannedAddonsHighestID) {
                 _bannedAddonsHighestID = row.ID;
+            }
         }
         log->info(">>> DBCMgr: loaded {} BannedAddOns in {} ms",
                   rows.size(), GetMSTimeDiffToNow(oldMSTime));
@@ -650,7 +638,7 @@ void DBCMgr::load_BattlemasterList() {
         auto stmt = PreparedStatement("SELECT_DBC_BATTLEMASTERLIST");
         auto rows = server_->db()->execute_sync_many<DbcBattleMasterList>(stmt);
         for (const auto &row: rows) {
-            BattlemasterListDBC bl;
+            BattlemasterListDBC bl{};
 
             bl.ID           = row.id;
             bl.MapID[0]     = row.mapid_1;
@@ -661,6 +649,21 @@ void DBCMgr::load_BattlemasterList() {
             bl.MapID[5]     = row.mapid_6;
             bl.MapID[6]     = row.mapid_7;
             bl.MapID[7]     = row.mapid_8;
+
+            bl.Name[LOCALE_enUS] = row.name_lang_enus.value_or("");
+            bl.Name[LOCALE_enGB] = row.name_lang_engb.value_or("");
+            bl.Name[LOCALE_koKR] = row.name_lang_kokr.value_or("");
+            bl.Name[LOCALE_frFR] = row.name_lang_frfr.value_or("");
+            bl.Name[LOCALE_deDE] = row.name_lang_dede.value_or("");
+            bl.Name[LOCALE_zhCN] = row.name_lang_zhcn.value_or("");
+            bl.Name[LOCALE_zhTW] = row.name_lang_zhtw.value_or("");
+            bl.Name[LOCALE_esES] = row.name_lang_eses.value_or("");
+            bl.Name[LOCALE_esMX] = row.name_lang_esmx.value_or("");
+            bl.Name[LOCALE_ruRU] = row.name_lang_ruru.value_or("");
+            bl.Name[LOCALE_ptPT] = row.name_lang_ptpt.value_or("");
+            bl.Name[LOCALE_ptBR] = row.name_lang_ptbr.value_or("");
+            bl.Name[LOCALE_itIT] = row.name_lang_itit.value_or("");
+
             bl.InstanceType = row.instance_type;
             bl.MaxGroupSize      = row.max_group_size;
             bl.HolidayWorldState = row.holiday_worldstate;
@@ -761,7 +764,7 @@ void DBCMgr::load_CharTitles() {
         auto stmt = PreparedStatement("SELECT_DBC_CHARTITLES");
         auto rows = server_->db()->execute_sync_many<DbcCharTitles>(stmt);
         for (const auto &row: rows) {
-            CharTitlesDBC ct;
+            CharTitlesDBC ct{};
             ct.ID = row.ID;
 
             // --- Первые локализованные названия (Name) ---
@@ -815,7 +818,7 @@ void DBCMgr::load_ChatChannels() {
         auto stmt = PreparedStatement("SELECT_DBC_CHATCHANNELS");
         auto rows = server_->db()->execute_sync_many<DbcChatChannels>(stmt);
         for (const auto &row: rows) {
-            ChatChannelsDBC cc;
+            ChatChannelsDBC cc{};
             cc.ID = row.ID;
             cc.Flags = row.Flags;
 
@@ -854,7 +857,7 @@ void DBCMgr::load_ChrClasses() {
         auto stmt = PreparedStatement("SELECT_DBC_CHRCLASSES");
         auto rows = server_->db()->execute_sync_many<DbcChrClasses>(stmt);
         for (const auto &row: rows) {
-            ChrClassesDBC cc;
+            ChrClassesDBC cc{};
             cc.ID           = row.ID;
             cc.DisplayPower = row.DisplayPower;
 
@@ -898,7 +901,7 @@ void DBCMgr::load_ChrRaces() {
         auto stmt = PreparedStatement("SELECT_DBC_CHRRACES");
         auto rows = server_->db()->execute_sync_many<DbcChrRaces>(stmt);
         for (const auto &row: rows) {
-            ChrRacesDBC cr;
+            ChrRacesDBC cr{};
             cr.ID                  = row.ID;
             cr.Flags               = row.Flags;
             cr.FactionID           = row.FactionID;
@@ -948,7 +951,7 @@ void DBCMgr::load_CinematicCamera() {
         auto stmt = PreparedStatement("SELECT_DBC_CINEMATICCAMERA");
         auto rows = server_->db()->execute_sync_many<DbcCinematicCamera>(stmt);
         for (const auto &row: rows) {
-            CinematicCameraDBC cc;
+            CinematicCameraDBC cc{};
             cc.ID           = row.id;
             cc.Model        = row.model.value_or("");
             cc.SoundID      = row.soundid;
@@ -1052,7 +1055,7 @@ void DBCMgr::load_CreatureFamily() {
         auto stmt = PreparedStatement("SELECT_DBC_CREATUREFAMILY");
         auto rows = server_->db()->execute_sync_many<DbcCreatureFamily>(stmt);
         for (const auto &row: rows) {
-            CreatureFamilyDBC cf;
+            CreatureFamilyDBC cf{};
             cf.ID            = row.ID;
             cf.MinScale      = row.MinScale;
             cf.MinScaleLevel = row.MinScaleLevel;
@@ -1098,7 +1101,7 @@ void DBCMgr::load_CreatureModelData() {
         auto stmt = PreparedStatement("SELECT_DBC_CREATUREMODELDATA");
         auto rows = server_->db()->execute_sync_many<DbcCreatureModelData>(stmt);
         for (const auto &row: rows) {
-            CreatureModelDataDBC cmd;
+            CreatureModelDataDBC cmd{};
             cmd.ID = row.ID;
             cmd.Flags           = row.Flags;
             cmd.ModelName       = row.ModelName.value_or("");
@@ -1222,7 +1225,7 @@ void DBCMgr::load_DungeonEncounter() {
         auto stmt = PreparedStatement("SELECT_DBC_DUNGEONENCOUNTER");
         auto rows = server_->db()->execute_sync_many<DbcDungeonEncounter>(stmt);
         for (const auto &row: rows) {
-            DungeonEncounterDBC de;
+            DungeonEncounterDBC de{};
 
             de.ID         = row.id;
             de.MapID      = row.mapid;
@@ -1411,7 +1414,7 @@ void DBCMgr::load_Faction() {
         auto stmt = PreparedStatement("SELECT_DBC_FACTION");
         auto rows = server_->db()->execute_sync_many<DbcFaction>(stmt);
         for (const auto &row: rows) {
-            FactionDBC f;
+            FactionDBC f{};
             f.ID = row.id;
             f.ReputationIndex = row.reputationindex;
 
@@ -1534,7 +1537,7 @@ void DBCMgr::load_GameObjectDisplayInfo() {
         auto stmt = PreparedStatement("SELECT_DBC_GAMEOBJECTDISPLAYINFO");
         auto rows = server_->db()->execute_sync_many<DbcGameObjectDisplayInfo>(stmt);
         for (const auto &row: rows) {
-            GameObjectDisplayInfoDBC gdi;
+            GameObjectDisplayInfoDBC gdi{};
             gdi.ID = row.id;
             gdi.ModelName   = row.modelname.value_or("");
             gdi.GeoBoxMin.X = row.geoboxminx;
@@ -1896,7 +1899,7 @@ void DBCMgr::load_Holidays() {
         auto stmt = PreparedStatement("SELECT_DBC_HOLIDAYS");
         auto rows = server_->db()->execute_sync_many<DbcHolidays>(stmt);
         for (const auto &row: rows) {
-            HolidaysDBC h;
+            HolidaysDBC h{};
             h.ID = row.id;
 
             h.Duration[0] = row.duration_1;
@@ -2025,7 +2028,7 @@ void DBCMgr::load_ItemDisplayInfo() {
         auto stmt = PreparedStatement("SELECT_DBC_ITEMDISPLAYINFO");
         auto rows = server_->db()->execute_sync_many<DbcItemDisplayInfo>(stmt);
         for (const auto &row: rows) {
-            ItemDisplayInfoDBC idi;
+            ItemDisplayInfoDBC idi{};
             idi.ID = row.id;
 
             // Массивы строк
@@ -2139,7 +2142,7 @@ void DBCMgr::load_ItemRandomProperties() {
         auto stmt = PreparedStatement("SELECT_DBC_ITEMRANDOMPROPERTIES");
         auto rows = server_->db()->execute_sync_many<DbcItemRandomProperties>(stmt);
         for (const auto &row: rows) {
-            ItemRandomPropertiesDBC irp;
+            ItemRandomPropertiesDBC irp{};
             irp.ID = row.id;
 
             irp.Enchantment[0] = row.enchantment_1;
@@ -2176,13 +2179,14 @@ void DBCMgr::load_ItemRandomProperties() {
 void DBCMgr::load_ItemRandomSuffix() {
     auto log = Logger::get();
     _itemRandomSuffixMap.clear();
+    _itemRandomSuffixHighestID = 0;
     uint32_t oldMSTime = getMSTime();
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_ITEMRANDOMSUFFIX");
         auto rows = server_->db()->execute_sync_many<DbcItemRandomSuffix>(stmt);
         for (const auto &row: rows) {
-            ItemRandomSuffixDBC irs;
+            ItemRandomSuffixDBC irs{};
             irs.ID = row.id;
 
             irs.Name[LOCALE_enUS] = row.name_lang_enus.value_or("");
@@ -2215,12 +2219,7 @@ void DBCMgr::load_ItemRandomSuffix() {
 
             _itemRandomSuffixMap[row.id] = irs;
 
-            if (_itemRandomSuffixHighestID)
-            {
-                if (_itemRandomSuffixHighestID < row.id)
-                    _itemRandomSuffixHighestID = row.id;
-            }
-            else
+            if (_itemRandomSuffixHighestID < row.id)
                 _itemRandomSuffixHighestID = row.id;
         }
         log->info(">>> DBCMgr: loaded {} ItemRandomSuffix in {} ms",
@@ -2239,7 +2238,7 @@ void DBCMgr::load_ItemSet() {
         auto stmt = PreparedStatement("SELECT_DBC_ITEMSET");
         auto rows = server_->db()->execute_sync_many<DbcItemSet>(stmt);
         for (const auto &row: rows) {
-            ItemSetDBC is;
+            ItemSetDBC is{};
             is.ID = row.id;
 
             is.Name[LOCALE_enUS] = row.name_lang_enus.value_or("");
@@ -2333,7 +2332,7 @@ void DBCMgr::load_LFGDungeons() {
         auto stmt = PreparedStatement("SELECT_DBC_LFGDUNGEONS");
         auto rows = server_->db()->execute_sync_many<PgDbcLfgDungeons>(stmt);
         for (const auto &row: rows) {
-            LFGDungeonDBC ld;
+            LFGDungeonDBC ld{};
             ld.ID = row.id;
 
             ld.Name[LOCALE_enUS] = row.name_lang_enus.value_or("");
@@ -2478,7 +2477,7 @@ void DBCMgr::load_MailTemplate() {
         auto stmt = PreparedStatement("SELECT_DBC_MAILTEMPLATE");
         auto rows = server_->db()->execute_sync_many<PgDbcMailTemplate>(stmt);
         for (const auto &row: rows) {
-            MailTemplateDBC mt;
+            MailTemplateDBC mt{};
             mt.ID = row.id;
 
             mt.Subject[LOCALE_enUS] = row.subject_lang_en_us.value_or("");
@@ -2531,7 +2530,7 @@ void DBCMgr::load_Map() {
         auto stmt = PreparedStatement("SELECT_DBC_MAP");
         auto rows = server_->db()->execute_sync_many<DbcMap>(stmt);
         for (const auto &row: rows) {
-            MapDBC m;
+            MapDBC m{};
             m.ID = row.id;
             m.InstanceType = row.instance_type;
             m.Flags        = row.flags;
@@ -2579,7 +2578,7 @@ void DBCMgr::load_MapDifficulty() {
         auto stmt = PreparedStatement("SELECT_DBC_MAPDIFFICULTY");
         auto rows = server_->db()->execute_sync_many<DbcMapDifficulty>(stmt);
         for (const auto &row: rows) {
-            MapDifficultyDBC md;
+            MapDifficultyDBC md{};
             md.ID = row.id;
             md.MapID      = row.map_id;
             md.Difficulty = row.difficulty;
@@ -2642,7 +2641,7 @@ void DBCMgr::load_NamesProfanity() {
         auto stmt = PreparedStatement("SELECT_DBC_NAMESPROFANITY");
         auto rows = server_->db()->execute_sync_many<DbcNamesProfanity>(stmt);
         for (const auto &row: rows) {
-            NamesProfanityDBC np;
+            NamesProfanityDBC np{};
             np.ID = row.id;
             np.Name     = row.name.value_or("");
             np.Language = row.language;
@@ -2665,7 +2664,7 @@ void DBCMgr::load_NamesReserved() {
         auto stmt = PreparedStatement("SELECT_DBC_NAMESRESERVED");
         auto rows = server_->db()->execute_sync_many<DbcNamesReserved>(stmt);
         for (const auto &row: rows) {
-            NamesReservedDBC nr;
+            NamesReservedDBC nr{};
             nr.ID = row.id;
             nr.Name = row.name.value_or("");
             nr.Language = row.language;
@@ -2985,7 +2984,7 @@ void DBCMgr::load_SkillLine() {
         auto stmt = PreparedStatement("SELECT_DBC_SKILLLINE");
         auto rows = server_->db()->execute_sync_many<DbcSkillLine>(stmt);
         for (const auto &row: rows) {
-            SkillLineDBC sl;
+            SkillLineDBC sl{};
             sl.ID = row.ID;
             sl.CategoryID = row.CategoryID;
 
@@ -3136,6 +3135,7 @@ void DBCMgr::load_SoundEntries() {
 void DBCMgr::load_Spells() {
     auto log = Logger::get();
     _spellMap.clear();
+    _spellHighestID = 0;
     uint32_t oldMSTime = getMSTime();
     log->info("loading spell.dbc...");
 
@@ -3143,7 +3143,7 @@ void DBCMgr::load_Spells() {
         auto stmt = PreparedStatement("SELECT_DBC_SPELL");
         auto rows = server_->db()->execute_sync_many<DbcSpell>(stmt);
         for (const auto &row: rows) {
-            SpellDBC spell;
+            SpellDBC spell = {};
             spell.ID = row.id;
             spell.Category = row.category;
             spell.DispelType = row.dispelType;
@@ -3258,7 +3258,7 @@ void DBCMgr::load_Spells() {
 
             _spellMap[row.id] = spell;
 
-            if (!_spellHighestID || _spellHighestID < row.id)
+            if (_spellHighestID < row.id)
                 _spellHighestID = row.id;
         }
         log->info(">>> DBCMgr: loaded {} Spells in {} ms",
@@ -3385,13 +3385,14 @@ void DBCMgr::load_SpellFocusObject() {
 void DBCMgr::load_SpellItemEnchantment() {
     auto log = Logger::get();
     _spellItemEnchantmentMap.clear();
+    _spellItemEnchantmentHighestID = 0;
     uint32_t oldMSTime = getMSTime();
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELLITEMENCHANTMENT");
         auto rows = server_->db()->execute_sync_many<DbcSpellItemEnchantment>(stmt);
         for (const auto &row: rows) {
-            SpellItemEnchantmentDBC sie;
+            SpellItemEnchantmentDBC sie{};
             sie.ID = row.id;
 
             // эффекты
@@ -3434,7 +3435,7 @@ void DBCMgr::load_SpellItemEnchantment() {
 
             _spellItemEnchantmentMap[row.id] = sie;
 
-            if (!_spellItemEnchantmentHighestID || _spellItemEnchantmentHighestID < row.id)
+            if (_spellItemEnchantmentHighestID < row.id)
                 _spellItemEnchantmentHighestID = row.id;
         }
         log->info(">>> DBCMgr: loaded {} SpellItemEnchantment in {} ms",
@@ -3745,7 +3746,7 @@ void DBCMgr::load_TaxiNodes() {
         auto stmt = PreparedStatement("SELECT_DBC_TAXINODES");
         auto rows = server_->db()->execute_sync_many<DbcTaxiNodes>(stmt);
         for (const auto &row: rows) {
-            TaxiNodesDBC tn;
+            TaxiNodesDBC tn{};
             tn.ID = row.id;
             tn.ContinentID = row.continentid;
             tn.Pos.X       = row.x;
@@ -3783,6 +3784,7 @@ void DBCMgr::load_TaxiNodes() {
 void DBCMgr::load_TaxiPath() {
     auto log = Logger::get();
     _taxiPathMap.clear();
+    _taxiPathHighestID = 0;
     uint32_t oldMSTime = getMSTime();
 
     try {
@@ -3797,7 +3799,7 @@ void DBCMgr::load_TaxiPath() {
 
             _taxiPathMap[row.id] = tp;
 
-            if (!_taxiPathHighestID || _taxiPathHighestID < row.id)
+            if (_taxiPathHighestID < row.id)
                 _taxiPathHighestID = row.id;
         }
         log->info(">>> DBCMgr: loaded {} TaxiPath in {} ms",
@@ -3945,7 +3947,7 @@ void DBCMgr::load_Vehicle() {
         auto stmt = PreparedStatement("SELECT_DBC_VEHICLE");
         auto rows = server_->db()->execute_sync_many<DbcVehicle>(stmt);
         for (const auto &row: rows) {
-            VehicleDBC v;
+            VehicleDBC v{};
             v.ID = row.id;
             v.Flags      = row.flags;
             v.TurnSpeed  = row.turnspeed;
@@ -4337,88 +4339,170 @@ void DBCMgr::handle_TaxiPathSetBySource() {
 }
 
 void DBCMgr::handle_TaxiPathNodesByPath() {
+    auto log = Logger::get();
+
+    // Рассчитываем количество путей на основе максимального ID
     uint32_t pathCount = _taxiPathHighestID + 1;
-    // Calculate path nodes count
-    std::vector<uint32_t> pathLength;
-    pathLength.resize(pathCount);                           // 0 and some other indexes not used
-    for (const auto& tpnID : _taxiPathNodeMap)
-    {
-        if (TaxiPathNodeDBC const* entry = &tpnID.second)
-            if (pathLength[entry->PathID] < entry->NodeIndex + 1)
-                pathLength[entry->PathID] = entry->NodeIndex + 1;
+
+    // Защита от неверного размера - если нет путей, очищаем и выходим
+    if (pathCount <= 1) {
+        _taxiPathNodesByPath.clear();
+        log->info("DBCMgr::handle_TaxiPathNodesByPath: No taxi paths to process");
+        return;
     }
 
-    // Set path length
-    _taxiPathNodesByPath.resize(pathCount);                 // 0 and some other indexes not used
-    for (uint32_t i = 1; i < _taxiPathNodesByPath.size(); ++i)
-        _taxiPathNodesByPath[i].resize(pathLength[i]);
-    // fill data
-    for (const auto& tpnID : _taxiPathNodeMap)
-    {
-        if (TaxiPathNodeDBC const* entry = &tpnID.second)
-            _taxiPathNodesByPath[entry->PathID][entry->NodeIndex] = entry;
+    // Рассчитываем длину каждого пути
+    std::vector<uint32_t> pathLength;
+    pathLength.resize(pathCount, 0); // Явная инициализация нулями
+
+    // Первый проход: находим максимальный индекс узла для каждого пути
+    for (const auto& tpnID : _taxiPathNodeMap) {
+        if (TaxiPathNodeDBC const* entry = &tpnID.second) {
+            // Проверяем, что PathID в допустимых пределах
+            if (entry->PathID < pathCount) {
+                if (pathLength[entry->PathID] < entry->NodeIndex + 1) {
+                    pathLength[entry->PathID] = entry->NodeIndex + 1;
+                }
+            } else {
+                log->warn("DBCMgr::handle_TaxiPathNodesByPath: Invalid PathID {} for node {}",
+                          entry->PathID, entry->ID);
+            }
+        }
     }
+
+    // Инициализируем основной контейнер с проверками
+    _taxiPathNodesByPath.clear();
+    _taxiPathNodesByPath.resize(pathCount);
+
+    // Второй проход: резервируем память для каждого пути
+    for (uint32_t i = 0; i < _taxiPathNodesByPath.size(); ++i) {
+        if (pathLength[i] > 0) {
+            _taxiPathNodesByPath[i].resize(pathLength[i], nullptr); // Явная инициализация nullptr
+        } else {
+            _taxiPathNodesByPath[i].clear(); // Пустой вектор для путей без узлов
+        }
+    }
+
+    // Третий проход: заполняем данными с проверками границ
+    uint32_t validNodes = 0;
+    uint32_t skippedNodes = 0;
+
+    for (const auto& tpnID : _taxiPathNodeMap) {
+        if (TaxiPathNodeDBC const* entry = &tpnID.second) {
+            // Проверяем все возможные границы
+            if (entry->PathID < _taxiPathNodesByPath.size() &&
+                entry->NodeIndex < _taxiPathNodesByPath[entry->PathID].size()) {
+                _taxiPathNodesByPath[entry->PathID][entry->NodeIndex] = entry;
+                validNodes++;
+            } else {
+                skippedNodes++;
+                if (entry->PathID >= _taxiPathNodesByPath.size()) {
+                    log->warn("DBCMgr::handle_TaxiPathNodesByPath: PathID {} out of bounds (max: {}) for node {}",
+                              entry->PathID, _taxiPathNodesByPath.size() - 1, entry->ID);
+                } else if (entry->NodeIndex >= _taxiPathNodesByPath[entry->PathID].size()) {
+                    log->warn("DBCMgr::handle_TaxiPathNodesByPath: NodeIndex {} out of bounds (max: {}) for path {} node {}",
+                              entry->NodeIndex, _taxiPathNodesByPath[entry->PathID].size() - 1,
+                              entry->PathID, entry->ID);
+                }
+            }
+        }
+    }
+
+    // Логируем результаты для отладки
+    uint32_t nonEmptyPaths = 0;
+    for (uint32_t i = 0; i < _taxiPathNodesByPath.size(); ++i) {
+        if (!_taxiPathNodesByPath[i].empty()) {
+            nonEmptyPaths++;
+        }
+    }
+
+    log->info("DBCMgr::handle_TaxiPathNodesByPath: Processed {} paths, {} non-empty, {} valid nodes, {} skipped nodes",
+              _taxiPathNodesByPath.size(), nonEmptyPaths, validNodes, skippedNodes);
 }
 
 void DBCMgr::handle_TaxiNodesMask() {
+    auto log = Logger::get();
+
     // Initialize global taxinodes mask
     // include existed nodes that have at least single not spell base (scripted) path
     std::set<uint32_t> spellPaths;
     SpellDBCMap const& spellMap = getSpellDBCMap();
-    for (const auto& sID : spellMap)
-        if (SpellDBC const* sInfo = &sID.second)
-            for (uint8_t j = 0; j < MAX_SPELL_EFFECTS; ++j)
-                if (sInfo->Effect[j] == SPELL_EFFECT_SEND_TAXI)
+    for (const auto& sID : spellMap) {
+        if (SpellDBC const* sInfo = &sID.second) {
+            for (uint8_t j = 0; j < MAX_SPELL_EFFECTS; ++j) {
+                if (sInfo->Effect[j] == SPELL_EFFECT_SEND_TAXI) {
                     spellPaths.insert(sInfo->EffectMiscValue[j]);
+                }
+            }
+        }
+    }
 
+    // Явная инициализация масок нулями
     _taxiNodesMask.fill(0);
     _oldContinentsNodesMask.fill(0);
     _hordeTaxiNodesMask.fill(0);
     _allianceTaxiNodesMask.fill(0);
     _deathKnightTaxiNodesMask.fill(0);
 
-    for (const auto& tnID : _taxiNodesMap)
-    {
-        if (TaxiNodesDBC const* node = &tnID.second)
-        {
+    // Рассчитываем максимальный допустимый ID на основе размера маски
+    const uint32_t maxNodeID = _taxiNodesMask.size() * 32;
+
+    for (const auto& tnID : _taxiNodesMap) {
+        if (TaxiNodesDBC const* node = &tnID.second) {
+            // Проверка на валидный ID (должен быть в диапазоне [1, maxNodeID])
+            if (node->ID == 0 || node->ID > maxNodeID) {
+                log->warn("DBCMgr::handle_TaxiNodesMask: Skipping invalid taxi node ID: {}", node->ID);
+                continue;
+            }
+
             auto src_i = _taxiPathSetBySource.find(node->ID);
-            if (src_i != _taxiPathSetBySource.end() && !src_i->second.empty())
-            {
+            if (src_i != _taxiPathSetBySource.end() && !src_i->second.empty()) {
                 bool ok = false;
-                for (TaxiPathSetForSource::const_iterator dest_i = src_i->second.begin(); dest_i != src_i->second.end(); ++dest_i)
-                {
+                for (TaxiPathSetForSource::const_iterator dest_i = src_i->second.begin(); dest_i != src_i->second.end(); ++dest_i) {
                     // not spell path
-                    if (dest_i->second.price || spellPaths.find(dest_i->second.ID) == spellPaths.end())
-                    {
+                    if (dest_i->second.price || spellPaths.find(dest_i->second.ID) == spellPaths.end()) {
                         ok = true;
                         break;
                     }
                 }
 
-                if (!ok)
+                if (!ok) {
                     continue;
+                }
             }
 
             // valid taxi network node
             uint8_t field = (uint8_t)((node->ID - 1) / 32);
             uint32_t submask = 1 << ((node->ID - 1) % 32);
-            _taxiNodesMask[field] |= submask;
 
-            if (node->MountCreatureID[0] && node->MountCreatureID[0] != 32981)
-                _hordeTaxiNodesMask[field] |= submask;
-            if (node->MountCreatureID[1] && node->MountCreatureID[1] != 32981)
-                _allianceTaxiNodesMask[field] |= submask;
-            if (node->MountCreatureID[0] == 32981 || node->MountCreatureID[1] == 32981)
-                _deathKnightTaxiNodesMask[field] |= submask;
+            // Дополнительная проверка границ
+            if (field < _taxiNodesMask.size()) {
+                _taxiNodesMask[field] |= submask;
 
-            // old continent node (+ nodes virtually at old continents, check explicitly to avoid loading map files for zone info)
-            if (node->ContinentID < 2 || node->ID == 82 || node->ID == 83 || node->ID == 93 || node->ID == 94)
-                _oldContinentsNodesMask[field] |= submask;
+                if (node->MountCreatureID[0] && node->MountCreatureID[0] != 32981) {
+                    _hordeTaxiNodesMask[field] |= submask;
+                }
+                if (node->MountCreatureID[1] && node->MountCreatureID[1] != 32981) {
+                    _allianceTaxiNodesMask[field] |= submask;
+                }
+                if (node->MountCreatureID[0] == 32981 || node->MountCreatureID[1] == 32981) {
+                    _deathKnightTaxiNodesMask[field] |= submask;
+                }
 
-            // fix DK node at Ebon Hold and Shadow Vault flight master
-            if (node->ID == 315 || node->ID == 333)
-                const_cast<TaxiNodesDBC*>(node)->MountCreatureID[1] = 32981;
+                // old continent node (+ nodes virtually at old continents, check explicitly to avoid loading map files for zone info)
+                if (node->ContinentID < 2 || node->ID == 82 || node->ID == 83 || node->ID == 93 || node->ID == 94) {
+                    _oldContinentsNodesMask[field] |= submask;
+                }
+
+                // fix DK node at Ebon Hold and Shadow Vault flight master
+                if (node->ID == 315 || node->ID == 333) {
+                    const_cast<TaxiNodesDBC*>(node)->MountCreatureID[1] = 32981;
+                }
+            } else {
+                log->warn("DBCMgr::handle_TaxiNodesMask: Field index out of bounds for node ID: {}", node->ID);
+            }
         }
     }
+
     spellPaths.clear();
 }
