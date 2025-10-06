@@ -10,151 +10,149 @@ DBCMgr::~DBCMgr() {
 }
 
 void DBCMgr::cleanUpBeforeDelete() {
-    // Сначала чистим вторичные контейнеры, которые содержат указатели на основные данные
-    _characterFacialHairStylesByTripple.clear();
-    _charSectionsByPenta.clear();
-    _charStartOutfitByTripple.clear();
-    _emotesTextSoundByTripple.clear();
-    _lfgDungeonByDouble.clear();
-    _mapDifficultyByDouble.clear();
-    _skillRaceClassInfoBySkill.clear();
-    _talentSpellPos.clear();
-    _petTalentSpells.clear();
+    // вторичные контейнеры
+    free_map(_characterFacialHairStylesByTripple);
+    free_map(_charSectionsByPenta);
+    free_map(_charStartOutfitByTripple);
+    free_map(_emotesTextSoundByTripple);
+    free_map(_lfgDungeonByDouble);
+    free_map(_mapDifficultyByDouble);
+    free_map(_skillRaceClassInfoBySkill);
+    free_map(_talentSpellPos);
+    free_map(_petTalentSpells);
 
-    // handle additional containers
     for (uint8_t i = 0; i < TOTAL_LOCALES; i++) {
-        _namesProfaneValidators[i].clear();
-        _namesReservedValidators[i].clear();
+        free_map(_namesProfaneValidators[i]);
+        free_map(_namesReservedValidators[i]);
     }
 
-    // Очищаем контейнеры с указателями перед основными данными
     for (auto& tpsID : _taxiPathSetBySource)
-        tpsID.second.clear();
-    _taxiPathSetBySource.clear();
+        free_map(tpsID.second);
+    free_map(_taxiPathSetBySource);
 
     for (uint32_t i = 1; i < _taxiPathNodesByPath.size(); ++i)
-        _taxiPathNodesByPath[i].clear();
-    _taxiPathNodesByPath.clear();
+        free_map(_taxiPathNodesByPath[i]);
+    free_map(_taxiPathNodesByPath);
 
-    // Затем очищаем основные контейнеры
-    _achievementMap.clear();
-    _achievementCriteriaMap.clear();
-    _areaTableMap.clear();
-    _areaGroupMap.clear();
-    _areaPOIMap.clear();
-    _areaTriggerMap.clear();
-    _auctionHouseMap.clear();
-    _bankBagSlotPricesMap.clear();
-    _bannedAddonsMap.clear();
-    _barberShopStyleMap.clear();
-    _battlemasterListMap.clear();
-    _characterFacialHairStyleMap.clear();
-    _charSectionMap.clear();
-    _charStartOutfitMap.clear();
-    _charTitlesMap.clear();
-    _chatChannelsMap.clear();
-    _chrClassesMap.clear();
-    _chrRacesMap.clear();
-    _cinematicCameraMap.clear();
-    _cinematicSequencesMap.clear();
-    _creatureDisplayInfoMap.clear();
-    _creatureDisplayInfoExtraMap.clear();
-    _creatureFamilyMap.clear();
-    _creatureModelDataMap.clear();
-    _creatureSpellDataMap.clear();
-    _creatureTypeMap.clear();
-    _currencyCategoryMap.clear();
-    _currencyTypesMap.clear();
-    _destructibleModelDataMap.clear();
-    _dungeonEncounterMap.clear();
-    _durabilityCoastsMap.clear();
-    _durabilityQualityMap.clear();
-    _emotesMap.clear();
-    _emotesTextMap.clear();
-    _emotesTextSoundMap.clear();
-    _factionMap.clear();
-    _factionTemplateMap.clear();
-    _gameobjectArtKitMap.clear();
-    _gameobjectDisplayInfoMap.clear();
-    _gemPropertiesMap.clear();
-    _glyphPropertiesMap.clear();
-    _glyphSlotMap.clear();
-    _gtBarberShopCostBaseMap.clear();
-    _gtChanceToMeleeCritMap.clear();
-    _gtChanceToMeleeCritBaseMap.clear();
-    _gtChanceToSpellCritMap.clear();
-    _gtChanceToSpellCritBaseMap.clear();
-    _gtCombatRatingsMap.clear();
-    _gtNPCManaCostScalerMap.clear();
-    _gtOCTClassCombatRatingScalarMap.clear();
-    _gtOCTRegenHPMap.clear();
-    _gtOCTRegenMPMap.clear();
-    _gtRegenHPPerSptMap.clear();
-    _gtRegenMPPerSptMap.clear();
-    _holidaysMap.clear();
-    _itemMap.clear();
-    _itemBagFamilyMap.clear();
-    _itemDisplayInfoMap.clear();
-    _itemExtendedCostMap.clear();
-    _itemLimitCategoryMap.clear();
-    _itemRandomPropertiesMap.clear();
-    _itemRandomSuffixMap.clear();
-    _itemSetMap.clear();
-    _lfgDungeonExpansionMap.clear();
-    _lfgDungeonMap.clear();
-    _lightMap.clear();
-    _liquidTypeMap.clear();
-    _lockMap.clear();
-    _mailTemplateMap.clear();
-    _mapMap.clear();
-    _mapDifficultyMap.clear();
-    _movieMap.clear();
-    _namesProfanityMap.clear();
-    _namesReservedMap.clear();
-    _overrideSpellDataMap.clear();
-    _powerDisplayMap.clear();
-    _pvpDifficultyMap.clear();
-    _questFactionRewardMap.clear();
-    _questSortMap.clear();
-    _questXPMap.clear();
-    _randPropPointsMap.clear();
-    _scalingStatDistributionMap.clear();
-    _scalingStatValuesMap.clear();
-    _skillLineMap.clear();
-    _skillLineAbilityMap.clear();
-    _skillRaceClassInfoMap.clear();
-    _skillTiersMap.clear();
-    _soundEntriesMap.clear();
-    _spellMap.clear();
-    _spellCastTimesMap.clear();
-    _spellCategoryMap.clear();
-    _spellDiffucultyMap.clear();
-    _spellDurationMap.clear();
-    _spellFocusObjectMap.clear();
-    _spellItemEnchantmentMap.clear();
-    _spellItemEnchantmentConditionMap.clear();
-    _spellRadiusMap.clear();
-    _spellRangeMap.clear();
-    _spellRuneCostMap.clear();
-    _spellShapeShiftFormMap.clear();
-    _spellVisualMap.clear();
-    _stableSlotPricesMap.clear();
-    _summonPropertiesMap.clear();
-    _talentMap.clear();
-    _talentTabMap.clear();
-    _taxiNodesMap.clear();
-    _taxiPathMap.clear();
-    _taxiPathNodeMap.clear();
-    _teamContributionPointsMap.clear();
-    _totemCategoryMap.clear();
-    _transportAnimationMap.clear();
-    _transportRotationMap.clear();
-    _vehicleMap.clear();
-    _vehicleSeatMap.clear();
-    _wmoAreaTableMap.clear();
-    _worldMapAreaMap.clear();
-    _worldMapOverlayMap.clear();
-    _worldSafeLocsMap.clear();
+    // основные контейнеры
+    free_map(_achievementMap);
+    free_map(_achievementCriteriaMap);
+    free_map(_areaTableMap);
+    free_map(_areaGroupMap);
+    free_map(_areaPOIMap);
+    free_map(_areaTriggerMap);
+    free_map(_auctionHouseMap);
+    free_map(_bankBagSlotPricesMap);
+    free_map(_bannedAddonsMap);
+    free_map(_barberShopStyleMap);
+    free_map(_battlemasterListMap);
+    free_map(_characterFacialHairStyleMap);
+    free_map(_charSectionMap);
+    free_map(_charStartOutfitMap);
+    free_map(_charTitlesMap);
+    free_map(_chatChannelsMap);
+    free_map(_chrClassesMap);
+    free_map(_chrRacesMap);
+    free_map(_cinematicCameraMap);
+    free_map(_cinematicSequencesMap);
+    free_map(_creatureDisplayInfoMap);
+    free_map(_creatureDisplayInfoExtraMap);
+    free_map(_creatureFamilyMap);
+    free_map(_creatureModelDataMap);
+    free_map(_creatureSpellDataMap);
+    free_map(_creatureTypeMap);
+    free_map(_currencyCategoryMap);
+    free_map(_currencyTypesMap);
+    free_map(_destructibleModelDataMap);
+    free_map(_dungeonEncounterMap);
+    free_map(_durabilityCoastsMap);
+    free_map(_durabilityQualityMap);
+    free_map(_emotesMap);
+    free_map(_emotesTextMap);
+    free_map(_emotesTextSoundMap);
+    free_map(_factionMap);
+    free_map(_factionTemplateMap);
+    free_map(_gameobjectArtKitMap);
+    free_map(_gameobjectDisplayInfoMap);
+    free_map(_gemPropertiesMap);
+    free_map(_glyphPropertiesMap);
+    free_map(_glyphSlotMap);
+    free_map(_gtBarberShopCostBaseMap);
+    free_map(_gtChanceToMeleeCritMap);
+    free_map(_gtChanceToMeleeCritBaseMap);
+    free_map(_gtChanceToSpellCritMap);
+    free_map(_gtChanceToSpellCritBaseMap);
+    free_map(_gtCombatRatingsMap);
+    free_map(_gtNPCManaCostScalerMap);
+    free_map(_gtOCTClassCombatRatingScalarMap);
+    free_map(_gtOCTRegenHPMap);
+    free_map(_gtOCTRegenMPMap);
+    free_map(_gtRegenHPPerSptMap);
+    free_map(_gtRegenMPPerSptMap);
+    free_map(_holidaysMap);
+    free_map(_itemMap);
+    free_map(_itemBagFamilyMap);
+    free_map(_itemDisplayInfoMap);
+    free_map(_itemExtendedCostMap);
+    free_map(_itemLimitCategoryMap);
+    free_map(_itemRandomPropertiesMap);
+    free_map(_itemRandomSuffixMap);
+    free_map(_itemSetMap);
+    free_map(_lfgDungeonExpansionMap);
+    free_map(_lfgDungeonMap);
+    free_map(_lightMap);
+    free_map(_liquidTypeMap);
+    free_map(_lockMap);
+    free_map(_mailTemplateMap);
+    free_map(_mapMap);
+    free_map(_mapDifficultyMap);
+    free_map(_movieMap);
+    free_map(_namesProfanityMap);
+    free_map(_namesReservedMap);
+    free_map(_overrideSpellDataMap);
+    free_map(_powerDisplayMap);
+    free_map(_pvpDifficultyMap);
+    free_map(_questFactionRewardMap);
+    free_map(_questSortMap);
+    free_map(_questXPMap);
+    free_map(_randPropPointsMap);
+    free_map(_scalingStatDistributionMap);
+    free_map(_scalingStatValuesMap);
+    free_map(_skillLineMap);
+    free_map(_skillLineAbilityMap);
+    free_map(_skillRaceClassInfoMap);
+    free_map(_skillTiersMap);
+    free_map(_soundEntriesMap);
+    free_map(_spellMap);
+    free_map(_spellCastTimesMap);
+    free_map(_spellCategoryMap);
+    free_map(_spellDiffucultyMap);
+    free_map(_spellDurationMap);
+    free_map(_spellFocusObjectMap);
+    free_map(_spellItemEnchantmentMap);
+    free_map(_spellItemEnchantmentConditionMap);
+    free_map(_spellRadiusMap);
+    free_map(_spellRangeMap);
+    free_map(_spellRuneCostMap);
+    free_map(_spellShapeShiftFormMap);
+    free_map(_spellVisualMap);
+    free_map(_stableSlotPricesMap);
+    free_map(_summonPropertiesMap);
+    free_map(_talentMap);
+    free_map(_talentTabMap);
+    free_map(_taxiNodesMap);
+    free_map(_taxiPathMap);
+    free_map(_taxiPathNodeMap);
+    free_map(_teamContributionPointsMap);
+    free_map(_totemCategoryMap);
+    free_map(_transportAnimationMap);
+    free_map(_transportRotationMap);
+    free_map(_vehicleMap);
+    free_map(_vehicleSeatMap);
+    free_map(_wmoAreaTableMap);
+    free_map(_worldMapAreaMap);
+    free_map(_worldMapOverlayMap);
+    free_map(_worldSafeLocsMap);
 
     _bannedAddonsHighestID = 0;
     _itemRandomSuffixHighestID = 0;
@@ -328,7 +326,7 @@ void DBCMgr::load_Achievement() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_ACHIEVEMENT");
-        auto rows = server_->db()->execute_sync_many<DbcAchievement>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcAchievement>(stmt);
         for (const auto &row: rows) {
             AchievementDBC ach{};
             ach.ID              = row.ID;
@@ -374,7 +372,7 @@ void DBCMgr::load_AchievementCriteria() {
 
     try{
         auto stmt = PreparedStatement("SELECT_DBC_ACHIEVEMENT_CRITERIA");
-        auto rows = server_->db()->execute_sync_many<DbcAchievementCriteria>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcAchievementCriteria>(stmt);
         for (const auto &row: rows) {
             AchievementCriteriaDBC achc{};
             achc.ID                  = row.ID;
@@ -427,7 +425,7 @@ void DBCMgr::load_AreaTable() {
     uint32_t oldMSTime = getMSTime();
     try {
         auto stmt = PreparedStatement("SELECT_DBC_AREATABLE");
-        auto rows = server_->db()->execute_sync_many<DbcAreaTable>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcAreaTable>(stmt);
         for (const auto &row: rows) {
             AreaTableDBC at{};
             at.ID               = row.ID;
@@ -475,7 +473,7 @@ void DBCMgr::load_AreaGroup() {
     uint32_t oldMSTime = getMSTime();
     try {
         auto stmt = PreparedStatement("SELECT_DBC_AREAGROUP");
-        auto rows = server_->db()->execute_sync_many<DbcAreaGroup>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcAreaGroup>(stmt);
         for (const auto &row: rows) {
             AreaGroupDBC ag{};
             ag.ID = row.ID;
@@ -509,7 +507,7 @@ void DBCMgr::load_AreaTrigger() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_AREATRIGGER");
-        auto rows = server_->db()->execute_sync_many<DbcAreaTrigger>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcAreaTrigger>(stmt);
         for (const auto &row: rows) {
             AreaTriggerDBC at{};
             at.ID          = row.ID;
@@ -539,7 +537,7 @@ void DBCMgr::load_AuctionHouse() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_AUCTIONHOUSE");
-        auto rows = server_->db()->execute_sync_many<DbcAuctionHouse>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcAuctionHouse>(stmt);
         for (const auto &row: rows) {
             AuctionHouseDBC ah{};
             ah.ID              = row.ID;
@@ -563,7 +561,7 @@ void DBCMgr::load_BankBagSlotPrices() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_BANKBAGSLOTPRICES");
-        auto rows = server_->db()->execute_sync_many<DbcBankBagSlotPrices>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcBankBagSlotPrices>(stmt);
         for (const auto &row: rows) {
             BankBagSlotPricesDBC bsp{};
             bsp.ID   = row.ID;
@@ -586,7 +584,7 @@ void DBCMgr::load_BannedAddOns() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_BANNEDADDONS");
-        auto rows = server_->db()->execute_sync_many<DbcBannedAddons>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcBannedAddons>(stmt);
         for (const auto &row: rows) {
             BannedAddOnsDBC ba = {};
             ba.ID = row.ID;
@@ -611,7 +609,7 @@ void DBCMgr::load_BarberShopStyle() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_BARBERSHOPSTYLE");
-        auto rows = server_->db()->execute_sync_many<DbcBarberShopStyle>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcBarberShopStyle>(stmt);
         for (const auto &row: rows) {
             BarberShopStyleDBC bs{};
             bs.ID   = row.ID;
@@ -636,7 +634,7 @@ void DBCMgr::load_BattlemasterList() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_BATTLEMASTERLIST");
-        auto rows = server_->db()->execute_sync_many<DbcBattleMasterList>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcBattleMasterList>(stmt);
         for (const auto &row: rows) {
             BattlemasterListDBC bl{};
 
@@ -684,7 +682,7 @@ void DBCMgr::load_CharacterFacialHairStyles() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CHARACTERFACIALHAIRSTYLES");
-        auto rows = server_->db()->execute_sync_many<DbcCharacterFacialHairstyles>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcCharacterFacialHairstyles>(stmt);
         for (const auto &row: rows) {
             CharacterFacialHairStylesDBC cfhs{};
             cfhs.ID          = row.id;
@@ -708,7 +706,7 @@ void DBCMgr::load_CharSections() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CHARSECTIONS");
-        auto rows = server_->db()->execute_sync_many<DbcCharSections>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcCharSections>(stmt);
         for (const auto &row: rows) {
             CharSectionsDBC cs{};
             cs.ID             = row.id;
@@ -735,7 +733,7 @@ void DBCMgr::load_CharStartOutfit() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CHARSTARTOUTFIT");
-        auto rows = server_->db()->execute_sync_many<DbcCharStartOutfit>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcCharStartOutfit>(stmt);
         for (const auto &row: rows) {
             CharStartOutfitDBC cso{};
             cso.ID      = row.ID;
@@ -762,7 +760,7 @@ void DBCMgr::load_CharTitles() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CHARTITLES");
-        auto rows = server_->db()->execute_sync_many<DbcCharTitles>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcCharTitles>(stmt);
         for (const auto &row: rows) {
             CharTitlesDBC ct{};
             ct.ID = row.ID;
@@ -816,7 +814,7 @@ void DBCMgr::load_ChatChannels() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CHATCHANNELS");
-        auto rows = server_->db()->execute_sync_many<DbcChatChannels>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcChatChannels>(stmt);
         for (const auto &row: rows) {
             ChatChannelsDBC cc{};
             cc.ID = row.ID;
@@ -855,7 +853,7 @@ void DBCMgr::load_ChrClasses() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CHRCLASSES");
-        auto rows = server_->db()->execute_sync_many<DbcChrClasses>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcChrClasses>(stmt);
         for (const auto &row: rows) {
             ChrClassesDBC cc{};
             cc.ID           = row.ID;
@@ -899,7 +897,7 @@ void DBCMgr::load_ChrRaces() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CHRRACES");
-        auto rows = server_->db()->execute_sync_many<DbcChrRaces>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcChrRaces>(stmt);
         for (const auto &row: rows) {
             ChrRacesDBC cr{};
             cr.ID                  = row.ID;
@@ -949,7 +947,7 @@ void DBCMgr::load_CinematicCamera() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CINEMATICCAMERA");
-        auto rows = server_->db()->execute_sync_many<DbcCinematicCamera>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcCinematicCamera>(stmt);
         for (const auto &row: rows) {
             CinematicCameraDBC cc{};
             cc.ID           = row.id;
@@ -976,7 +974,7 @@ void DBCMgr::load_CinematicSequences() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CINEMATICSEQUENCES");
-        auto rows = server_->db()->execute_sync_many<DbcCinematicSequences>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcCinematicSequences>(stmt);
         for (const auto &row: rows) {
             CinematicSequencesDBC cs{};
             cs.ID = row.id;
@@ -1006,7 +1004,7 @@ void DBCMgr::load_CreatureDisplayInfo() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CREATUREDISPLAYINFO");
-        auto rows = server_->db()->execute_sync_many<DbcCreatureDisplayInfo>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcCreatureDisplayInfo>(stmt);
         for (const auto &row: rows) {
             CreatureDisplayInfoDBC cdi{};
             cdi.ID = row.ID;
@@ -1030,7 +1028,7 @@ void DBCMgr::load_CreatureDisplayInfoExtra() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CREATUREDISPLAYINFOEXTRA");
-        auto rows = server_->db()->execute_sync_many<DbcCreatureDisplayInfoExtra>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcCreatureDisplayInfoExtra>(stmt);
         for (const auto &row: rows) {
             CreatureDisplayInfoExtraDBC cdie{};
             cdie.ID = row.ID;
@@ -1053,7 +1051,7 @@ void DBCMgr::load_CreatureFamily() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CREATUREFAMILY");
-        auto rows = server_->db()->execute_sync_many<DbcCreatureFamily>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcCreatureFamily>(stmt);
         for (const auto &row: rows) {
             CreatureFamilyDBC cf{};
             cf.ID            = row.ID;
@@ -1099,7 +1097,7 @@ void DBCMgr::load_CreatureModelData() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CREATUREMODELDATA");
-        auto rows = server_->db()->execute_sync_many<DbcCreatureModelData>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcCreatureModelData>(stmt);
         for (const auto &row: rows) {
             CreatureModelDataDBC cmd{};
             cmd.ID = row.ID;
@@ -1125,7 +1123,7 @@ void DBCMgr::load_CreatureSpellData() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CREATURESPELDATA");
-        auto rows = server_->db()->execute_sync_many<DbcCreatureSpellData>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcCreatureSpellData>(stmt);
         for (const auto &row: rows) {
             CreatureSpellDataDBC csd{};
             csd.ID = row.ID;
@@ -1150,7 +1148,7 @@ void DBCMgr::load_CreatureType() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CREATURETYPE");
-        auto rows = server_->db()->execute_sync_many<DbcCreatureType>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcCreatureType>(stmt);
         for (const auto &row: rows) {
             CreatureTypeDBC ct{};
             ct.ID = row.ID;
@@ -1175,7 +1173,7 @@ void DBCMgr::load_CurrencyTypes() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_CURRENCYTYPES");
-        auto rows = server_->db()->execute_sync_many<DbcCurrencyTypes>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcCurrencyTypes>(stmt);
         for (const auto &row: rows) {
             CurrencyTypesDBC ct{};
             ct.ID       = row.ID;
@@ -1198,7 +1196,7 @@ void DBCMgr::load_DestructibleModelData() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_DESTRUCTIBLEMODELDATA");
-        auto rows = server_->db()->execute_sync_many<DbcDestructibleModelData>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcDestructibleModelData>(stmt);
         for (const auto &row: rows) {
             DestructibleModelDataDBC dmd{};
             dmd.ID = row.id;
@@ -1223,7 +1221,7 @@ void DBCMgr::load_DungeonEncounter() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_DUNGEONENCOUNTER");
-        auto rows = server_->db()->execute_sync_many<DbcDungeonEncounter>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcDungeonEncounter>(stmt);
         for (const auto &row: rows) {
             DungeonEncounterDBC de{};
 
@@ -1265,7 +1263,7 @@ void DBCMgr::load_DurabilityCosts() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_DURABILITYCOSTS");
-        auto rows = server_->db()->execute_sync_many<DbcDurabilityCosts>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcDurabilityCosts>(stmt);
         for (const auto &row: rows) {
             DurabilityCostsDBC dc{};
             dc.ID = row.id; // берем id из строки
@@ -1319,7 +1317,7 @@ void DBCMgr::load_DurabilityQuality() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_DURABILITYQUALITY");
-        auto rows = server_->db()->execute_sync_many<DbcDurabilityQuality>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcDurabilityQuality>(stmt);
         for (const auto &row: rows) {
             DurabilityQualityDBC dq{};
             dq.ID = row.ID;
@@ -1341,7 +1339,7 @@ void DBCMgr::load_Emotes() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_EMOTES");
-        auto rows = server_->db()->execute_sync_many<DbcEmotes>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcEmotes>(stmt);
         for (const auto &row: rows) {
             EmotesDBC e{};
             e.ID = row.ID;
@@ -1365,7 +1363,7 @@ void DBCMgr::load_EmotesText() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_EMOTESTEXT");
-        auto rows = server_->db()->execute_sync_many<DbcEmotesText>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcEmotesText>(stmt);
         for (const auto &row: rows) {
             EmotesTextDBC et{};
             et.ID = row.ID;
@@ -1387,7 +1385,7 @@ void DBCMgr::load_EmotesTextSound() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_EMOTESTEXTSOUND");
-        auto rows = server_->db()->execute_sync_many<DbcEmotesTextSound>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcEmotesTextSound>(stmt);
         for (const auto &row: rows) {
             EmotesTextSoundDBC ets{};
             ets.ID = row.ID;
@@ -1412,7 +1410,7 @@ void DBCMgr::load_Faction() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_FACTION");
-        auto rows = server_->db()->execute_sync_many<DbcFaction>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcFaction>(stmt);
         for (const auto &row: rows) {
             FactionDBC f{};
             f.ID = row.id;
@@ -1478,7 +1476,7 @@ void DBCMgr::load_FactionTemplate() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_FACTIONTEMPLATE");
-        auto rows = server_->db()->execute_sync_many<DbcFactionTemplate>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcFactionTemplate>(stmt);
         for (const auto &row: rows) {
             FactionTemplateDBC ft{};
             ft.ID = row.id;
@@ -1514,7 +1512,7 @@ void DBCMgr::load_GameObjectArtKit() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GAMEOBJECTARTKIT");
-        auto rows = server_->db()->execute_sync_many<DbcGameObjectArtKit>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGameObjectArtKit>(stmt);
         for (const auto &row: rows) {
             GameObjectArtKitDBC gak{};
             gak.ID = row.id;
@@ -1535,7 +1533,7 @@ void DBCMgr::load_GameObjectDisplayInfo() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GAMEOBJECTDISPLAYINFO");
-        auto rows = server_->db()->execute_sync_many<DbcGameObjectDisplayInfo>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGameObjectDisplayInfo>(stmt);
         for (const auto &row: rows) {
             GameObjectDisplayInfoDBC gdi{};
             gdi.ID = row.id;
@@ -1563,7 +1561,7 @@ void DBCMgr::load_GemProperties() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GEMPROPERTIES");
-        auto rows = server_->db()->execute_sync_many<DbcGemProperties>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGemProperties>(stmt);
         for (const auto &row: rows) {
             GemPropertiesDBC gp{};
             gp.ID = row.id;
@@ -1586,7 +1584,7 @@ void DBCMgr::load_GlyphProperties() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GLYPHPROPERTIES");
-        auto rows = server_->db()->execute_sync_many<DbcGlyphProperties>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGlyphProperties>(stmt);
         for (const auto &row: rows) {
             GlyphPropertiesDBC gp{};
             gp.ID = row.id;
@@ -1610,7 +1608,7 @@ void DBCMgr::load_GlyphSlot() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GLYPHSLOT");
-        auto rows = server_->db()->execute_sync_many<DbcGlyphSlot>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGlyphSlot>(stmt);
         for (const auto &row: rows) {
             GlyphSlotDBC gs{};
             gs.ID = row.id;
@@ -1633,7 +1631,7 @@ void DBCMgr::load_gtBarberShopCostBase() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GTBARBERSHOPCOSTBASE");
-        auto rows = server_->db()->execute_sync_many<DbcGtBarberShopCostBase>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGtBarberShopCostBase>(stmt);
         for (const auto &row: rows) {
             GtBarberShopCostBaseDBC gtbsc{};
             gtbsc.ID = row.id;
@@ -1655,7 +1653,7 @@ void DBCMgr::load_gtChanceToMeleeCrit() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GTCHANGETOMELEECRIT");
-        auto rows = server_->db()->execute_sync_many<DbcGtChanceToMeleeCrit>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGtChanceToMeleeCrit>(stmt);
         for (const auto &row: rows) {
             GtChanceToMeleeCritDBC gtcmc{};
             gtcmc.ID = row.id;
@@ -1677,7 +1675,7 @@ void DBCMgr::load_gtChanceToMeleeCritBase() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GTCHANGETOMELEECRITBASE");
-        auto rows = server_->db()->execute_sync_many<DbcGtChanceToMeleeCritBase>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGtChanceToMeleeCritBase>(stmt);
         for (const auto &row: rows) {
             GtChanceToMeleeCritBaseDBC gtcmcb{};
             gtcmcb.ID = row.id;
@@ -1699,7 +1697,7 @@ void DBCMgr::load_gtChanceToSpellCrit() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GTCHANGETOSPELLCRIT");
-        auto rows = server_->db()->execute_sync_many<DbcGtChanceToSpellCrit>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGtChanceToSpellCrit>(stmt);
         for (const auto &row: rows) {
             GtChanceToSpellCritDBC gtcsc{};
             gtcsc.ID = row.id;
@@ -1721,7 +1719,7 @@ void DBCMgr::load_gtChanceToSpellCritBase() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GTCHANGETOSPELLCRITBASE");
-        auto rows = server_->db()->execute_sync_many<DbcGtChanceToSpellCritBase>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGtChanceToSpellCritBase>(stmt);
         for (const auto &row: rows) {
             GtChanceToSpellCritBaseDBC gtcscb{};
             gtcscb.ID = row.id;
@@ -1743,7 +1741,7 @@ void DBCMgr::load_gtCombatRatings() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GTCOMBATRATINGS");
-        auto rows = server_->db()->execute_sync_many<DbcGtCombatRatings>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGtCombatRatings>(stmt);
         for (const auto &row: rows) {
             GtCombatRatingsDBC gtcr{};
             gtcr.ID = row.id;
@@ -1765,7 +1763,7 @@ void DBCMgr::load_gtNPCManaCostScaler() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GTNPCMANACOSTSCALER");
-        auto rows = server_->db()->execute_sync_many<DbcGtnpcManaCostScaler>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGtnpcManaCostScaler>(stmt);
         for (const auto &row: rows) {
             GtNPCManaCostScalerDBC gtnpcMCS{};
             gtnpcMCS.ID = row.id;
@@ -1787,7 +1785,7 @@ void DBCMgr::load_gtOCTClassCombatRatingScalar() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GTOCTCLASSCOMBATRATINGSALAR");
-        auto rows = server_->db()->execute_sync_many<DbcGtoctClassCombatRatingScalar>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGtoctClassCombatRatingScalar>(stmt);
         for (const auto &row: rows) {
             GtOCTClassCombatRatingScalarDBC gtOCTccrs{};
             gtOCTccrs.ID = row.id;
@@ -1809,7 +1807,7 @@ void DBCMgr::load_gtOCTRegenHP() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GTOCTREGENHP");
-        auto rows = server_->db()->execute_sync_many<DbcGtoctRegenHP>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGtoctRegenHP>(stmt);
         for (const auto &row: rows) {
             GtOCTRegenHPDBC gtOCTrhp{};
             gtOCTrhp.ID = row.id;
@@ -1831,7 +1829,7 @@ void DBCMgr::load_gtOCTRegenMP() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GTOCTREGENMP");
-        auto rows = server_->db()->execute_sync_many<DbcGtoctRegenMP>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGtoctRegenMP>(stmt);
         for (const auto &row: rows) {
             GtOCTRegenMPDBC gtOCTrmp{};
             gtOCTrmp.ID = row.id;
@@ -1853,7 +1851,7 @@ void DBCMgr::load_gtRegenHPPerSpt() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GTREGENHPPERSPT");
-        auto rows = server_->db()->execute_sync_many<DbcGtRegenHpPerSpt>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGtRegenHpPerSpt>(stmt);
         for (const auto &row: rows) {
             GtRegenHPPerSptDBC gtrhpps{};
             gtrhpps.ID = row.id;
@@ -1875,7 +1873,7 @@ void DBCMgr::load_gtRegenMPPerSpt() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_GTREGENMPPERSPT");
-        auto rows = server_->db()->execute_sync_many<DbcGtRegenMpPerSpt>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcGtRegenMpPerSpt>(stmt);
         for (const auto &row: rows) {
             GtRegenMPPerSptDBC gtrmpps{};
             gtrmpps.ID = row.id;
@@ -1897,7 +1895,7 @@ void DBCMgr::load_Holidays() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_HOLIDAYS");
-        auto rows = server_->db()->execute_sync_many<DbcHolidays>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcHolidays>(stmt);
         for (const auto &row: rows) {
             HolidaysDBC h{};
             h.ID = row.id;
@@ -1977,7 +1975,7 @@ void DBCMgr::load_Item() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_ITEM");
-        auto rows = server_->db()->execute_sync_many<DbcItem>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcItem>(stmt);
         for (const auto &row: rows) {
             ItemDBC i{};
             i.ID = row.id;
@@ -2005,7 +2003,7 @@ void DBCMgr::load_ItemBagFamily() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_ITEMBAGFAMILY");
-        auto rows = server_->db()->execute_sync_many<DbcItemBagFamily>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcItemBagFamily>(stmt);
         for (const auto &row: rows) {
             ItemBagFamilyDBC ibf{};
             ibf.ID = row.id;
@@ -2026,7 +2024,7 @@ void DBCMgr::load_ItemDisplayInfo() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_ITEMDISPLAYINFO");
-        auto rows = server_->db()->execute_sync_many<DbcItemDisplayInfo>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcItemDisplayInfo>(stmt);
         for (const auto &row: rows) {
             ItemDisplayInfoDBC idi{};
             idi.ID = row.id;
@@ -2079,7 +2077,7 @@ void DBCMgr::load_ItemExtendedCost() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_ITEMEXTENDEDCOST");
-        auto rows = server_->db()->execute_sync_many<DbcItemExtendedCost>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcItemExtendedCost>(stmt);
         for (const auto &row: rows) {
             ItemExtendedCostDBC iec{};
             iec.ID = row.id;
@@ -2117,7 +2115,7 @@ void DBCMgr::load_ItemLimitCategory() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_ITEMLIMITCATEGORY");
-        auto rows = server_->db()->execute_sync_many<DbcItemLimitCategory>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcItemLimitCategory>(stmt);
         for (const auto &row: rows) {
             ItemLimitCategoryDBC ilc{};
             ilc.ID = row.id;
@@ -2140,7 +2138,7 @@ void DBCMgr::load_ItemRandomProperties() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_ITEMRANDOMPROPERTIES");
-        auto rows = server_->db()->execute_sync_many<DbcItemRandomProperties>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcItemRandomProperties>(stmt);
         for (const auto &row: rows) {
             ItemRandomPropertiesDBC irp{};
             irp.ID = row.id;
@@ -2184,7 +2182,7 @@ void DBCMgr::load_ItemRandomSuffix() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_ITEMRANDOMSUFFIX");
-        auto rows = server_->db()->execute_sync_many<DbcItemRandomSuffix>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcItemRandomSuffix>(stmt);
         for (const auto &row: rows) {
             ItemRandomSuffixDBC irs{};
             irs.ID = row.id;
@@ -2236,7 +2234,7 @@ void DBCMgr::load_ItemSet() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_ITEMSET");
-        auto rows = server_->db()->execute_sync_many<DbcItemSet>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcItemSet>(stmt);
         for (const auto &row: rows) {
             ItemSetDBC is{};
             is.ID = row.id;
@@ -2305,7 +2303,7 @@ void DBCMgr::load_LFGDungeonExpansion() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_LFGDUNGEONEXPANSION");
-        auto rows = server_->db()->execute_sync_many<DbcLfgDungeonExpansion>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcLfgDungeonExpansion>(stmt);
         for (const auto &row: rows) {
             LFGDungeonExpansionDBC le{};
             le.ID = row.id;
@@ -2330,7 +2328,7 @@ void DBCMgr::load_LFGDungeons() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_LFGDUNGEONS");
-        auto rows = server_->db()->execute_sync_many<PgDbcLfgDungeons>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<PgDbcLfgDungeons>(stmt);
         for (const auto &row: rows) {
             LFGDungeonDBC ld{};
             ld.ID = row.id;
@@ -2379,7 +2377,7 @@ void DBCMgr::load_Light() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_LIGHT");
-        auto rows = server_->db()->execute_sync_many<DbcLight>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcLight>(stmt);
         for (const auto &row: rows) {
             LightDBC l{};
             l.ID = row.id;
@@ -2404,7 +2402,7 @@ void DBCMgr::load_LiquidType() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_LIQUIDTYPE");
-        auto rows = server_->db()->execute_sync_many<DbcLiquidType>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcLiquidType>(stmt);
         for (const auto &row: rows) {
             LiquidTypeDBC lt{};
             lt.ID = row.id;
@@ -2427,7 +2425,7 @@ void DBCMgr::load_Lock() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_LOCK");
-        auto rows = server_->db()->execute_sync_many<DbcLock>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcLock>(stmt);
         for (const auto &row: rows) {
             LockDBC l{};
             l.ID = row.id;
@@ -2475,7 +2473,7 @@ void DBCMgr::load_MailTemplate() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_MAILTEMPLATE");
-        auto rows = server_->db()->execute_sync_many<PgDbcMailTemplate>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<PgDbcMailTemplate>(stmt);
         for (const auto &row: rows) {
             MailTemplateDBC mt{};
             mt.ID = row.id;
@@ -2528,7 +2526,7 @@ void DBCMgr::load_Map() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_MAP");
-        auto rows = server_->db()->execute_sync_many<DbcMap>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcMap>(stmt);
         for (const auto &row: rows) {
             MapDBC m{};
             m.ID = row.id;
@@ -2576,7 +2574,7 @@ void DBCMgr::load_MapDifficulty() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_MAPDIFFICULTY");
-        auto rows = server_->db()->execute_sync_many<DbcMapDifficulty>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcMapDifficulty>(stmt);
         for (const auto &row: rows) {
             MapDifficultyDBC md{};
             md.ID = row.id;
@@ -2618,7 +2616,7 @@ void DBCMgr::load_Movie() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_MOVIE");
-        auto rows = server_->db()->execute_sync_many<DbcMovie>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcMovie>(stmt);
         for (const auto &row: rows) {
             MovieDBC m{};
             m.ID = row.ID;
@@ -2639,7 +2637,7 @@ void DBCMgr::load_NamesProfanity() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_NAMESPROFANITY");
-        auto rows = server_->db()->execute_sync_many<DbcNamesProfanity>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcNamesProfanity>(stmt);
         for (const auto &row: rows) {
             NamesProfanityDBC np{};
             np.ID = row.id;
@@ -2662,7 +2660,7 @@ void DBCMgr::load_NamesReserved() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_NAMESRESERVED");
-        auto rows = server_->db()->execute_sync_many<DbcNamesReserved>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcNamesReserved>(stmt);
         for (const auto &row: rows) {
             NamesReservedDBC nr{};
             nr.ID = row.id;
@@ -2685,7 +2683,7 @@ void DBCMgr::load_OverrideSpellData() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_OVERRIDESPELLDATA");
-        auto rows = server_->db()->execute_sync_many<DbcOverridespellData>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcOverridespellData>(stmt);
         for (const auto &row: rows) {
             OverrideSpellDataDBC osd{};
             osd.ID = row.id;
@@ -2717,7 +2715,7 @@ void DBCMgr::load_PowerDisplay() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_POWERDISPLAY");
-        auto rows = server_->db()->execute_sync_many<DbcPowerDisplay>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcPowerDisplay>(stmt);
         for (const auto &row: rows) {
             PowerDisplayDBC pd{};
             pd.ID = row.id;
@@ -2739,7 +2737,7 @@ void DBCMgr::load_PvpDifficulty() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_PVPDifficulty");
-        auto rows = server_->db()->execute_sync_many<DbcPvpdifficulty>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcPvpdifficulty>(stmt);
         for (const auto &row: rows) {
             PvPDifficultyDBC pd{};
             pd.ID = row.id;
@@ -2770,7 +2768,7 @@ void DBCMgr::load_QuestFactionReward() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_QUESTFACTIONREWARD");
-        auto rows = server_->db()->execute_sync_many<DbcQuestFactionReward>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcQuestFactionReward>(stmt);
         for (const auto &row: rows) {
             QuestFactionRewardDBC qfr{};
             qfr.ID = row.id;
@@ -2802,7 +2800,7 @@ void DBCMgr::load_QuestSort() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_QUESTSORT");
-        auto rows = server_->db()->execute_sync_many<DbcQuestsort>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcQuestsort>(stmt);
         for (const auto &row: rows) {
             QuestSortDBC qs{};
             qs.ID = row.id;
@@ -2823,7 +2821,7 @@ void DBCMgr::load_QuestXP() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_QUESTXP");
-        auto rows = server_->db()->execute_sync_many<DbcQuestXp>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcQuestXp>(stmt);
         for (const auto &row: rows) {
             QuestXPDBC qxp{};
             qxp.ID = row.id;
@@ -2855,7 +2853,7 @@ void DBCMgr::load_RandPropPoints() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_RANDPROPPOINTS");
-        auto rows = server_->db()->execute_sync_many<DbcRandPropPoints>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcRandPropPoints>(stmt);
         for (const auto &row: rows) {
             RandPropPointsDBC rpp{};
             rpp.ID = row.id;
@@ -2893,7 +2891,7 @@ void DBCMgr::load_ScalingStatDistribution() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SCALINGSTATDISTRIBUTION");
-        auto rows = server_->db()->execute_sync_many<DbcScalingStatDistribution>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcScalingStatDistribution>(stmt);
         for (const auto &row: rows) {
             ScalingStatDistributionDBC ssd{};
             ssd.ID = row.id;
@@ -2938,7 +2936,7 @@ void DBCMgr::load_ScalingStatValues() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SCALINGSTATVALUES");
-        auto rows = server_->db()->execute_sync_many<DbcScalingStatValues>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcScalingStatValues>(stmt);
         for (const auto &row: rows) {
             ScalingStatValuesDBC ssv{};
             ssv.ID        = row.id;
@@ -2982,7 +2980,7 @@ void DBCMgr::load_SkillLine() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SKILLLINE");
-        auto rows = server_->db()->execute_sync_many<DbcSkillLine>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSkillLine>(stmt);
         for (const auto &row: rows) {
             SkillLineDBC sl{};
             sl.ID = row.ID;
@@ -3024,7 +3022,7 @@ void DBCMgr::load_SkillLineAbility() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SKILLLINEABILITY");
-        auto rows = server_->db()->execute_sync_many<DbcSkillLineAbility>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSkillLineAbility>(stmt);
         for (const auto &row: rows) {
             SkillLineAbilityDBC sla{};
             sla.ID = row.id;
@@ -3054,7 +3052,7 @@ void DBCMgr::load_SkillRaceClassInfo() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SKILLRACECLASSINFO");
-        auto rows = server_->db()->execute_sync_many<DbcSkillRaceClassInfo>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSkillRaceClassInfo>(stmt);
         for (const auto &row: rows) {
             SkillRaceClassInfoDBC srci{};
             srci.ID = row.ID;
@@ -3080,7 +3078,7 @@ void DBCMgr::load_SkillTiers() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SKILLTIERS");
-        auto rows = server_->db()->execute_sync_many<DbcSkillTiers>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSkillTiers>(stmt);
         for (const auto &row: rows) {
             SkillTiersDBC st{};
             st.ID = row.id;
@@ -3118,7 +3116,7 @@ void DBCMgr::load_SoundEntries() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SOUNDENTRIES");
-        auto rows = server_->db()->execute_sync_many<DbcSoundEntries>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSoundEntries>(stmt);
         for (const auto &row: rows) {
             SoundEntriesDBC se{};
             se.ID = row.id;
@@ -3141,7 +3139,7 @@ void DBCMgr::load_Spells() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELL");
-        auto rows = server_->db()->execute_sync_many<DbcSpell>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSpell>(stmt);
         for (const auto &row: rows) {
             SpellDBC spell = {};
             spell.ID = row.id;
@@ -3275,7 +3273,7 @@ void DBCMgr::load_SpellCastTimes() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELLCASTTIMES");
-        auto rows = server_->db()->execute_sync_many<DbcSpellCastTimes>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSpellCastTimes>(stmt);
         for (const auto &row: rows) {
             SpellCastTimesDBC sct{};
             sct.ID = row.id;
@@ -3297,7 +3295,7 @@ void DBCMgr::load_SpellCategory() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELLCATEGORY");
-        auto rows = server_->db()->execute_sync_many<DbcSpellCategory>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSpellCategory>(stmt);
         for (const auto &row: rows) {
             SpellCategoryDBC sc{};
             sc.ID = row.id;
@@ -3319,7 +3317,7 @@ void DBCMgr::load_SpellDifficulty() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELLDIFFICULTY");
-        auto rows = server_->db()->execute_sync_many<DbcSpellDifficulty>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSpellDifficulty>(stmt);
         for (const auto &row: rows) {
             SpellDifficultyDBC sd{};
             sd.ID = row.id;
@@ -3344,7 +3342,7 @@ void DBCMgr::load_SpellDuration() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELLDURATION");
-        auto rows = server_->db()->execute_sync_many<DbcSpellDuration>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSpellDuration>(stmt);
         for (const auto &row: rows) {
             SpellDurationDBC sd{};
             sd.ID = row.id;
@@ -3368,7 +3366,7 @@ void DBCMgr::load_SpellFocusObject() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELLFOCUSOBJECT");
-        auto rows = server_->db()->execute_sync_many<DbcSpellFocusObject>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSpellFocusObject>(stmt);
         for (const auto &row: rows) {
             SpellFocusObjectDBC sfo{};
             sfo.ID = row.id;
@@ -3390,7 +3388,7 @@ void DBCMgr::load_SpellItemEnchantment() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELLITEMENCHANTMENT");
-        auto rows = server_->db()->execute_sync_many<DbcSpellItemEnchantment>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSpellItemEnchantment>(stmt);
         for (const auto &row: rows) {
             SpellItemEnchantmentDBC sie{};
             sie.ID = row.id;
@@ -3452,7 +3450,7 @@ void DBCMgr::load_SpellItemEnchantmentCondition() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELLITEMENCHANTMENTCONDITION");
-        auto rows = server_->db()->execute_sync_many<DbcSpellItemEnchantmentCondition>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSpellItemEnchantmentCondition>(stmt);
         for (const auto &row: rows) {
             SpellItemEnchantmentConditionDBC siec{};
             siec.ID = row.id;
@@ -3497,7 +3495,7 @@ void DBCMgr::load_SpellRadius() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELLRADIUS");
-        auto rows = server_->db()->execute_sync_many<DbcSpellRadius>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSpellRadius>(stmt);
         for (const auto &row: rows) {
             SpellRadiusDBC sr{};
             sr.ID = row.id;
@@ -3521,7 +3519,7 @@ void DBCMgr::load_SpellRange() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELLRANGE");
-        auto rows = server_->db()->execute_sync_many<DbcSpellRange>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSpellRange>(stmt);
         for (const auto &row: rows) {
             SpellRangeDBC sr{};
             sr.ID = row.id;
@@ -3550,7 +3548,7 @@ void DBCMgr::load_SpellRuneCost() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELLRUNE_COST");
-        auto rows = server_->db()->execute_sync_many<DbcSpellRuneCost>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSpellRuneCost>(stmt);
         for (const auto &row: rows) {
             SpellRuneCostDBC src{};
             src.ID = row.id;
@@ -3578,7 +3576,7 @@ void DBCMgr::load_SpellShapeshiftForm() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELLSHAPESHIFTFORM");
-        auto rows = server_->db()->execute_sync_many<DbcSpellShapeshiftForm>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSpellShapeshiftForm>(stmt);
         for (const auto &row: rows) {
             SpellShapeshiftFormDBC ssf{};
             ssf.ID = row.id;
@@ -3616,7 +3614,7 @@ void DBCMgr::load_SpellVisual() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SPELLVISUAL");
-        auto rows = server_->db()->execute_sync_many<DbcSpellVisual>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSpellVisual>(stmt);
         for (const auto &row: rows) {
             SpellVisualDBC sv{};
             sv.ID = row.id;
@@ -3639,7 +3637,7 @@ void DBCMgr::load_StableSlotPrices() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_STABLESLOTPRICES");
-        auto rows = server_->db()->execute_sync_many<DbcStableSlotPrices>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcStableSlotPrices>(stmt);
         for (const auto &row: rows) {
             StableSlotPricesDBC ssp{};
             ssp.ID = row.id;
@@ -3661,7 +3659,7 @@ void DBCMgr::load_SummonProperties() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_SUMMONPROPERTIES");
-        auto rows = server_->db()->execute_sync_many<DbcSummonProperties>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcSummonProperties>(stmt);
         for (const auto &row: rows) {
             SummonPropertiesDBC sp{};
             sp.ID = row.id;
@@ -3687,7 +3685,7 @@ void DBCMgr::load_Talent() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_TALENT");
-        auto rows = server_->db()->execute_sync_many<DbcTalent>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcTalent>(stmt);
         for (const auto &row: rows) {
             TalentDBC t{};
             t.ID = row.id;
@@ -3720,7 +3718,7 @@ void DBCMgr::load_TalentTab() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_TALENTTAB");
-        auto rows = server_->db()->execute_sync_many<DbcTalentTab>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcTalentTab>(stmt);
         for (const auto &row: rows) {
             TalentTabDBC tt{};
             tt.ID = row.id;
@@ -3744,7 +3742,7 @@ void DBCMgr::load_TaxiNodes() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_TAXINODES");
-        auto rows = server_->db()->execute_sync_many<DbcTaxiNodes>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcTaxiNodes>(stmt);
         for (const auto &row: rows) {
             TaxiNodesDBC tn{};
             tn.ID = row.id;
@@ -3789,7 +3787,7 @@ void DBCMgr::load_TaxiPath() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_TAXIPATH");
-        auto rows = server_->db()->execute_sync_many<DbcTaxiPath>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcTaxiPath>(stmt);
         for (const auto &row: rows) {
             TaxiPathDBC tp{};
             tp.ID = row.id;
@@ -3816,7 +3814,7 @@ void DBCMgr::load_TaxiPathNode() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_TAXIPATHNODE");
-        auto rows = server_->db()->execute_sync_many<DbcTaxiPathNode>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcTaxiPathNode>(stmt);
         for (const auto &row: rows) {
             TaxiPathNodeDBC tp{};
             tp.ID = row.id;
@@ -3847,7 +3845,7 @@ void DBCMgr::load_TeamContributionPoints() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_TEAMCONTRIBUTIONPOINTS");
-        auto rows = server_->db()->execute_sync_many<DbcTeamContributionPoints>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcTeamContributionPoints>(stmt);
         for (const auto &row: rows) {
             TeamContributionPointsDBC tcp{};
             tcp.ID = row.id;
@@ -3869,7 +3867,7 @@ void DBCMgr::load_TotemCategory() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_TOTEMCATEGORY");
-        auto rows = server_->db()->execute_sync_many<DbcTotemCategory>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcTotemCategory>(stmt);
         for (const auto &row: rows) {
             TotemCategoryDBC tc{};
             tc.ID = row.id;
@@ -3892,7 +3890,7 @@ void DBCMgr::load_TransportAnimation() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_TRANSPORTANIMATION");
-        auto rows = server_->db()->execute_sync_many<DbcTransportAnimation>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcTransportAnimation>(stmt);
         for (const auto &row: rows) {
             TransportAnimationDBC ta{};
             ta.ID = row.id;
@@ -3918,7 +3916,7 @@ void DBCMgr::load_TransportRotation() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_TRANSPORTROTATION");
-        auto rows = server_->db()->execute_sync_many<DbcTransportRotation>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcTransportRotation>(stmt);
         for (const auto &row: rows) {
             TransportRotationDBC tr{};
             tr.ID = row.id;
@@ -3945,7 +3943,7 @@ void DBCMgr::load_Vehicle() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_VEHICLE");
-        auto rows = server_->db()->execute_sync_many<DbcVehicle>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcVehicle>(stmt);
         for (const auto &row: rows) {
             VehicleDBC v{};
             v.ID = row.id;
@@ -4009,7 +4007,7 @@ void DBCMgr::load_VehicleSeat() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_VEHICLESEAT");
-        auto rows = server_->db()->execute_sync_many<DbcVehicleSeat>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcVehicleSeat>(stmt);
         for (const auto &row: rows) {
             VehicleSeatDBC vs{};
             vs.ID = row.id;
@@ -4075,7 +4073,7 @@ void DBCMgr::load_WMOAreaTable() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_WMOAREATABLE");
-        auto rows = server_->db()->execute_sync_many<DbcWmoAreaTable>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcWmoAreaTable>(stmt);
         for (const auto &row: rows) {
             WMOAreaTableDBC wat{};
             wat.ID = row.id;
@@ -4101,7 +4099,7 @@ void DBCMgr::load_WorldMapArea() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_WORLDMAPAREA");
-        auto rows = server_->db()->execute_sync_many<DbcWorldMapArea>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcWorldMapArea>(stmt);
         for (const auto &row: rows) {
             WorldMapAreaDBC wma{};
             wma.ID = row.id;
@@ -4129,7 +4127,7 @@ void DBCMgr::load_WorldMapOverlay() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_WORLDMAPOVERLAY");
-        auto rows = server_->db()->execute_sync_many<DbcWorldMapOverlay>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcWorldMapOverlay>(stmt);
         for (const auto &row: rows) {
             WorldMapOverlayDBC wmo{};
             wmo.ID = row.id;
@@ -4155,7 +4153,7 @@ void DBCMgr::load_WorldSafeLocs() {
 
     try {
         auto stmt = PreparedStatement("SELECT_DBC_WORLDSAFELOCS");
-        auto rows = server_->db()->execute_sync_many<DbcWorldSafeLocs>(stmt);
+        auto rows = server_.lock()->db()->execute_sync_many<DbcWorldSafeLocs>(stmt);
         for (const auto &row: rows) {
             WorldSafeLocsDBC wsl{};
             wsl.ID = row.id;

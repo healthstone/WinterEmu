@@ -58,6 +58,16 @@ void AuthServer::stop() {
         log->error("[AuthServer] Failed to close acceptor: {}", ec.message());
     }
 
+    if (account_cache_) {
+        account_cache_->stop();
+        account_cache_.reset();
+    }
+
+    if (realmList_) {
+        realmList_->stop();
+        realmList_.reset();
+    }
+
     // Для избежания dead lock'a, нужно делать копию списка, закрыть открытые сокеты (где тоже мьютекс)
     {
         std::unordered_set<std::shared_ptr<AuthSession>> sessions_copy;
@@ -78,9 +88,6 @@ void AuthServer::stop() {
     }
 
     io_context_.stop();
-
-    // ✅ Корректно закрываем все DB connections:
-    if (db_) db_->shutdown();
 
     log_session_count();
 }

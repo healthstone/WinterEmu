@@ -43,18 +43,6 @@ void NodeServer::start_accept() {
 void NodeServer::stop() {
     auto log = Logger::get();
 
-    if (dbc_manager_) {
-        dbc_manager_->cleanUpBeforeDelete();
-    }
-
-    if (playerInfo_manager_) {
-        playerInfo_manager_->cleanUpBeforeDelete();
-    }
-
-    if (itemTemplate_manager_) {
-        itemTemplate_manager_->cleanUpBeforeDelete();
-    }
-
     boost::system::error_code ec;
     acceptor_.cancel(ec);
     if (ec && ec != boost::asio::error::operation_aborted && ec != boost::asio::error::eof) {
@@ -64,6 +52,21 @@ void NodeServer::stop() {
     acceptor_.close(ec);
     if (ec && ec != boost::asio::error::operation_aborted && ec != boost::asio::error::eof) {
         log->error("[NodeServer] Failed to close acceptor: {}", ec.message());
+    }
+
+    if (dbc_manager_) {
+        dbc_manager_->cleanUpBeforeDelete();
+        dbc_manager_.reset();
+    }
+
+    if (playerInfo_manager_) {
+        playerInfo_manager_->cleanUpBeforeDelete();
+        playerInfo_manager_.reset();
+    }
+
+    if (itemTemplate_manager_) {
+        itemTemplate_manager_->cleanUpBeforeDelete();
+        itemTemplate_manager_.reset();
     }
 
     // Для избежания dead lock'a, нужно делать копию списка, закрыть открытые сокеты (где тоже мьютекс)
@@ -86,9 +89,6 @@ void NodeServer::stop() {
     }
 
     io_context_.stop();
-
-    // ✅ Корректно закрываем все DB connections:
-    if (db_) db_->shutdown();
 
     log_session_count();
 }

@@ -17,42 +17,44 @@ void AddonMgr::loadFromDB() {
     bannedAddonsVector_.clear();
 
     auto log = Logger::get();
-    uint32_t dbcHighestID = server_->getDBCMgr()->getBannedAddOnsHighestID();
-    try {
-        uint32_t oldMSTime1 = getMSTime();
+    if (auto srv = server_.lock()) {
+        uint32_t dbcHighestID = srv->getDBCMgr()->getBannedAddOnsHighestID();
+        try {
+            uint32_t oldMSTime1 = getMSTime();
 
-        auto stmt1 = PreparedStatement("SELECT_ADDONS");
-        auto rows1 = server_->db()->execute_sync_many<Addon>(stmt1);
-        for (const auto &row: rows1) {
-            knownAddons_[row.name] = {row.name, row.crc};
+            auto stmt1 = PreparedStatement("SELECT_ADDONS");
+            auto rows1 = srv->db()->execute_sync_many<Addon>(stmt1);
+            for (const auto &row: rows1) {
+                knownAddons_[row.name] = {row.name, row.crc};
+            }
+            log->info(">>> AddonMgr: loaded {} addons in {} ms",
+                      rows1.size(), GetMSTimeDiffToNow(oldMSTime1));
+
+            uint32_t oldMSTime2 = getMSTime();
+            auto stmt2 = PreparedStatement("SELECT_BANNED_ADDONS");
+            auto rows2 = srv->db()->execute_sync_many<BannedAddonRow>(stmt2);
+            for (const auto &row: rows2) {
+                BannedAddon banned{};
+                banned.Id = row.id + dbcHighestID;
+                banned.Timestamp = row.timestamp;
+                banned.NameMD5 = Crypto::MD5::GetDigestOf(row.name);
+                banned.VersionMD5 = Crypto::MD5::GetDigestOf(row.version);
+
+                bannedAddonsVector_.push_back(banned);
+            }
+
+            // Сортируем по timestamp для бинарного поиска
+            std::sort(bannedAddonsVector_.begin(), bannedAddonsVector_.end(),
+                      [](const BannedAddon& a, const BannedAddon& b) {
+                          return a.Timestamp < b.Timestamp;
+                      });
+
+            log->info(">>> AddonMgr: loaded {} banned addons in {} ms",
+                      rows2.size(), GetMSTimeDiffToNow(oldMSTime2));
         }
-        log->info(">>> AddonMgr: loaded {} addons in {} ms",
-                  rows1.size(), GetMSTimeDiffToNow(oldMSTime1));
-
-        uint32_t oldMSTime2 = getMSTime();
-        auto stmt2 = PreparedStatement("SELECT_BANNED_ADDONS");
-        auto rows2 = server_->db()->execute_sync_many<BannedAddonRow>(stmt2);
-        for (const auto &row: rows2) {
-            BannedAddon banned;
-            banned.Id = row.id + dbcHighestID;
-            banned.Timestamp = row.timestamp;
-            banned.NameMD5 = Crypto::MD5::GetDigestOf(row.name);
-            banned.VersionMD5 = Crypto::MD5::GetDigestOf(row.version);
-
-            bannedAddonsVector_.push_back(banned);
+        catch (const std::exception &ex) {
+            log->error("AddonMgr::loadFromDB failed: {}", ex.what());
         }
-
-        // Сортируем по timestamp для бинарного поиска
-        std::sort(bannedAddonsVector_.begin(), bannedAddonsVector_.end(),
-                  [](const BannedAddon& a, const BannedAddon& b) {
-                      return a.Timestamp < b.Timestamp;
-                  });
-
-        log->info(">>> AddonMgr: loaded {} banned addons in {} ms",
-                  rows2.size(), GetMSTimeDiffToNow(oldMSTime2));
-    }
-    catch (const std::exception &ex) {
-        log->error("AddonMgr::loadFromDB failed: {}", ex.what());
     }
 }
 

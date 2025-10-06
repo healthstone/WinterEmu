@@ -15,18 +15,20 @@ void ItemTemplateMgr::loadFromDB() {
     auto log = Logger::get();
     cleanUpBeforeDelete();
 
-    try {
-        uint32_t oldMSTime = getMSTime();
+    if (auto srv = server_.lock()) {
+        try {
+            uint32_t oldMSTime = getMSTime();
 
-        auto stmt = PreparedStatement("SELECT_ITEM_TEMPLATE");
-        auto rows = server_->db()->execute_sync_many<ItemTemplate>(stmt);
-        for (const auto &row: rows)
-            itemTemplateStore_[row.ItemId] = row;
+            auto stmt = PreparedStatement("SELECT_ITEM_TEMPLATE");
+            auto rows = srv->db()->execute_sync_many<ItemTemplate>(stmt);
+            for (const auto &row: rows)
+                itemTemplateStore_[row.ItemId] = row;
 
-        log->info(">>> ItemTemplateMgr: loaded {} ItemTemplate in {} ms",
-                  rows.size(), GetMSTimeDiffToNow(oldMSTime));
-    }
-    catch (const std::exception &ex) {
-        log->error("ItemTemplateMgr::loadFromDB failed: {}", ex.what());
+            log->info(">>> ItemTemplateMgr: loaded {} ItemTemplate in {} ms",
+                      rows.size(), GetMSTimeDiffToNow(oldMSTime));
+        }
+        catch (const std::exception &ex) {
+            log->error("ItemTemplateMgr::loadFromDB failed: {}", ex.what());
+        }
     }
 }

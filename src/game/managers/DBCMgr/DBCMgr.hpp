@@ -197,6 +197,12 @@ public:
 
     void cleanUpBeforeDelete();
 
+    template <typename T>
+    inline void free_map(T& m) {
+        T empty;
+        m.swap(empty); // заменяем на пустой -> освобождает память под бакеты
+    }
+
     // Utilities
     Team teamForRace(uint8_t race);
     ResponseCodes validateName(std::wstring const& name, LocaleConstant locale);
@@ -1472,7 +1478,7 @@ private:
     void load_WorldMapOverlay();            // load WorldMapOverlay.dbc
     void load_WorldSafeLocs();              // load WorldSafeLocs.dbc
 
-    std::shared_ptr<BaseServer> server_;
+    std::weak_ptr<BaseServer> server_;
 
     AchievementDBCMap _achievementMap;
     AchievementCriteriaDBCMap _achievementCriteriaMap;

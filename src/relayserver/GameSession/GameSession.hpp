@@ -44,7 +44,7 @@ public:
     void send_packet(const std::shared_ptr<const WoWPacket>& packet);
 
     boost::asio::ip::tcp::socket &socket() { return socket_; }
-    std::shared_ptr<RelayServer> server() const { return server_; }
+    std::shared_ptr<RelayServer> server() const { return server_.lock(); }
     MessageBuffer &read_buffer() {
         return read_buffer_;
     }
@@ -156,7 +156,7 @@ private:
     void process_packets();
 
     boost::asio::ip::tcp::socket socket_;
-    std::shared_ptr<RelayServer> server_;
+    std::weak_ptr<RelayServer> server_;
     MessageBuffer read_buffer_;
 
     std::deque<std::vector<uint8_t>> write_queue_;

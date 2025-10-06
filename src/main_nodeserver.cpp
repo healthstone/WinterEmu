@@ -55,17 +55,22 @@ int main() {
         signals.async_wait([&](const boost::system::error_code &, int signal_number) {
             log->info("[NodeServer] Signal {} received, shutting down...", signal_number);
             server->stop();
-            db->shutdown();
         });
 
+        // Потоки io_context
         std::vector<std::thread> threads;
-        for (unsigned int i = 0; i < network_threads; ++i) {
-            threads.emplace_back([&io_context]() {
-                io_context.run();
-            });
-        }
+        threads.reserve(network_threads);
+        for (unsigned int i = 0; i < network_threads; ++i)
+            threads.emplace_back([&io_context]() { io_context.run(); });
+
+        // Главный поток тоже запускает io_context
+        io_context.run();
 
         for (auto &t : threads) t.join();
+
+        db->shutdown();
+        server.reset();
+        db.reset();
 
         log->info("[NodeServer] Gracefully shut down.");
     } catch (const std::exception &e) {

@@ -46,25 +46,37 @@ void RelayServer::stop() {
     auto log = Logger::get();
 
     schedule_update_realm(RealmFlags::REALM_FLAG_OFFLINE, 0.0f);
+    // Ждём все pending updates
+    for (auto &p : pending_updates_) p->get_future().wait();
 
-    if (dbc_manager_) {
-        dbc_manager_->cleanUpBeforeDelete();
+    if (realm_) {
+        realm_.reset();
     }
 
     if (addon_manager_) {
         addon_manager_->cleanUpBeforeDelete();
+        addon_manager_.reset();
+    }
+
+    if (dbc_manager_) {
+        dbc_manager_->cleanUpBeforeDelete();
+        dbc_manager_.reset();
     }
 
     if (playerInfo_manager_) {
         playerInfo_manager_->cleanUpBeforeDelete();
+        playerInfo_manager_.reset();
     }
 
     if (itemTemplate_manager_) {
         itemTemplate_manager_->cleanUpBeforeDelete();
+        itemTemplate_manager_.reset();
     }
 
     if (node_manager_) {
         node_manager_->stop_all();
+        node_manager_->remove_connectors(1);
+        node_manager_.reset();
     }
 
     boost::system::error_code ec;
@@ -97,13 +109,9 @@ void RelayServer::stop() {
         sessions_.clear();
     }
     playerSessionMap_.clear();
+    log_session_count();
 
     io_context_.stop();
-
-    // ✅ Корректно закрываем все DB connections:
-    if (db_) db_->shutdown();
-
-    log_session_count();
 }
 
 void RelayServer::remove_session(std::shared_ptr<GameSession> session) {
@@ -121,16 +129,16 @@ void RelayServer::init(unsigned int network_threads, uint32_t realmID) {
     load_realm_by_id(realmID);
 
     dbc_manager_ = std::make_unique<DBCMgr>(shared_from_this());
-    dbc_manager_->initialize();
+    //dbc_manager_->initialize();
 
     addon_manager_ = std::make_unique<AddonMgr>(shared_from_this());
-    addon_manager_->loadFromDB();
+    //addon_manager_->loadFromDB();
 
     itemTemplate_manager_ = std::make_unique<ItemTemplateMgr>(shared_from_this());
-    itemTemplate_manager_->loadFromDB();
+    //itemTemplate_manager_->loadFromDB();
 
     playerInfo_manager_ = std::make_unique<PlayerInfoMgr>(shared_from_this());
-    playerInfo_manager_->loadFromDB();
+    //playerInfo_manager_->loadFromDB();
 
     // Подключаемся к нодам
     node_manager_ = std::make_unique<NodeManager>(io_context_);
@@ -207,18 +215,20 @@ std::shared_ptr<GameSession> RelayServer::getSessionByPlayerId(ObjectGuid guid) 
 // Внутри RelayServer добавьте метод-обёртку:
 void RelayServer::schedule_update_realm(RealmFlags flags, float population) {
     auto self = shared_from_this();
-    boost::asio::post(
-            io_context_,
-            [self, flags, population]() {
-                boost::asio::co_spawn(
-                        self->io_context_,
-                        [self, flags, population]() -> boost::asio::awaitable<void> {
-                            co_await self->updateRealm(flags, population);
-                        },
-                        boost::asio::detached
-                );
-            }
-    );
+    auto p = std::make_shared<std::promise<void>>();
+    pending_updates_.push_back(p);
+
+    boost::asio::post(io_context_, [self, flags, population, p]() {
+        boost::asio::co_spawn(
+                self->io_context_,
+                [self, flags, population, p]() -> boost::asio::awaitable<void> {
+                    co_await self->updateRealm(flags, population);
+                    p->set_value(); // сигнализируем о завершении
+                    co_return;
+                },
+                boost::asio::detached
+        );
+    });
 }
 
 boost::asio::awaitable<void> RelayServer::updateRealm(RealmFlags flags, float population) {

@@ -54,12 +54,15 @@ private:
     const std::shared_ptr<Database> db_;
     boost::asio::awaitable<void> updateRealm(RealmFlags flags, float population);
 
+    std::vector<std::shared_ptr<std::promise<void>>> pending_updates_;
+
     std::unique_ptr<Realm> realm_;
-    std::unique_ptr<NodeManager> node_manager_;
     std::unique_ptr<AddonMgr> addon_manager_;
     std::unique_ptr<DBCMgr> dbc_manager_;
     std::unique_ptr<PlayerInfoMgr> playerInfo_manager_;
     std::unique_ptr<ItemTemplateMgr> itemTemplate_manager_;
+    std::unique_ptr<NodeManager> node_manager_;
+
     std::unordered_set<std::shared_ptr<GameSession>> sessions_;
     std::mutex sessions_mutex_;
 

@@ -75,15 +75,15 @@ public:
 
     /// Удалить все коннекторы для NodeID
     void remove_connectors(uint8_t node_id) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        auto it = connectors_.find(node_id);
-        if (it != connectors_.end()) {
-            for (auto& connector : it->second) {
-                connector->stop();
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            auto it = connectors_.find(node_id);
+            if (it != connectors_.end()) {
+                connectors_.erase(it);
             }
-            connectors_.erase(it);
-            Logger::get()->info("[NodeManager] Removed all connectors for NodeID {}", node_id);
         }
+
+        Logger::get()->info("[NodeManager] Removed all connectors for NodeID {}", node_id);
     }
 
     /// Отправить пакет на все ноды (по одному случайному коннектору для каждой ноды)

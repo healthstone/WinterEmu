@@ -21,6 +21,8 @@ void NodeConnector::start() {
 
 void NodeConnector::stop() {
     boost::asio::post(io_, [self = shared_from_this()]() {
+        if (!self->connected_) return; // уже остановлен
+
         boost::system::error_code ignored_ec;
         self->reconnect_timer_.cancel(ignored_ec);
         self->heartbeat_timer_.cancel(ignored_ec);
@@ -30,11 +32,12 @@ void NodeConnector::stop() {
             self->socket_.shutdown(tcp::socket::shutdown_both, ignored_ec);
             self->socket_.close(ignored_ec);
         }
+
         self->connected_ = false;
         self->writing_ = false;
         self->write_queue_.clear();
 
-        Logger::get()->info("[NodeConnector] Disconnected");
+        Logger::get()->info("[NodeConnector] Disconnected safely");
     });
 }
 
