@@ -129,16 +129,16 @@ void RelayServer::init(unsigned int network_threads, uint32_t realmID) {
     load_realm_by_id(realmID);
 
     dbc_manager_ = std::make_unique<DBCMgr>(shared_from_this());
-    //dbc_manager_->initialize();
+    dbc_manager_->initialize();
 
     addon_manager_ = std::make_unique<AddonMgr>(shared_from_this());
-    //addon_manager_->loadFromDB();
+    addon_manager_->loadFromDB();
 
     itemTemplate_manager_ = std::make_unique<ItemTemplateMgr>(shared_from_this());
-    //itemTemplate_manager_->loadFromDB();
+    itemTemplate_manager_->loadFromDB();
 
     playerInfo_manager_ = std::make_unique<PlayerInfoMgr>(shared_from_this());
-    //playerInfo_manager_->loadFromDB();
+    playerInfo_manager_->loadFromDB();
 
     // Подключаемся к нодам
     node_manager_ = std::make_unique<NodeManager>(io_context_);
