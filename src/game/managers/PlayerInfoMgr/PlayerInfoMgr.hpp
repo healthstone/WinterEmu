@@ -54,7 +54,7 @@ private:
 
     void playerCreateInfoAddItemHelper(uint8_t race_, uint8_t class_, uint32_t itemId, int16_t count);
 
-    std::weak_ptr<BaseServer> server_;
+    std::shared_ptr<BaseServer> server_;
 
     std::unique_ptr<PlayerInfo> _playerInfo[MAX_RACES][MAX_CLASSES];
     std::unique_ptr<PlayerClassInfo> _playerClassInfo[MAX_CLASSES];

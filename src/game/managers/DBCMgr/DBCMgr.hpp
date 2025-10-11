@@ -1478,7 +1478,7 @@ private:
     void load_WorldMapOverlay();            // load WorldMapOverlay.dbc
     void load_WorldSafeLocs();              // load WorldSafeLocs.dbc
 
-    std::weak_ptr<BaseServer> server_;
+    std::shared_ptr<BaseServer> server_;
 
     AchievementDBCMap _achievementMap;
     AchievementCriteriaDBCMap _achievementCriteriaMap;

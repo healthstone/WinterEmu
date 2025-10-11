@@ -17,7 +17,7 @@ void AddonMgr::loadFromDB() {
     bannedAddonsVector_.clear();
 
     auto log = Logger::get();
-    if (auto srv = server_.lock()) {
+    if (auto srv = server_) {
         uint32_t dbcHighestID = srv->getDBCMgr()->getBannedAddOnsHighestID();
         try {
             uint32_t oldMSTime1 = getMSTime();

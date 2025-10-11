@@ -55,6 +55,7 @@ int main() {
         signals.async_wait([&](const boost::system::error_code &, int signal_number) {
             log->info("[NodeServer] Signal {} received, shutting down...", signal_number);
             server->stop();
+            db->shutdown();
         });
 
         // Потоки io_context
@@ -68,7 +69,6 @@ int main() {
 
         for (auto &t : threads) t.join();
 
-        db->shutdown();
         server.reset();
         db.reset();
 

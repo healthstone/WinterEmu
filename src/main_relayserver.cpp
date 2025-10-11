@@ -51,19 +51,12 @@ int main() {
         server->start_accept();
         log->info("[RelayServer] Running on port {} with {} network threads", port, network_threads);
 
-        // Используем weak_ptr, чтобы не держать лишнюю shared ссылку
-        std::weak_ptr<RelayServer> weak_server(server);
-
         // Сигналы
         boost::asio::signal_set signals(io_context, SIGINT, SIGTERM);
-        signals.async_wait([weak_server, &work_guard, &log](const boost::system::error_code &, int signal_number) {
+        signals.async_wait([&](const boost::system::error_code &, int signal_number) {
             log->info("[RelayServer] Signal {} received, shutting down...", signal_number);
-
-            if (auto srv = weak_server.lock()) {
-                srv->stop();       // корректная остановка сервера
-            }
-
-            work_guard.reset();   // снимаем guard — io_context.run() завершится
+            server->stop();
+            db->shutdown();
         });
 
         // Потоки io_context
@@ -80,7 +73,6 @@ int main() {
 
         // Явно обнуляем server и db
         server.reset();
-        db->shutdown();
         db.reset();
 
         log->info("[RelayServer] Gracefully shut down.");

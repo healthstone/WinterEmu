@@ -33,7 +33,7 @@ void PlayerInfoMgr::loadFromDB() {
 
 void PlayerInfoMgr::load_playercreateinfo() {
     auto log = Logger::get();
-    if (auto srv = server_.lock()) {
+    if (auto srv = server_) {
         try {
             auto dbcMgr = srv->getDBCMgr();
             uint32_t oldMSTime1 = getMSTime();
@@ -102,7 +102,7 @@ void PlayerInfoMgr::load_playercreateinfo() {
 
 void PlayerInfoMgr::load_playercreateinfo_item() {
     auto log = Logger::get();
-    if (auto srv = server_.lock()) {
+    if (auto srv = server_) {
         try {
             uint32_t oldMSTime = getMSTime();
             auto itemTemplateMgr = srv->getItemTemplateMgr();
@@ -158,7 +158,7 @@ void PlayerInfoMgr::load_playercreateinfo_item() {
 
 void PlayerInfoMgr::load_playercreateinfo_skills() {
     auto log = Logger::get();
-    if (auto srv = server_.lock()) {
+    if (auto srv = server_) {
         try {
             auto dbcMgr = srv->getDBCMgr();
             uint32_t count = 0;
@@ -233,7 +233,7 @@ void PlayerInfoMgr::playerCreateInfoAddItemHelper(uint8_t race_, uint8_t class_,
         _playerInfo[race_][class_]->item.push_back(PlayerCreateInfoItem(itemId, count));
     else
     {
-        if (auto srv = server_.lock()) {
+        if (auto srv = server_) {
             auto log = Logger::get();
             auto dbcMgr = srv->getDBCMgr();
             if (count < -1)

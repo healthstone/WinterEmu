@@ -7,6 +7,7 @@
 #include "src/game/enums/Gender.hpp"
 #include "src/game/enums/PetDefines.hpp"
 #include "src/game/enums/PlayerEnums.hpp"
+#include "src/game/enums/ItemDefines.hpp"
 #include "src/game/Entity/PlayerInfo/PlayerInfo.hpp"
 #include "utils/RealmStringValidator.hpp"
 
@@ -129,33 +130,32 @@ CharHandlers::handleCharacterEnum(std::shared_ptr<GameSession> session) {
                     continue;
                 }
 
-//                SpellItemEnchantmentEntry const* enchant = nullptr;
-//
-//                Optional<uint32> enchants;
-//                if ((visualBase+1) < equipment.size())
-//                    enchants = Trinity::StringTo<uint32>(equipment[visualBase + 1]);
-//                if (!enchants)
-//                {
-//                    TC_LOG_WARN("entities.player.loading", "Player {} has invalid enchantment info '{}' in `equipmentcache` at index {}. Skipped.",
-//                                guid, ((visualBase+1) < equipment.size()) ? std::string(equipment[visualBase + 1]) : "<none>", visualBase + 1);
-//                    enchants = 0;
-//                }
-//                for (uint8 enchantSlot = PERM_ENCHANTMENT_SLOT; enchantSlot <= TEMP_ENCHANTMENT_SLOT; ++enchantSlot)
-//                {
-//                    // values stored in 2 uint16
-//                    uint32 enchantId = 0x0000FFFF & ((*enchants) >> enchantSlot * 16);
-//                    if (!enchantId)
-//                        continue;
-//
-//                    enchant = sSpellItemEnchantmentStore.LookupEntry(enchantId);
-//                    if (enchant)
-//                        break;
-//                }
+                SpellItemEnchantmentDBC const* enchant = nullptr;
+                std::optional<uint32_t> enchants;
+
+                if ((visualBase + 1) < equipment.size())
+                    enchants = Util::stringToUInt32(equipment[visualBase + 1]);
+
+                if (!enchants) {
+                    Logger::get()->warn("Player {} has invalid enchantment info '{}' in `equipmentcache` at index {}. Skipped.",
+                                        playerGuid.ToString(),
+                                        ((visualBase + 1) < equipment.size()) ? std::string(equipment[visualBase + 1]) : "<none>", visualBase + 1);
+                    enchants = 0;
+                }
+
+                for (uint8_t enchantSlot = PERM_ENCHANTMENT_SLOT; enchantSlot <= TEMP_ENCHANTMENT_SLOT; ++enchantSlot) {
+                    uint32_t enchantId = 0x0000FFFF & ((*enchants) >> (enchantSlot * 16));
+                    if (!enchantId)
+                        continue;
+
+                    enchant = dbcMgr->getSpellItemEnchantmentDBC(enchantId);
+                    if (enchant)
+                        break;
+                }
 
                 pkt.write_uint32_le(proto->DisplayInfoID);
                 pkt.write_uint8(proto->InventoryType);
-                //pkt.write_uint32_le(enchant ? enchant->ItemVisual : 0);
-                pkt.write_uint32_le(0);
+                pkt.write_uint32_le(enchant ? enchant->ItemVisual : 0);
             }
         }
     } else {

@@ -15,7 +15,7 @@ void ItemTemplateMgr::loadFromDB() {
     auto log = Logger::get();
     cleanUpBeforeDelete();
 
-    if (auto srv = server_.lock()) {
+    if (auto srv = server_) {
         try {
             uint32_t oldMSTime = getMSTime();
 

@@ -34,7 +34,7 @@ public:
     const std::vector<BannedAddon>& getBannedAddons() const { return bannedAddonsVector_; }
 
 private:
-    std::weak_ptr<RelayServer> server_;
+    std::shared_ptr<RelayServer> server_;
 
     std::unordered_map<std::string, SavedAddon> knownAddons_;
     std::vector<BannedAddon> bannedAddonsVector_; // Для быстрого доступа по порядку

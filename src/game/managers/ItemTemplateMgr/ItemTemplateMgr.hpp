@@ -27,6 +27,6 @@ public:
     ItemTemplateContainer const& getItemTemplateStore() const { return itemTemplateStore_; }
 
 private:
-    std::weak_ptr<BaseServer> server_;
+    std::shared_ptr<BaseServer> server_;
     ItemTemplateContainer itemTemplateStore_;
 };
