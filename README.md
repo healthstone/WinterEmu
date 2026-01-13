@@ -141,7 +141,7 @@ Unit tests included for SRP6, DB, packet parsing.
 
 Install:
 ```bash
-sudo apt install libssl-dev libboost-all-dev libpq-dev libpqxx-dev pkg-config catch2 zlib1g zlib1g-dev -y
+sudo apt install libssl-dev libboost-all-dev libpq-dev libpqxx-dev pkg-config zlib1g zlib1g-dev -y
 ```
 
 libpqxx should be version 6.4
